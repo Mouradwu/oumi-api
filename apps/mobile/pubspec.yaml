@@ -1,0 +1,35 @@
+﻿name: oumi_mobile
+description: Plateforme nationale algérienne de mise en relation pour le don de sang, plasma et plaquettes.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  provider: ^6.0.5
+  http: ^1.1.0
+  geolocator: ^10.1.0
+  flutter_map: ^6.0.0
+  latlong2: ^0.9.0
+  shared_preferences: ^2.2.0
+  flutter_secure_storage: ^9.0.0
+  intl: ^0.18.1
+  url_launcher: ^6.1.14
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/logo/
+    - assets/icons/
+    - assets/images/

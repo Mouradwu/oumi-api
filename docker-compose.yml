@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # Base de données PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    container_name: oumi-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: oumi_password
+      POSTGRES_DB: oumi_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema/schema-complete.sql:/docker-entrypoint-initdb.d/01-schema.sql
+      - ./database/seeds/seed-wilayas-complete.sql:/docker-entrypoint-initdb.d/02-wilayas.sql
+    networks:
+      - oumi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API NestJS
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oumi-api
+    environment:
+      NODE_ENV: production
+      API_PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: oumi_password
+      DATABASE_NAME: oumi_db
+      JWT_SECRET: oumi_production_secret_key_2026
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - oumi-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  oumi-network:
+    driver: bridge
