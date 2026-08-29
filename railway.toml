@@ -1,5 +1,9 @@
 [build]
 builder = "NIXPACKS"
 
+[nixpacks]
+# Indique à Nixpacks de traiter apps/api comme le dossier racine du projet
+root = "apps/api"
+
 [deploy]
-startCommand = "cd apps/api && pnpm run start:prod"
+startCommand = "pnpm run start:prod"
