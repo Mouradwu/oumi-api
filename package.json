@@ -1,17 +1,19 @@
-{
-  "name": "oumi-monorepo",
-  "version": "1.0.0",
-  "description": "Plateforme nationale algérienne de mise en relation pour le don de sang",
-  "private": true,
-  "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "format": "prettier --write ."
-  },
-  "devDependencies": {
-    "turbo": "latest",
-    "prettier": "latest"
-  },
-  "packageManager": "pnpm@11.24.0"
+﻿{
+    "name":  "oumi-monorepo",
+    "version":  "1.0.0",
+    "description":  "Plateforme nationale algÃ©rienne de mise en relation pour le don de sang",
+    "private":  true,
+    "scripts":  {
+                    "build":  "turbo run build",
+                    "dev":  "turbo run dev",
+                    "lint":  "turbo run lint",
+                    "format":  "prettier --write ."
+                },
+    "devDependencies":  {
+                            "turbo":  "latest",
+                            "prettier":  "latest"
+                        },
+    "engines":  {
+
+                }
 }
