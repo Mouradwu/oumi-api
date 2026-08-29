@@ -3,8 +3,8 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Installation de pnpm
-RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+# Installation de pnpm v9.4.0 (version stable recommandée pour NestJS)
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
 # Copie des fichiers de dépendances
 COPY package.json pnpm-lock.yaml ./
@@ -24,8 +24,8 @@ FROM node:22-alpine AS production
 
 WORKDIR /app
 
-# Installation de pnpm
-RUN corepack enable && corepack prepare pnpm@11.24.0 --activate
+# Installation de pnpm v9.4.0
+RUN corepack enable && corepack prepare pnpm@9.4.0 --activate
 
 # Copie des dépendances de production uniquement
 COPY package.json pnpm-lock.yaml ./
