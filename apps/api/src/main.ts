@@ -13,6 +13,6 @@ async function bootstrap() {
   const port = 3000;
   await app.listen(process.env.PORT ? parseInt(process.env.PORT, 10) : 3000, '0.0.0.0');
   
-  console.log(`Ã¢Å“â€¦ OUMI API est dÃƒÂ©marrÃƒÂ©e et ÃƒÂ©coute sur le port ${port}`);
+  console.log(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ OUMI API est dÃƒÆ’Ã‚Â©marrÃƒÆ’Ã‚Â©e et ÃƒÆ’Ã‚Â©coute sur le port ${port}`);
 }
 bootstrap();
