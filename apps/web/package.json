@@ -1,27 +1,26 @@
-
-    "name":  "@oumi/web",
-    "version":  "1.0.0",
-    "description":  "Application Web OUMI",
+﻿{
+    "version":  "0.1.0",
+    "name":  "oumi-web",
     "scripts":  {
-                    "dev":  "next dev",
+                    "lint":  "next lint",
                     "build":  "next build",
-                    "start":  "next start",
-                    "lint":  "next lint"
+                    "dev":  "next dev",
+                    "start":  "next start"
                 },
-    "dependencies":  {
-                         "next":  "14.0.0",
-                         "react":  "^18.2.0",
-                         "react-dom":  "^18.2.0"
-                     },
     "devDependencies":  {
-                            "@types/node":  "^20.0.0",
-                            "@types/react":  "^18.2.0",
-                            "@types/react-dom":  "^18.2.0",
-                            "typescript":  "^5.0.0",
-                            "eslint":  "^8.0.0",
-                            "prettier":  "^3.0.0"
+                            "@types/react":  "latest",
+                            "typescript":  "latest",
+                            "eslint":  "latest",
+                            "postcss":  "latest",
+                            "tailwindcss":  "latest",
+                            "@types/node":  "latest",
+                            "eslint-config-next":  "latest",
+                            "@types/react-dom":  "latest"
                         },
-    "engines":  {
-
-                }
+    "dependencies":  {
+                         "react":  "latest",
+                         "react-dom":  "latest",
+                         "next":  "latest"
+                     },
+    "private":  true
 }
