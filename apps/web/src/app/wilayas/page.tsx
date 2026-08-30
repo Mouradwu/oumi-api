@@ -23,15 +23,17 @@ export default function WilayasPage() {
   const t = translations[lang];
   const isRTL = lang === "ar";
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://oumiapi-production.up.railway.app";
+
   useEffect(() => {
-    fetch("https://oumiapi-production.up.railway.app/wilayas")
+    fetch(`${API_URL}/wilayas`)
       .then((res) => res.json())
       .then((data) => {
         setWilayas(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }, [API_URL]);
 
   const filteredWilayas = wilayas.filter((w) => {
     const query = search.toLowerCase();
