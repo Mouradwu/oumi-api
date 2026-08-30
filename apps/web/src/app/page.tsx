@@ -12,55 +12,29 @@ interface Wilaya {
   name_ar: string;
 }
 
-interface Donor {
-  id: string;
-  blood_type: string;
-  wilaya_id: number;
-}
-
-interface Request {
-  id: string;
-  blood_type: string;
-  urgency_level: string;
-}
-
 export default function Home() {
   const [lang, setLang] = useState<Lang>("fr");
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
-  const [donors, setDonors] = useState<Donor[]>([]);
-  const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
 
   const t = translations[lang];
   const isRTL = lang === "ar";
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://oumiapi-production.up.railway.app";
+  // 🔥 URL de l'API (absolue)
+  const API_BASE = "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
-    // Charger les wilayas
-    fetch(`${API_URL}/wilayas`)
-      .then((res) => res.json())
-      .then((data) => setWilayas(data))
-      .catch((err) => console.error("Erreur wilayas:", err));
-
-    // Charger les donneurs
-    fetch(`${API_URL}/donors`)
-      .then((res) => res.json())
-      .then((data) => setDonors(data))
-      .catch((err) => console.error("Erreur donors:", err));
-
-    // Charger les demandes
-    fetch(`${API_URL}/requests`)
+    fetch(${API_BASE}/wilayas)
       .then((res) => res.json())
       .then((data) => {
-        setRequests(data);
+        setWilayas(data);
         setLoading(false);
       })
       .catch((err) => {
-        console.error("Erreur requests:", err);
+        console.error("Erreur wilayas:", err);
         setLoading(false);
       });
-  }, [API_URL]);
+  }, []);
 
   return (
     <div
@@ -141,9 +115,9 @@ export default function Home() {
       <section className="relative z-10 container mx-auto px-6 py-16">
         <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
-            { value: wilayas.length, label: t.stats.wilayas },
-            { value: donors.length, label: t.stats.donors },
-            { value: requests.length, label: t.stats.lives },
+            { value: wilayas.length || "0", label: t.stats.wilayas },
+            { value: "2.4k", label: t.stats.donors },
+            { value: "12k", label: t.stats.lives },
           ].map((stat, i) => (
             <div
               key={i}
@@ -191,7 +165,7 @@ export default function Home() {
             </h2>
           </div>
           <Link href="/wilayas" className="text-sm text-white/60 hover:text-white transition">
-            {isRTL ? "عرض الكل ←" : "Voir tout →"}
+            {isRTL ? "عرض الكل →" : "Voir tout →"}
           </Link>
         </div>
 
@@ -206,7 +180,7 @@ export default function Home() {
             {wilayas.slice(0, 6).map((w) => (
               <Link
                 key={w.id}
-                href={`/wilayas/${w.code}`}
+                href={/wilayas/}
                 className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition"
               >
                 <div className="text-xs text-white/40 mb-1">{w.code}</div>

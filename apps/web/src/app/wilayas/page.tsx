@@ -23,17 +23,20 @@ export default function WilayasPage() {
   const t = translations[lang];
   const isRTL = lang === "ar";
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://oumiapi-production.up.railway.app";
+  const API_BASE = "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
-    fetch(`${API_URL}/wilayas`)
+    fetch(${API_BASE}/wilayas)
       .then((res) => res.json())
       .then((data) => {
         setWilayas(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, [API_URL]);
+      .catch((err) => {
+        console.error("Erreur wilayas:", err);
+        setLoading(false);
+      });
+  }, []);
 
   const filteredWilayas = wilayas.filter((w) => {
     const query = search.toLowerCase();
@@ -64,13 +67,13 @@ export default function WilayasPage() {
           </Link>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm text-white/70 hover:text-white transition">
-              {t.nav.home}
+              Accueil
             </Link>
-            <Link href="/wilayas" className="text-sm text-white font-medium">
-              {t.nav.wilayas}
+            <Link href="/wilayas" className="text-sm text-white/70 hover:text-white transition">
+              Wilayas
             </Link>
             <Link href="/auth/login" className="text-sm text-white/70 hover:text-white transition">
-              {t.nav.login}
+              Connexion
             </Link>
           </nav>
           <div className="flex items-center gap-3">
@@ -80,75 +83,61 @@ export default function WilayasPage() {
             >
               {lang === "fr" ? "العربية" : "FR"}
             </button>
+            <Link
+              href="/auth/register"
+              className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition"
+            >
+              Inscription
+            </Link>
           </div>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="relative z-10 container mx-auto px-6 py-16 text-center">
-        <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">
-          {isRTL ? "69 ولاية" : "69 Wilayas"}
-        </div>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-6">
-          {isRTL ? "استكشف الولايات" : "Explorer les Wilayas"}
-        </h1>
-        <p className="text-lg text-white/60 max-w-xl mx-auto mb-10">
-          {isRTL
-            ? "اكتشف جميع الولايات الجزائرية وتواصل مع المتبرعين في منطقتك"
-            : "Découvrez toutes les wilayas algériennes et connectez-vous avec les donneurs de votre région"}
-        </p>
-
-        {/* Search */}
-        <div className="max-w-md mx-auto">
+      {/* Main content */}
+      <main className="relative z-10 container mx-auto px-6 py-12">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
+            {isRTL ? "الولايات" : "Les wilayas"}
+          </h1>
           <input
             type="text"
-            placeholder={isRTL ? "ابحث عن ولاية..." : "Rechercher une wilaya..."}
+            placeholder={isRTL ? "بحث..." : "Rechercher..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-red-500/50 transition"
+            className="w-full md:w-64 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-red-500/50"
           />
         </div>
-      </section>
 
-      {/* Wilayas Grid */}
-      <section className="relative z-10 container mx-auto px-6 py-12">
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[...Array(12)].map((_, i) => (
-              <div key={i} className="h-24 bg-white/5 rounded-2xl animate-pulse" />
+              <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />
             ))}
           </div>
-        ) : filteredWilayas.length === 0 ? (
-          <div className="text-center py-20 text-white/40">
-            {isRTL ? "لم يتم العثور على نتائج" : "Aucun résultat trouvé"}
-          </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {filteredWilayas.map((wilaya) => (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {filteredWilayas.map((w) => (
               <Link
-                key={wilaya.id}
-                href={`/wilayas/${wilaya.code}`}
-                className="group p-6 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] hover:border-red-500/30 transition"
+                key={w.id}
+                href={/wilayas/}
+                className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition"
               >
-                <div className="text-xs text-white/40 mb-2">{wilaya.code}</div>
-                <div className="text-lg font-semibold mb-1">
-                  {isRTL ? wilaya.name_ar : wilaya.name_fr}
-                </div>
-                <div className="text-xs text-white/30">
-                  {isRTL ? wilaya.name_fr : wilaya.name_ar}
+                <div className="text-xs text-white/40 mb-1">{w.code}</div>
+                <div className="text-sm font-medium truncate">
+                  {isRTL ? w.name_ar : w.name_fr}
                 </div>
               </Link>
             ))}
           </div>
         )}
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="relative z-10 border-t border-white/5 py-8 mt-20">
+      <footer className="relative z-10 border-t border-white/5 py-8 mt-12">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <Logo size={20} />
-          <div className="text-xs text-white/40">{t.footer.tagline}</div>
-          <div className="text-xs text-white/30">{t.footer.rights}</div>
+          <div className="text-xs text-white/40">{t?.footer?.tagline || "OUMI - Don de sang"}</div>
+          <div className="text-xs text-white/30">{t?.footer?.rights || "© 2026 Tous droits réservés"}</div>
         </div>
       </footer>
     </div>
