@@ -28,7 +28,7 @@ export const translations = {
           desc: "Alertes instantanées aux donneurs proches.",
         },
         {
-          icon: "️",
+          icon: "🛡️",
           title: "Donneurs vérifiés",
           desc: "Profils certifiés et historique médical sécurisé.",
         },
@@ -68,7 +68,7 @@ export const translations = {
       title: "بسيط. سريع. حيوي.",
       items: [
         {
-          icon: "",
+          icon: "⚡",
           title: "طوارئ فورية",
           desc: "تنبيهات فورية للمتبرعين القريبين.",
         },
