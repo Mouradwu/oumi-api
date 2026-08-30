@@ -31,7 +31,7 @@ import { AssociationsModule } from './associations/associations.module';
       type: 'postgres',
       url: process.env.DATABASE_URL,
       entities: [Wilaya, User, Donor, DonationRequest, Hospital, TransfusionCenter, Notification, Conversation, Message, Campaign, Association],
-      synchronize: false,
+      synchronize: true,
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
     }),
     GeographyModule,
