@@ -11,8 +11,8 @@ async function bootstrap() {
   
   // FORCE LE PORT 3000 (Standard Railway)
   const port = 3000;
-  await app.listen(port, '0.0.0.0');
+  await app.listen(process.env.PORT ? parseInt(process.env.PORT, 10) : 3000, '0.0.0.0');
   
-  console.log(`✅ OUMI API est démarrée et écoute sur le port ${port}`);
+  console.log(`âœ… OUMI API est dÃ©marrÃ©e et Ã©coute sur le port ${port}`);
 }
 bootstrap();
