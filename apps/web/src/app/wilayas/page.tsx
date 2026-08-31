@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -30,28 +30,19 @@ export default function WilayasPage() {
         setWilayas(Array.isArray(data) ? data : []);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error("Erreur wilayas:", err);
+      .catch(() => {
         setWilayas([]);
         setLoading(false);
       });
   }, []);
 
   const filteredWilayas = wilayas.filter((w) => {
-    const query = search.toLowerCase();
-    return (
-      w.name_fr.toLowerCase().includes(query) ||
-      w.name_ar.includes(query) ||
-      w.code.includes(query)
-    );
+    const q = search.toLowerCase();
+    return w.name_fr.toLowerCase().includes(q) || w.name_ar.includes(q) || w.code.includes(q);
   });
 
   return (
-    <div
-      dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-[#0a0a0f] text-white"
-      style={{ fontFamily: isRTL ? "var(--font-tajawal)" : "var(--font-inter)" }}
-    >
+    <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-[#0a0a0f] text-white" style={{ fontFamily: isRTL ? "var(--font-tajawal)" : "var(--font-inter)" }}>
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-rose-500/10 rounded-full blur-3xl" />
@@ -66,25 +57,19 @@ export default function WilayasPage() {
           </nav>
           <div className="flex items-center gap-3">
             <button onClick={() => setLang(lang === "fr" ? "ar" : "fr")} className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition">{lang === "fr" ? "العربية" : "FR"}</button>
-            <Link href="/auth/register" className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition">Inscription</Link>
+            <Link href="/donor/register" className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition">Devenir donneur</Link>
           </div>
         </div>
       </header>
       <main className="relative z-10 container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">{isRTL ? "الولايات" : "Les wilayas"}</h1>
-          <input
-            type="text"
-            placeholder={isRTL ? "بحث..." : "Rechercher..."}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-64 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-red-500/50"
-          />
+          <div className="flex flex-wrap items-center gap-2">
+            <input type="text" placeholder={isRTL ? "بحث..." : "Rechercher..."} value={search} onChange={e => setSearch(e.target.value)} className="w-full md:w-64 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-red-500/50" />
+          </div>
         </div>
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[...Array(12)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />)}
-          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">{[...Array(12)].map((_, i) => <div key={i} className="h-24 bg-white/5 rounded-xl animate-pulse" />)}</div>
         ) : filteredWilayas.length === 0 ? (
           <div className="text-center py-20 text-white/50">{isRTL ? "لا توجد ولايات" : "Aucune wilaya trouvée"}</div>
         ) : (
