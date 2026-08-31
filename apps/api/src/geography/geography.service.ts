@@ -13,7 +13,13 @@ export class GeographyService {
     @InjectRepository(Commune) private communeRepo: Repository<Commune>,
   ) {}
 
-  async getWilayas() { return this.wilayaRepo.find(); }
+  async getWilayas() {
+    return this.wilayaRepo.find();
+  }
+
+  async getWilayaById(code: string) {
+    return this.wilayaRepo.findOne({ where: { code } });
+  }
 
   async getDairas(wilayaCode?: string) {
     return wilayaCode ? this.dairaRepo.find({ where: { wilaya_code: wilayaCode } }) : this.dairaRepo.find();
