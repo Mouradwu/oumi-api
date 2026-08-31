@@ -15,7 +15,7 @@ interface Donor {
   user: { first_name: string; last_name: string; };
 }
 
-interface Request {
+interface DonationRequest {
   id: number;
   blood_group: string;
   donation_type: string;
@@ -194,18 +194,18 @@ export default function ExplorerPage() {
         {tab === 'requests' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRequests.map((req) => (
-              <div key={req.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
+              <div key={request.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="font-semibold">{req.donation_type} - {req.blood_group}</p>
-                    <p className="text-sm text-white/60">🏥 {req.hospital || "Établissement"}</p>
-                    <p className="text-sm text-white/40">📍 Wilaya {req.wilaya}</p>
-                    <span className={`text-xs px-2 py-1 rounded ${req.urgency === 'CRITICAL' ? 'bg-red-600/20 text-red-400' : req.urgency === 'URGENT' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-green-600/20 text-green-400'}`}>{req.urgency}</span>
+                    <p className="font-semibold">{request.donation_type} - {request.blood_group}</p>
+                    <p className="text-sm text-white/60">🏥 {request.hospital || "Établissement"}</p>
+                    <p className="text-sm text-white/40">📍 Wilaya {request.wilaya}</p>
+                    <span className={`text-xs px-2 py-1 rounded ${request.urgency === 'CRITICAL' ? 'bg-red-600/20 text-red-400' : request.urgency === 'URGENT' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-green-600/20 text-green-400'}`}>{request.urgency}</span>
                   </div>
                 </div>
-                {user && user.id !== req.userId && (
-                  <button onClick={() => handleOfferHelp(req.id, req.userId)} disabled={actionLoading === req.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
-                    {actionLoading === req.id ? "..." : "💪 Je peux aider"}
+                {user && user.id !== request.userId && (
+                  <button onClick={() => handleOfferHelp(request.id, request.userId)} disabled={actionLoading === request.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
+                    {actionLoading === request.id ? "..." : "💪 Je peux aider"}
                   </button>
                 )}
               </div>
@@ -216,4 +216,5 @@ export default function ExplorerPage() {
     </div>
   );
 }
+
 
