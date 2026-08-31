@@ -26,7 +26,7 @@ export default function LoginPage() {
       const token = data.access_token;
       localStorage.setItem("token", token);
 
-      // Vérifier que le token est valide avant de rediriger
+      // Vérifier que le token est valide
       const verifyRes = await fetch("https://oumiapi-production.up.railway.app/auth/me", {
         headers: { Authorization: "Bearer " + token },
       });
@@ -34,10 +34,8 @@ export default function LoginPage() {
         localStorage.removeItem("token");
         throw new Error("Token invalide, veuillez réessayer.");
       }
-      const user = await verifyRes.json();
-      console.log("✅ Utilisateur connecté :", user);
 
-      // Redirection vers le profil
+      // Redirection
       window.location.href = "/profile";
     } catch (err: any) {
       setError(err.message);
