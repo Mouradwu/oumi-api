@@ -1,31 +1,39 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Patch } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, Query, BadRequestException, UseGuards } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { CreateRequestDto } from './dto/create-request.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('requests')
 export class RequestsController {
   constructor(private readonly requestsService: RequestsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  create(@Request() req, @Body() dto: CreateRequestDto) {
-    return this.requestsService.create(req.user.id, dto);
+  async create(@Body() createRequestDto: CreateRequestDto) {
+    if (!createRequestDto.userId) {
+      throw new BadRequestException('userId est obligatoire');
+    }
+    try {
+      return await this.requestsService.create(createRequestDto);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Get()
-  findAll() {
+  findAll(@Query('userId') userId?: string) {
+    if (userId) {
+      return this.requestsService.findByUserId(userId);
+    }
     return this.requestsService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.requestsService.findOne(id);
+    return this.requestsService.findOne(+id);
   }
 
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard)
   updateStatus(@Param('id') id: string, @Body('status') status: string) {
-    return this.requestsService.updateStatus(id, status);
+    if (!status) throw new BadRequestException('status est obligatoire');
+    return this.requestsService.updateStatus(+id, status);
   }
 }
