@@ -35,6 +35,12 @@ export default function ExplorerPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [filters, setFilters] = useState({ blood_group: "", donation_type: "", wilaya: "" });
+  const [searchTriggered, setSearchTriggered] = useState(false);
+
+  const handleSearch = () => {
+    setSearchTriggered(true);
+    // Le filtrage sera effectué dans le render via filteredDonors et filteredRequests
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -112,18 +118,18 @@ export default function ExplorerPage() {
     }
   };
 
-  const filteredDonors = donors.filter(d => {
+  const filteredDonors = searchTriggered ? donors.filter(d => {
     if (filters.blood_group && d.blood_group !== filters.blood_group) return false;
     if (filters.donation_type && !d.donation_types.includes(filters.donation_type)) return false;
     if (filters.wilaya && d.wilaya !== filters.wilaya) return false;
-    return true;
+    return true; }) : [];
   });
 
-  const filteredRequests = requests.filter(r => {
+  const filteredRequests = searchTriggered ? requests.filter(r => {
     if (filters.blood_group && r.blood_group !== filters.blood_group) return false;
     if (filters.donation_type && r.donation_type !== filters.donation_type) return false;
     if (filters.wilaya && r.wilaya !== filters.wilaya) return false;
-    return true;
+    return true; }) : [];
   });
 
   return (
@@ -213,4 +219,5 @@ export default function ExplorerPage() {
     </div>
   );
 }
+
 

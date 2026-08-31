@@ -33,6 +33,26 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [donorProfile, setDonorProfile] = useState<any>(null);
+    const toggleAvailability = async () => {
+    const token = localStorage.getItem("token");
+    if (!donorProfile) return;
+    try {
+      const res = await fetch(`https://oumiapi-production.up.railway.app/donors/${donorProfile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ availability: !donorProfile.availability }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setDonorProfile(updated);
+        alert("Disponibilité mise à jour !");
+      } else {
+        throw new Error("Erreur");
+      }
+    } catch (e) {
+      alert("Erreur lors de la mise à jour");
+    }
+  };
   const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
@@ -155,6 +175,9 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-semibold mb-4">🔔 Notifications récentes</h2>
                 <div className="space-y-2">
                   {notifications.slice(0, 3).map((n) => (
+                  {n.type === "acceptance" && n.data?.donorPhone && (
+                    <div className="mt-1 text-green-400 text-sm">📞 {n.data.donorPhone}</div>
+                  )}
                     <div key={n.id} className="flex justify-between items-center border-b border-white/5 py-2">
                       <span className="text-sm">{n.message}</span>
                       <span className="text-xs text-white/30">{new Date(n.created_at).toLocaleDateString()}</span>
@@ -169,3 +192,6 @@ export default function ProfilePage() {
     </div>
   );
 }
+
+
+
