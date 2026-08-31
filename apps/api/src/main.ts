@@ -9,13 +9,13 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
   app.enableCors();
 
-  // 🆕 Endpoint de santé (ne dépend pas de la base)
+  // Endpoint de santé
   app.get('/health', (req, res) => res.send('OK'));
 
   // Utiliser le PORT attribué par Railway, ou 3000 par défaut
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 
-  console.log(🚀 OUMI API démarrée sur le port );
+  console.log(`🚀 OUMI API démarrée sur le port ${port}`);
 }
 bootstrap();
