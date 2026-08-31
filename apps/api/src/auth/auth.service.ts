@@ -1,4 +1,4 @@
-﻿import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException, NotFoundException, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -30,12 +30,17 @@ export class AuthService {
         first_name,
         last_name,
         phone,
-        roles: [],
+        roles: [],  // important : initialiser le tableau
       });
-      return this.usersRepository.save(user);
+      const saved = await this.usersRepository.save(user);
+      return saved;
     } catch (error) {
       console.error('Erreur lors de l\'inscription:', error);
-      throw error;
+      // Renvoyer une erreur claire au frontend
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Erreur interne lors de l\'inscription. Vérifiez les logs.');
     }
   }
 
