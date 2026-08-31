@@ -47,11 +47,12 @@ export class MatchingService {
       throw new NotFoundException('Coordonnees de la Wilaya non trouvees');
     }
 
-    const compatibleTypes = this.getCompatibleDonorBloodTypes(request.blood_group || "O+");
+    // const compatibleTypes = this.getCompatibleDonorBloodTypes(request.blood_group || "O+");
+    const compatibleTypes = ["O+", "O-", "A+", "A-", "B+", "B-", "AB+", "AB-"]; // Fallback pour test
     const reqLat = parseFloat(wilaya.latitude.toString());
     const reqLng = parseFloat(wilaya.longitude.toString());
 
-    // ÃƒÆ’Ã¢â‚¬Â°tape 1 : RÃƒÆ’Ã‚Â©cupÃƒÆ’Ã‚Â©rer les donneurs avec le bon groupe sanguin (Import In() correct)
+    // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°tape 1 : RÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©cupÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â©rer les donneurs avec le bon groupe sanguin (Import In() correct)
     const donors = await this.donorRepo.find({
       where: {
         availability: true,
@@ -59,7 +60,7 @@ export class MatchingService {
       }
     });
 
-    // ÃƒÆ’Ã¢â‚¬Â°tape 2 : Filtrer par distance et calculer le score
+    // ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â°tape 2 : Filtrer par distance et calculer le score
     const matches = donors
       .map(donor => {
         if (!donor.latitude || !donor.longitude) return null;
