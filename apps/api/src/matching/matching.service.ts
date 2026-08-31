@@ -18,9 +18,11 @@ export class MatchingService {
     if (!request) throw new Error('Request not found');
 
     const compatibleGroups = this.getCompatibleBloodGroups(request.blood_group);
+    
+    // Utiliser l'opérateur In pour rechercher plusieurs groupes sanguins
     const donors = await this.donorRepository.find({
       where: { 
-        blood_group: In(compatibleGroups), 
+        blood_group: In(compatibleGroups),
         availability: true 
       },
       relations: ['user'],
