@@ -16,24 +16,14 @@ export class MatchingService {
   async findMatches(requestId: number) {
     const request = await this.requestRepository.findOne({ where: { id: requestId } });
     if (!request) throw new Error('Request not found');
-
     const compatibleGroups = this.getCompatibleBloodGroups(request.blood_group);
-    
-    // Utiliser l'opérateur In pour rechercher plusieurs groupes sanguins
     const donors = await this.donorRepository.find({
-      where: { 
-        blood_group: In(compatibleGroups),
-        availability: true 
-      },
+      where: { blood_group: In(compatibleGroups), availability: true },
       relations: ['user'],
     });
-
     return donors.map(donor => ({
       id: donor.id,
-      donor: {
-        ...donor,
-        distance: Math.random() * 50,
-      },
+      donor: { ...donor, distance: Math.random() * 50 }, // à remplacer par calcul GPS
       score: Math.floor(Math.random() * 100),
       compatibility: 'good',
     }));

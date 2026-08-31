@@ -8,10 +8,7 @@ export class RequestsController {
 
   @Post()
   async create(@Body() body: any) {
-    console.log('Received request body:', JSON.stringify(body, null, 2));
-
-    // Construction manuelle du DTO
-    const createRequestDto: CreateRequestDto = {
+    const dto: CreateRequestDto = {
       userId: body.userId || body.user_id,
       blood_group: body.blood_group || body.bloodGroup,
       donation_type: body.donation_type || body.donationType,
@@ -24,30 +21,13 @@ export class RequestsController {
       quantity: body.quantity,
       contact_phone: body.contact_phone || body.contactPhone,
     };
-
-    if (!createRequestDto.userId) {
-      console.error('userId manquant dans le body reçu:', body);
-      throw new BadRequestException({
-        message: 'userId est obligatoire',
-        received: body,
-        constructed: createRequestDto,
-      });
-    }
-
-    try {
-      const result = await this.requestsService.create(createRequestDto);
-      return result;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+    if (!dto.userId) throw new BadRequestException('userId est obligatoire');
+    return this.requestsService.create(dto);
   }
 
   @Get()
   findAll(@Query('userId') userId?: string) {
-    if (userId) {
-      return this.requestsService.findByUserId(userId);
-    }
-    return this.requestsService.findAll();
+    return userId ? this.requestsService.findByUserId(userId) : this.requestsService.findAll();
   }
 
   @Get(':id')
