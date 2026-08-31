@@ -1,9 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 
 interface Match {
   id: number;
@@ -25,21 +24,24 @@ export default function MatchingPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const handleFind = async () => {
     if (!requestId) return;
     setLoading(true);
     setError("");
     setMatches([]);
+    setSuccess(false);
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch($apiBase/matching/find/, {
+      const res = await fetch("'$apiBase'/matching/find/" + requestId, {
         headers: { Authorization: "Bearer " + token },
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de matching");
       setMatches(data);
+      setSuccess(true);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -72,6 +74,11 @@ export default function MatchingPage() {
         </div>
 
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
+        {success && matches.length === 0 && (
+          <div className="bg-yellow-500/20 text-yellow-400 p-3 rounded-lg mt-4">
+            Aucun donneur compatible trouvé dans la région
+          </div>
+        )}
 
         {matches.length > 0 && (
           <div className="mt-8 space-y-4">

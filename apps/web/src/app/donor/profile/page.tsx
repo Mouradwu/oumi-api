@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 
 export default function DonorProfilePage() {
   const { user } = useAuth();
@@ -21,7 +20,6 @@ export default function DonorProfilePage() {
     availability: true,
   });
 
-  // Récupérer la position GPS
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -50,7 +48,7 @@ export default function DonorProfilePage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://oumiapi-production.up.railway.app/donors", {
+      const res = await fetch("'$apiBase'/donors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -120,7 +118,11 @@ export default function DonorProfilePage() {
                   key={type}
                   type="button"
                   onClick={() => toggleDonationType(type)}
-                  className={px-4 py-2 rounded-full text-sm transition }
+                  className={`px-4 py-2 rounded-full text-sm transition ${
+                    form.donation_types.includes(type)
+                      ? "bg-red-600 text-white"
+                      : "bg-white/10 text-white/60 hover:bg-white/20"
+                  }`}
                 >
                   {type}
                 </button>
