@@ -34,4 +34,10 @@ export class DonorsService {
     await this.donorRepository.update(id, updateData);
     return this.findOne(id);
   }
+
+  // Vérification d'existence (à améliorer avec un vrai UserRepository)
+  async userExists(userId: number): Promise<boolean> {
+    // Pour l'instant, on retourne true (à adapter)
+    return true;
+  }
 }

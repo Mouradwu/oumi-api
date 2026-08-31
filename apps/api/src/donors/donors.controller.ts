@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 
@@ -7,8 +7,30 @@ export class DonorsController {
   constructor(private readonly donorsService: DonorsService) {}
 
   @Post()
-  create(@Body() createDonorDto: CreateDonorDto) {
-    return this.donorsService.create(createDonorDto);
+  async create(@Body() createDonorDto: CreateDonorDto) {
+    try {
+      // Vérifier que userId est fourni
+      if (!createDonorDto.userId) {
+        throw new BadRequestException('userId est obligatoire');
+      }
+
+      // Vérifier que l'utilisateur existe (optionnel)
+      const userExists = await this.donorsService.userExists(createDonorDto.userId);
+      if (!userExists) {
+        throw new NotFoundException(`Utilisateur avec id ${createDonorDto.userId} non trouvé`);
+      }
+
+      // Créer le donneur
+      const donor = await this.donorsService.create(createDonorDto);
+      return {
+        success: true,
+        data: donor,
+        message: 'Donneur enregistré avec succès'
+      };
+    } catch (error) {
+      // Renvoyer une erreur explicite
+      throw error;
+    }
   }
 
   @Get()
