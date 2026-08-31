@@ -17,6 +17,9 @@ export class NotificationsService {
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
+    // Log du DTO reçu
+    this.logger.log('DTO reçu:', JSON.stringify(dto));
+
     // Vérifier que le destinataire existe
     const targetUser = await this.userRepo.findOne({ where: { id: dto.userId } });
     if (!targetUser) {
@@ -31,9 +34,12 @@ export class NotificationsService {
       }
     }
 
+    // Assurer que title a une valeur par défaut
+    const title = dto.title || 'Notification';
+
     const notif = this.notifRepo.create({
       userId: dto.userId,
-      title: dto.title,
+      title: title,
       message: dto.message,
       type: dto.type || null,
       data: dto.data || null,

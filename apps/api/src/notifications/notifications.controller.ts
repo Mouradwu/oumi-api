@@ -1,16 +1,19 @@
-﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, BadRequestException } from '@nestjs/common';
+﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('notifications')
 export class NotificationsController {
+  private readonly logger = new Logger(NotificationsController.name);
+
   constructor(private readonly service: NotificationsService) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    // Si userId n'est pas fourni, on prend l'utilisateur connecté
+    // Log du body reçu
+    this.logger.log('Body reçu:', JSON.stringify(dto));
     if (!dto.userId) dto.userId = req.user.id;
     return await this.service.create(dto);
   }
