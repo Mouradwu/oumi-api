@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -28,7 +28,7 @@ export class AuthService {
       first_name: dto.first_name,
       last_name: dto.last_name,
       phone: dto.phone,
-      role: dto.role || 'donor',
+      
     });
 
     const savedUser = await this.usersRepository.save(user);
@@ -40,7 +40,7 @@ export class AuthService {
         email: savedUser.email,
         first_name: savedUser.first_name,
         last_name: savedUser.last_name,
-        role: savedUser.role,
+        
       },
       ...tokens,
     };
@@ -62,10 +62,10 @@ export class AuthService {
     return {
       user: {
         id: user.id,
-        email: user.email,
+        email: user.email, roles: [],
         first_name: user.first_name,
         last_name: user.last_name,
-        role: user.role,
+        
       },
       ...tokens,
     };
@@ -78,17 +78,17 @@ export class AuthService {
     }
     return {
       id: user.id,
-      email: user.email,
+      email: user.email, roles: [],
       first_name: user.first_name,
       last_name: user.last_name,
       phone: user.phone,
-      role: user.role,
-      is_verified: user.is_verified,
+      
+      
     };
   }
 
   private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, role: user.role };
+    const payload = { sub: user.id, email: user.email, roles: [], role: user.roles?.[0] ?? ""s?.[0] ?? "" };
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, { expiresIn: '15m' }),
       this.jwtService.signAsync(payload, { expiresIn: '7d' }),

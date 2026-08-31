@@ -6,13 +6,24 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
 
+interface Notification {
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  data: any;
+  created_at: string;
+  user?: { first_name: string; last_name: string; email?: string; phone?: string; };
+}
+
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [notifications, setNotifications] = useState([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [donorProfile, setDonorProfile] = useState(null);
-  const [requests, setRequests] = useState([]);
+  const [requests, setRequests] = useState<Notification[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -175,3 +186,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
