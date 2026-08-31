@@ -1,6 +1,10 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+﻿import { Injectable } from '@nestjs/common';
+
+
+
+import { User } from '../users/user.entity';
+
+
 import { Notification } from './notification.entity';
 
 @Injectable()
@@ -33,3 +37,4 @@ export class NotificationsService {
     return { success: true };
   }
 }
+
