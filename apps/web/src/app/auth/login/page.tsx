@@ -11,13 +11,15 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const API_BASE = "https://oumiapi-production.up.railway.app";
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
+      const res = await fetch(\/auth/login, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -40,33 +42,11 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center">Se connecter</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            required
-          />
-          <input
-            type="password"
-            placeholder="Mot de passe"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            required
-          />
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition"
-          >
-            {loading ? "Connexion..." : "Se connecter"}
-          </button>
+          <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
+          <input type="password" placeholder="Mot de passe" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
+          <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition">{loading ? "Connexion..." : "Se connecter"}</button>
         </form>
-        <p className="text-center text-white/50 text-sm">
-          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
-        </p>
+        <p className="text-center text-white/50 text-sm">Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link></p>
       </div>
     </div>
   );

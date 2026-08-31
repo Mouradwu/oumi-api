@@ -22,7 +22,7 @@ export default function Home() {
   const t = translations[lang];
   const isRTL = lang === "ar";
 
-  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://oumiapi-production.up.railway.app";
+  const API_BASE = "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
     const fetchData = async () => {
@@ -47,9 +47,6 @@ export default function Home() {
     fetchData();
   }, []);
 
-  // DEBUG : bandeau visible
-  const debugMessage = !loading ? ✅ Wilayas: \, Donneurs: \, Demandes: \ : "⏳ Chargement...";
-
   return (
     <div
       dir={isRTL ? "rtl" : "ltr"}
@@ -58,7 +55,7 @@ export default function Home() {
     >
       {/* Bandeau de debug */}
       <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
-        {debugMessage}
+        {loading ? "⏳ Chargement..." : ✅ Wilayas: \, Donneurs: \, Demandes: \}
       </div>
 
       {/* Background gradient */}
@@ -199,7 +196,7 @@ export default function Home() {
             {wilayas.slice(0, 6).map((w) => (
               <Link
                 key={w.id}
-                href={/wilayas/}
+                href={/wilayas/\}
                 className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition"
               >
                 <div className="text-xs text-white/40 mb-1">{w.code}</div>

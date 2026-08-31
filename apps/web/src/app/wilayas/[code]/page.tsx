@@ -21,11 +21,11 @@ export default function WilayaDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const apiBase = "https://oumiapi-production.up.railway.app";
+  const API_BASE = "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
     if (!code) return;
-    fetch($apiBase/wilayas/)
+    fetch(\/wilayas/\)
       .then((res) => {
         if (!res.ok) throw new Error("Wilaya non trouvée");
         return res.json();
