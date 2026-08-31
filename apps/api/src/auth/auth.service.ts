@@ -1,11 +1,11 @@
-﻿import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import { User } from '../users/user.entity';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
@@ -15,84 +15,49 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async register(dto: RegisterDto) {
-    const existing = await this.usersRepository.findOne({ where: { email: dto.email } });
-    if (existing) {
-      throw new ConflictException('Cet email est deja utilise');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 10);
+  async register(registerDto: RegisterDto): Promise<User> {
+    const { email, password, first_name, last_name, phone } = registerDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const user = this.usersRepository.create({
-      email: dto.email,
+      email,
       password: hashedPassword,
-      first_name: dto.first_name,
-      last_name: dto.last_name,
-      phone: dto.phone,
-      
+      first_name,
+      last_name,
+      phone,
+      roles: [],
     });
-
-    const savedUser = await this.usersRepository.save(user);
-    const tokens = await this.generateTokens(savedUser);
-
-    return {
-      user: {
-        id: savedUser.id,
-        email: savedUser.email,
-        first_name: savedUser.first_name,
-        last_name: savedUser.last_name,
-        
-      },
-      ...tokens,
-    };
+    return this.usersRepository.save(user);
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.usersRepository.findOne({ where: { email: dto.email } });
-    if (!user) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
-    }
-
-    const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-    if (!isPasswordValid) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
-    }
-
-    const tokens = await this.generateTokens(user);
-
+  async login(loginDto: LoginDto): Promise<{ access_token: string; user: any }> {
+    const { email, password } = loginDto;
+    const user = await this.usersRepository.findOne({ where: { email } });
+    if (!user) throw new UnauthorizedException('Identifiants invalides');
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) throw new UnauthorizedException('Identifiants invalides');
+    const payload = { sub: user.id, email: user.email, roles: user.roles || [] };
+    const access_token = this.jwtService.sign(payload);
     return {
+      access_token,
       user: {
         id: user.id,
-        email: user.email, roles: [],
+        email: user.email,
         first_name: user.first_name,
         last_name: user.last_name,
-        
+        roles: user.roles || [],
       },
-      ...tokens,
     };
   }
 
-  async getProfile(userId: string) {
-    const user = await this.usersRepository.findOne({ where: { id: userId } });
-    if (!user) {
-      throw new UnauthorizedException('Utilisateur non trouve');
-    }
+  async validateUser(id: string): Promise<any> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new UnauthorizedException('Utilisateur non trouvé');
     return {
       id: user.id,
-      email: user.email, roles: [],
+      email: user.email,
       first_name: user.first_name,
       last_name: user.last_name,
-      phone: user.phone,
-      
-      
+      roles: user.roles || [],
     };
-  }
-
-  private async generateTokens(user: User) {
-    const payload = { sub: user.id, email: user.email, roles: [], role: user.roles?.[0] ?? ""s?.[0] ?? "" };
-    const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, { expiresIn: '15m' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
-    ]);
-    return { access_token: accessToken, refresh_token: refreshToken };
   }
 }

@@ -17,6 +17,27 @@ interface Notification {
   user?: { first_name: string; last_name: string; email?: string; phone?: string; };
 }
 
+interface DonationRequest {
+  id: number;
+  blood_group: string;
+  donation_type: string;
+  wilaya: string;
+  hospital: string;
+  urgency: string;
+  description: string;
+  userId: string;
+  user: { first_name: string; last_name: string; };
+}
+  id: number;
+  title: string;
+  message: string;
+  type: string;
+  read: boolean;
+  data: any;
+  created_at: string;
+  user?: { first_name: string; last_name: string; email?: string; phone?: string; };
+}
+
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -72,7 +93,7 @@ export default function ProfilePage() {
   // Déterminer les rôles actifs
   const roles = user.roles || [];
   const isDonor = roles.includes("donor") || donorProfile !== null;
-  const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
+  const isRequester = roles.includes("requester") || (requests || []).some(r => r.userId === user.id);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -186,4 +207,5 @@ export default function ProfilePage() {
     </div>
   );
 }
+
 
