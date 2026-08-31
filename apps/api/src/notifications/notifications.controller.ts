@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards } from '@nestjs/common';
+﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -10,9 +10,16 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    // Si userId n'est pas fourni, on prend l'utilisateur connecté
-    if (!dto.userId) dto.userId = req.user.id;
-    return this.service.create(dto);
+    try {
+      // Si userId n'est pas fourni, on prend l'utilisateur connecté
+      if (!dto.userId) dto.userId = req.user.id;
+      return await this.service.create(dto);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Erreur lors de l\'envoi de la demande.');
+    }
   }
 
   @Get()
@@ -24,7 +31,6 @@ export class NotificationsController {
   @Patch(':id/read')
   @UseGuards(JwtAuthGuard)
   async markAsRead(@Param('id') id: string, @Request() req) {
-    // On vérifie que la notification appartient à l'utilisateur
     return this.service.markAsRead(+id, req.user.id);
   }
 
