@@ -36,13 +36,14 @@ export default function ProfilePage() {
   const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
+    // Vérification du token
     const token = localStorage.getItem("token");
     if (!token) {
       router.push("/auth/login");
       return;
     }
     if (!user) {
-      router.push("/auth/login");
+      // Si user n'est pas encore chargé, on attend
       return;
     }
 
@@ -107,7 +108,6 @@ export default function ProfilePage() {
   const roles = user.roles || [];
   const isDonor = roles.includes("donor") || donorProfile !== null;
   const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
-
   const acceptedNotifications = notifications.filter(n => n.type === "acceptance");
 
   return (

@@ -38,7 +38,7 @@ function LoginForm() {
       localStorage.setItem("token", data.access_token);
       console.log("✅ Token stocké, redirection vers /profile");
       
-      // Redirection forcée (recharge la page)
+      // Redirection forcée avec window.location
       window.location.href = "/profile";
     } catch (err: any) {
       setError(err.message);
