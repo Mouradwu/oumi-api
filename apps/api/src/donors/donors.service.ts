@@ -26,7 +26,7 @@ export class DonorsService {
     return donor;
   }
 
-  async findByUserId(userId: number): Promise<Donor> {
+  async findByUserId(userId: string): Promise<Donor> {
     return this.donorRepository.findOne({ where: { userId }, relations: ['user'] });
   }
 
@@ -35,9 +35,9 @@ export class DonorsService {
     return this.findOne(id);
   }
 
-  // Vérification d'existence (à améliorer avec un vrai UserRepository)
-  async userExists(userId: number): Promise<boolean> {
-    // Pour l'instant, on retourne true (à adapter)
+  // VÃ©rification d'existence (Ã  amÃ©liorer avec un vrai UserRepository)
+  async userExists(userId: string): Promise<boolean> {
+    // Pour l'instant, on retourne true (Ã  adapter)
     return true;
   }
 }

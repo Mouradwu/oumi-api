@@ -9,23 +9,23 @@ export class DonorsController {
   @Post()
   async create(@Body() createDonorDto: CreateDonorDto) {
     try {
-      // Vérifier que userId est fourni
+      // VÃ©rifier que userId est fourni
       if (!createDonorDto.userId) {
         throw new BadRequestException('userId est obligatoire');
       }
 
-      // Vérifier que l'utilisateur existe (optionnel)
+      // VÃ©rifier que l'utilisateur existe (optionnel)
       const userExists = await this.donorsService.userExists(createDonorDto.userId);
       if (!userExists) {
-        throw new NotFoundException(`Utilisateur avec id ${createDonorDto.userId} non trouvé`);
+        throw new NotFoundException(`Utilisateur avec id ${createDonorDto.userId} non trouvÃ©`);
       }
 
-      // Créer le donneur
+      // CrÃ©er le donneur
       const donor = await this.donorsService.create(createDonorDto);
       return {
         success: true,
         data: donor,
-        message: 'Donneur enregistré avec succès'
+        message: 'Donneur enregistrÃ© avec succÃ¨s'
       };
     } catch (error) {
       // Renvoyer une erreur explicite
@@ -41,7 +41,7 @@ export class DonorsController {
   @Get('me')
   findMyProfile(@Query('userId') userId: string) {
     if (!userId) {
-      return { message: 'Veuillez fournir userId en paramètre (ex: ?userId=1)' };
+      return { message: 'Veuillez fournir userId en paramÃ¨tre (ex: ?userId=1)' };
     }
     return this.donorsService.findByUserId(+userId);
   }

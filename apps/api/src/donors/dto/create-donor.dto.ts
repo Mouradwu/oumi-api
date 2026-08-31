@@ -1,5 +1,5 @@
 export class CreateDonorDto {
-  userId: number;
+  userId: string;
   blood_group: string;
   donation_types: string[];
   wilaya: string;
