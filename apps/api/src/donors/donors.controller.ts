@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -9,18 +9,34 @@ export class DonorsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  createOrUpdate(@Request() req, @Body() dto: CreateDonorDto) {
-    return this.donorsService.createOrUpdate(req.user.id, dto);
+  create(@Body() createDonorDto: CreateDonorDto, @Request() req) {
+    return this.donorsService.create({
+      ...createDonorDto,
+      userId: req.user.id,
+    });
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  findAll() {
+    return this.donorsService.findAll();
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getMyProfile(@Request() req) {
-    return this.donorsService.getMyProfile(req.user.id);
+  findMyProfile(@Request() req) {
+    return this.donorsService.findByUserId(req.user.id);
   }
 
-  @Get()
-  findAll() {
-    return this.donorsService.findAll();
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string) {
+    return this.donorsService.findOne(+id);
+  }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  update(@Param('id') id: string, @Body() updateData: Partial<CreateDonorDto>) {
+    return this.donorsService.update(+id, updateData);
   }
 }

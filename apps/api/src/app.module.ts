@@ -26,6 +26,7 @@ import { AssociationsModule } from './associations/associations.module';
 
 @Module({
   imports: [
+    DonorsModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot({
       type: 'postgres',
