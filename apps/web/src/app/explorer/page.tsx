@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface Donor {
   id: number;
@@ -22,6 +23,7 @@ interface Donor {
 
 export default function ExplorerPage() {
   const { user } = useAuth();
+  const { user } = useAuth();
   const [donors, setDonors] = useState<Donor[]>([]);
   const [filtered, setFiltered] = useState<Donor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +33,41 @@ export default function ExplorerPage() {
   const [bloodGroup, setBloodGroup] = useState("");
   const [donationType, setDonationType] = useState("");
   const [wilaya, setWilaya] = useState("");
-  const [radius, setRadius] = useState(50);
+    const [radius, setRadius] = useState(50);
+  const [requesting, setRequesting] = useState<number | null>(null);
+  const [requestSuccess, setRequestSuccess] = useState<string | null>(null);
+
+  const handleRequestHelp = async (donorId: number, donorName: string) => {
+    if (!user) {
+      alert("Veuillez vous connecter pour faire une demande.");
+      return;
+    }
+    setRequesting(donorId);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("https://oumiapi-production.up.railway.app/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          userId: donorId, // le donneur
+          title: "Demande d'aide",
+          message: `${user.first_name} ${user.last_name} a besoin de votre aide pour un don.`,
+          type: "request",
+          data: { receiverId: user.id, receiverName: user.first_name + " " + user.last_name },
+        }),
+      });
+      if (!res.ok) throw new Error("Erreur lors de l'envoi");
+      setRequestSuccess(`✅ Demande envoyée à ${donorName}`);
+      setTimeout(() => setRequestSuccess(null), 5000);
+    } catch (err: any) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setRequesting(null);
+    }
+  };
 
   useEffect(() => {
     fetch("https://oumiapi-production.up.railway.app/donors")
@@ -190,3 +226,4 @@ export default function ExplorerPage() {
     </div>
   );
 }
+
