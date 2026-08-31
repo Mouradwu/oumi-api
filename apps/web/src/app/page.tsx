@@ -16,25 +16,39 @@ export default function Home() {
   const [lang, setLang] = useState<Lang>("fr");
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
   const [loading, setLoading] = useState(true);
+  const [donorsCount, setDonorsCount] = useState(0);
+  const [requestsCount, setRequestsCount] = useState(0);
 
   const t = translations[lang];
   const isRTL = lang === "ar";
 
-  // ÃƒÆ’Ã‚Â°Ãƒâ€¦Ã‚Â¸ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¥ URL de l'API (absolue)
-  const API_BASE = "https://oumiapi-production.up.railway.app";
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL || "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
-    fetch(${API_BASE}/wilayas)
-      .then((res) => res.json())
-      .then((data) => {
-        setWilayas(data);
+    const fetchData = async () => {
+      try {
+        const [wilayasRes, donorsRes, requestsRes] = await Promise.all([
+          fetch(\/wilayas),
+          fetch(\/donors),
+          fetch(\/requests)
+        ]);
+        const wilayasData = await wilayasRes.json();
+        const donorsData = await donorsRes.json();
+        const requestsData = await requestsRes.json();
+        setWilayas(wilayasData);
+        setDonorsCount(Array.isArray(donorsData) ? donorsData.length : 0);
+        setRequestsCount(Array.isArray(requestsData) ? requestsData.length : 0);
+      } catch (err) {
+        console.error("Erreur chargement des données:", err);
+      } finally {
         setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Erreur wilayas:", err);
-        setLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, []);
+
+  // DEBUG : bandeau visible
+  const debugMessage = !loading ? ✅ Wilayas: \, Donneurs: \, Demandes: \ : "⏳ Chargement...";
 
   return (
     <div
@@ -42,6 +56,11 @@ export default function Home() {
       className="min-h-screen bg-[#0a0a0f] text-white overflow-hidden"
       style={{ fontFamily: isRTL ? "system-ui" : "Inter, system-ui" }}
     >
+      {/* Bandeau de debug */}
+      <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
+        {debugMessage}
+      </div>
+
       {/* Background gradient */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-red-600/20 rounded-full blur-3xl" />
@@ -56,7 +75,7 @@ export default function Home() {
             <Link href="/" className="text-sm text-white/70 hover:text-white transition">
               {t.nav.home}
             </Link>
-            <Link href=`https://oumiapi-production.up.railway.app/wilayas` className="text-sm text-white/70 hover:text-white transition">
+            <Link href="/wilayas" className="text-sm text-white/70 hover:text-white transition">
               {t.nav.wilayas}
             </Link>
             <Link href="/auth/login" className="text-sm text-white/70 hover:text-white transition">
@@ -68,7 +87,7 @@ export default function Home() {
               onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
               className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
             >
-              {lang === "fr" ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©" : "FR"}
+              {lang === "fr" ? "العربية" : "FR"}
             </button>
             <Link
               href="/auth/register"
@@ -83,7 +102,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 text-center">
         <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">
-          {isRTL ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â© ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â£ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â° ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€šÃ‚ÂÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â  ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±" : "Plateforme nÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â°1 en AlgÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â©rie"}
+          {isRTL ? "المنصة الأولى في الجزائر" : "Plateforme n°1 en Algérie"}
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">
           {t.hero.title}
@@ -103,10 +122,10 @@ export default function Home() {
             {t.hero.ctaPrimary}
           </Link>
           <Link
-            href=`https://oumiapi-production.up.railway.app/wilayas`
+            href="/wilayas"
             className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition"
           >
-            {t.hero.ctaSecondary} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢
+            {t.hero.ctaSecondary} →
           </Link>
         </div>
       </section>
@@ -116,8 +135,8 @@ export default function Home() {
         <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
           {[
             { value: wilayas.length || "0", label: t.stats.wilayas },
-            { value: "2.4k", label: t.stats.donors },
-            { value: "12k", label: t.stats.lives },
+            { value: donorsCount.toString(), label: t.stats.donors },
+            { value: requestsCount.toString(), label: t.stats.lives },
           ].map((stat, i) => (
             <div
               key={i}
@@ -158,14 +177,14 @@ export default function Home() {
         <div className="flex justify-between items-end mb-10">
           <div>
             <div className="text-xs text-white/40 uppercase tracking-wider mb-2">
-              {isRTL ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â·ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€¦Ã‚Â ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â©" : "Couverture"}
+              {isRTL ? "التغطية" : "Couverture"}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {t.nav.wilayas}
             </h2>
           </div>
-          <Link href=`https://oumiapi-production.up.railway.app/wilayas` className="text-sm text-white/60 hover:text-white transition">
-            {isRTL ? "ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â±ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â¶ ÃƒÆ’Ã‹Å“Ãƒâ€šÃ‚Â§ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã¢â€žÂ¢Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â€žÂ¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢" : "Voir tout ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢"}
+          <Link href="/wilayas" className="text-sm text-white/60 hover:text-white transition">
+            {isRTL ? "عرض الكل →" : "Voir tout →"}
           </Link>
         </div>
 
@@ -204,4 +223,3 @@ export default function Home() {
     </div>
   );
 }
-// Force redeploy with absolute URLs
