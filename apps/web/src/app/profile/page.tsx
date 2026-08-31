@@ -36,6 +36,12 @@ export default function ProfilePage() {
   const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/auth/login");
+      return;
+    }
+    // le reste du useEffect
     if (!user) {
       router.push("/auth/login");
       return;
@@ -208,3 +214,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

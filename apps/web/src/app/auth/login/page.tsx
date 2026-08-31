@@ -33,8 +33,13 @@ function LoginForm() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de connexion");
+      
+      // Stocker le token
       localStorage.setItem("token", data.access_token);
-      router.push("/profile");
+      console.log("✅ Token stocké, redirection vers /profile");
+      
+      // Redirection forcée (recharge la page)
+      window.location.href = "/profile";
     } catch (err: any) {
       setError(err.message);
     } finally {
