@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -50,7 +50,7 @@ export default function CreateRequestPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur de création");
+      if (!res.ok) throw new Error(data.message || "Erreur de crÃ©ation");
       setSuccess(true);
       setTimeout(() => router.push("/requests"), 2000);
     } catch (err: any) {
@@ -64,11 +64,11 @@ export default function CreateRequestPage() {
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <div className="max-w-2xl mx-auto">
         <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">🏥 Nouvelle demande de sang</h1>
-        <p className="text-white/50 mt-2">Pour les hôpitaux, cliniques et associations</p>
+        <h1 className="text-3xl font-bold mt-6">ðŸ¥ Nouvelle demande de sang</h1>
+        <p className="text-white/50 mt-2">Pour les hÃ´pitaux, cliniques et associations</p>
 
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ Demande créée !</div>}
+        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">âœ… Demande crÃ©Ã©e !</div>}
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
@@ -79,7 +79,7 @@ export default function CreateRequestPage() {
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
               required
             >
-              <option value="">Sélectionnez</option>
+              <option value="">SÃ©lectionnez</option>
               <option value="A+">A+</option>
               <option value="A-">A-</option>
               <option value="B+">B+</option>
@@ -99,9 +99,9 @@ export default function CreateRequestPage() {
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
               required
             >
-              <option value="SANG">🩸 Sang</option>
-              <option value="PLASMA">💧 Plasma</option>
-              <option value="PLAQUETTES">🧬 Plaquettes</option>
+              <option value="SANG">ðŸ©¸ Sang</option>
+              <option value="PLASMA">ðŸ’§ Plasma</option>
+              <option value="PLAQUETTES">ðŸ§¬ Plaquettes</option>
             </select>
           </div>
 
@@ -118,10 +118,10 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Hôpital / Association *</label>
+            <label className="block text-sm text-white/60 mb-1">HÃ´pital / Association *</label>
             <input
               type="text"
-              placeholder="Nom de l'établissement"
+              placeholder="Nom de l'Ã©tablissement"
               value={form.hospital}
               onChange={(e) => setForm({ ...form, hospital: e.target.value })}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
@@ -141,7 +141,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Âge du patient (optionnel)</label>
+            <label className="block text-sm text-white/60 mb-1">Ã‚ge du patient (optionnel)</label>
             <input
               type="number"
               placeholder="Ex: 45"
@@ -152,7 +152,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Quantité (poches) *</label>
+            <label className="block text-sm text-white/60 mb-1">QuantitÃ© (poches) *</label>
             <select
               value={form.quantity}
               onChange={(e) => setForm({ ...form, quantity: e.target.value })}
@@ -167,7 +167,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Téléphone de contact *</label>
+            <label className="block text-sm text-white/60 mb-1">TÃ©lÃ©phone de contact *</label>
             <input
               type="tel"
               placeholder="06 XX XX XX XX"
@@ -185,16 +185,16 @@ export default function CreateRequestPage() {
               onChange={(e) => setForm({ ...form, urgency: e.target.value })}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
             >
-              <option value="NORMAL">🟢 Normal</option>
-              <option value="URGENT">🟡 Urgent</option>
-              <option value="CRITICAL">🔴 Critique</option>
+              <option value="NORMAL">ðŸŸ¢ Normal</option>
+              <option value="URGENT">ðŸŸ¡ Urgent</option>
+              <option value="CRITICAL">ðŸ”´ Critique</option>
             </select>
           </div>
 
           <div>
             <label className="block text-sm text-white/60 mb-1">Description / Notes</label>
             <textarea
-              placeholder="Informations complémentaires..."
+              placeholder="Informations complÃ©mentaires..."
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               rows={3}
@@ -207,7 +207,7 @@ export default function CreateRequestPage() {
             disabled={loading}
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {loading ? "Création..." : "📢 Créer la demande"}
+            {loading ? "CrÃ©ation..." : "ðŸ“¢ CrÃ©er la demande"}
           </button>
         </form>
       </div>
