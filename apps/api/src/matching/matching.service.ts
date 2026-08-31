@@ -47,19 +47,19 @@ export class MatchingService {
       throw new NotFoundException('Coordonnees de la Wilaya non trouvees');
     }
 
-    const compatibleTypes = this.getCompatibleDonorBloodTypes(request.blood_type);
+    const compatibleTypes = this.getCompatibleDonorBloodTypes(request.blood_group);
     const reqLat = parseFloat(wilaya.latitude.toString());
     const reqLng = parseFloat(wilaya.longitude.toString());
 
-    // Ã‰tape 1 : RÃ©cupÃ©rer les donneurs avec le bon groupe sanguin (Import In() correct)
+    // Ãƒâ€°tape 1 : RÃƒÂ©cupÃƒÂ©rer les donneurs avec le bon groupe sanguin (Import In() correct)
     const donors = await this.donorRepo.find({
       where: {
-        availability_status: 'green',
-        blood_type: In(compatibleTypes)
+        availability: 'green',
+        blood_group: In(compatibleTypes)
       }
     });
 
-    // Ã‰tape 2 : Filtrer par distance et calculer le score
+    // Ãƒâ€°tape 2 : Filtrer par distance et calculer le score
     const matches = donors
       .map(donor => {
         if (!donor.latitude || !donor.longitude) return null;
@@ -74,16 +74,16 @@ export class MatchingService {
 
         let score = 40;
         score += Math.max(0, 25 - (distance / 2));
-        if (donor.availability_status === 'green') score += 20;
-        if (donor.is_verified) score += 10;
+        if (donor.availability === 'green') score += 20;
+        if (donor.certified) score += 10;
         if (donor.donation_types && donor.donation_types.includes(request.donation_type)) score += 5;
 
         return {
           id: donor.id,
-          blood_type: donor.blood_type,
+          blood_group: donor.blood_group,
           donation_types: donor.donation_types,
-          availability_status: donor.availability_status,
-          is_verified: donor.is_verified,
+          availability: donor.availability,
+          certified: donor.certified,
           distance_km: Math.round(distance * 100) / 100,
           score: Math.round(score * 100) / 100
         };
