@@ -17,39 +17,29 @@ export class NotificationsService {
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
-    try {
-      this.logger.log('Création d\'une notification', dto);
-
-      // Vérifier que le destinataire existe
-      const targetUser = await this.userRepo.findOne({ where: { id: dto.userId } });
-      if (!targetUser) {
-        throw new BadRequestException(`L'utilisateur ${dto.userId} n'existe pas.`);
-      }
-
-      // Vérification anti-doublon pour les demandes
-      if (dto.type === 'request' && dto.data?.receiverId) {
-        const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
-        if (exists) {
-          throw new BadRequestException('Une demande est déjà en attente auprès de ce donneur.');
-        }
-      }
-
-      const notif = this.notifRepo.create({
-        userId: dto.userId,
-        title: dto.title,
-        message: dto.message,
-        type: dto.type || null,
-        data: dto.data || null,
-        read: false,
-      });
-      return this.notifRepo.save(notif);
-    } catch (error) {
-      this.logger.error('Erreur lors de la création de la notification', error.stack);
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new InternalServerErrorException('Erreur interne lors de la création de la notification.');
+    // Vérifier que le destinataire existe
+    const targetUser = await this.userRepo.findOne({ where: { id: dto.userId } });
+    if (!targetUser) {
+      throw new BadRequestException(`L'utilisateur ${dto.userId} n'existe pas.`);
     }
+
+    // Vérification anti-doublon pour les demandes
+    if (dto.type === 'request' && dto.data?.receiverId) {
+      const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
+      if (exists) {
+        throw new BadRequestException('Une demande est déjà en attente auprès de ce donneur.');
+      }
+    }
+
+    const notif = this.notifRepo.create({
+      userId: dto.userId,
+      title: dto.title,
+      message: dto.message,
+      type: dto.type || null,
+      data: dto.data || null,
+      read: false,
+    });
+    return this.notifRepo.save(notif);
   }
 
   async findForUser(userId: string): Promise<Notification[]> {
