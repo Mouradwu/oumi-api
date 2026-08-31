@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 
 export default function DonorRegisterPage() {
   const { user } = useAuth();
@@ -13,36 +12,16 @@ export default function DonorRegisterPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Profil donneur (tous les champs)
   const [donor, setDonor] = useState({
     blood_group: "",
-    donation_types: [] as string[],   // ← plusieurs types possibles
+    donation_types: [] as string[],
     wilaya: "",
-    latitude: 0,
-    longitude: 0,
     availability: true,
     certified: false,
     has_donated_before: false,
     last_donation_date: "",
   });
 
-  // Récupérer la position GPS
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setDonor(prev => ({
-            ...prev,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          }));
-        },
-        () => console.log("Position non disponible")
-      );
-    }
-  }, []);
-
-  // Si l'utilisateur n'est pas connecté, rediriger vers login
   if (!user) {
     router.push("/auth/login");
     return null;
@@ -52,8 +31,8 @@ export default function DonorRegisterPage() {
     setDonor(prev => ({
       ...prev,
       donation_types: prev.donation_types.includes(type)
-        ? prev.donation_types.filter(t => t !== type)  // Retirer
-        : [...prev.donation_types, type],              // Ajouter
+        ? prev.donation_types.filter(t => t !== type)
+        : [...prev.donation_types, type],
     }));
   };
 
@@ -63,27 +42,39 @@ export default function DonorRegisterPage() {
     setError("");
     setSuccess(false);
 
-    // Validation : au moins un type de don sélectionné
     if (donor.donation_types.length === 0) {
-      setError("Veuillez sélectionner au moins un type de don (Sang, Plasma, Plaquettes)");
+      setError("Veuillez sélectionner au moins un type de don");
       setLoading(false);
       return;
     }
 
     try {
       const token = localStorage.getItem("token");
+      const payload = {
+        ...donor,
+        userId: user.id,
+        latitude: 0,
+        longitude: 0,
+      };
+
       const res = await fetch("'$apiBase'/donors", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: "Bearer " + token,
         },
-        body: JSON.stringify({
-          ...donor,
-          userId: user.id,
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await res.json();
+
+      // Si la réponse n'est pas JSON, on affiche l'erreur
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        throw new Error("Erreur serveur : " + text.substring(0, 100));
+      }
+
       if (!res.ok) throw new Error(data.message || "Erreur d'enregistrement");
       setSuccess(true);
       setTimeout(() => router.push("/donor/profile"), 2000);
@@ -104,12 +95,11 @@ export default function DonorRegisterPage() {
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
         {success && (
           <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">
-            ✅ Profil enregistré ! Redirection vers votre profil...
+            ✅ Profil enregistré ! Redirection...
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          {/* Groupe sanguin */}
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
             <select
@@ -130,42 +120,38 @@ export default function DonorRegisterPage() {
             </select>
           </div>
 
-          {/* Types de don (multi-sélection) */}
           <div>
-            <label className="block text-sm text-white/60 mb-1">Types de don * (sélectionnez un ou plusieurs)</label>
+            <label className="block text-sm text-white/60 mb-1">Types de don *</label>
             <div className="flex flex-wrap gap-3">
-              {[
-                { value: "SANG", label: "🩸 Sang", color: "red" },
-                { value: "PLASMA", label: "💧 Plasma", color: "blue" },
-                { value: "PLAQUETTES", label: "🧬 Plaquettes", color: "yellow" },
-              ].map(({ value, label, color }) => (
+              {["SANG", "PLASMA", "PLAQUETTES"].map((type) => (
                 <button
-                  key={value}
+                  key={type}
                   type="button"
-                  onClick={() => toggleDonationType(value)}
+                  onClick={() => toggleDonationType(type)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                    donor.donation_types.includes(value)
-                      ? `bg-${color}-600 text-white`
+                    donor.donation_types.includes(type)
+                      ? "bg-red-600 text-white"
                       : "bg-white/10 text-white/60 hover:bg-white/20"
                   }`}
                 >
-                  {label}
+                  {type === "SANG" && "🩸 Sang"}
+                  {type === "PLASMA" && "💧 Plasma"}
+                  {type === "PLAQUETTES" && "🧬 Plaquettes"}
                 </button>
               ))}
             </div>
             {donor.donation_types.length > 0 && (
               <p className="text-green-400 text-xs mt-1">
-                ✅ {donor.donation_types.length} type(s) sélectionné(s) : {donor.donation_types.join(", ")}
+                ✅ {donor.donation_types.length} type(s) sélectionné(s)
               </p>
             )}
           </div>
 
-          {/* Wilaya */}
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
             <input
               type="text"
-              placeholder="Ex: 16 (Alger)"
+              placeholder="Ex: 16"
               value={donor.wilaya}
               onChange={(e) => setDonor({ ...donor, wilaya: e.target.value })}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
@@ -173,35 +159,8 @@ export default function DonorRegisterPage() {
             />
           </div>
 
-          {/* GPS (latitude/longitude) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                placeholder="36.75"
-                value={donor.latitude}
-                onChange={(e) => setDonor({ ...donor, latitude: parseFloat(e.target.value) || 0 })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                placeholder="3.05"
-                value={donor.longitude}
-                onChange={(e) => setDonor({ ...donor, longitude: parseFloat(e.target.value) || 0 })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              />
-            </div>
-          </div>
-
-          {/* Statut du donneur */}
           <div className="space-y-3 border border-white/10 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold">📋 Statut du donneur</h3>
+            <h3 className="text-sm font-semibold">📋 Statut</h3>
 
             <div className="flex items-center gap-3">
               <input
@@ -210,7 +169,7 @@ export default function DonorRegisterPage() {
                 onChange={(e) => setDonor({ ...donor, has_donated_before: e.target.checked })}
                 className="w-4 h-4 accent-red-600"
               />
-              <label className="text-sm text-white/60">J'ai déjà donné (certifié)</label>
+              <label className="text-sm text-white/60">J'ai déjà donné</label>
             </div>
 
             {donor.has_donated_before && (
@@ -232,9 +191,7 @@ export default function DonorRegisterPage() {
                 onChange={(e) => setDonor({ ...donor, certified: e.target.checked })}
                 className="w-4 h-4 accent-green-600"
               />
-              <label className="text-sm text-white/60">
-                ✅ Certifié médicalement (document justificatif)
-              </label>
+              <label className="text-sm text-white/60">✅ Certifié médicalement</label>
             </div>
 
             <div className="flex items-center gap-3">
@@ -244,7 +201,7 @@ export default function DonorRegisterPage() {
                 onChange={(e) => setDonor({ ...donor, availability: e.target.checked })}
                 className="w-4 h-4 accent-red-600"
               />
-              <label className="text-sm text-white/60">Disponible pour donner maintenant</label>
+              <label className="text-sm text-white/60">Disponible pour donner</label>
             </div>
           </div>
 
