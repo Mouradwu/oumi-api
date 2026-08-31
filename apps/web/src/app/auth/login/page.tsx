@@ -1,104 +1,71 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { translations, type Lang } from "@/lib/translations";
 
 export default function LoginPage() {
-  const [lang, setLang] = useState<Lang>("fr");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
-
-  const t = translations[lang];
-  const isRTL = lang === "ar";
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // TODO: Connecter à l'API
-    setTimeout(() => setLoading(false), 2000);
+    setError("");
+
+    try {
+      const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Erreur de connexion");
+      localStorage.setItem("token", data.access_token);
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div
-      dir={isRTL ? "rtl" : "ltr"}
-      className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center p-6"
-      style={{ fontFamily: isRTL ? "var(--font-tajawal)" : "var(--font-inter)" }}
-    >
-      {/* Background */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-red-600/10 rounded-full blur-3xl" />
-      </div>
-
-      {/* Lang switch */}
-      <div className="absolute top-6 right-6">
-        <button
-          onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
-          className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
-        >
-          {lang === "fr" ? "العربية" : "FR"}
-        </button>
-      </div>
-
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className="text-center mb-8">
-          <Link href="/" className="inline-block mb-6">
-            <Logo size={40} />
-          </Link>
-          <h1 className="text-3xl font-bold mb-2">
-            {isRTL ? "تسجيل الدخول" : "Connexion"}
-          </h1>
-          <p className="text-white/60">
-            {isRTL ? "مرحباً بعودتك" : "Ravi de vous revoir"}
-          </p>
-        </div>
-
+    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        <Logo size={36} />
+        <h1 className="text-2xl font-bold text-center">Se connecter</h1>
+        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm text-white/60 mb-2">
-              {isRTL ? "البريد الإلكتروني" : "Email"}
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-red-500/50 transition"
-              placeholder={isRTL ? "أدخل بريدك" : "vous@exemple.com"}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-2">
-              {isRTL ? "كلمة المرور" : "Mot de passe"}
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-red-500/50 transition"
-              placeholder="••••••••"
-            />
-          </div>
-
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
+          />
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-white text-black rounded-xl font-medium hover:bg-white/90 transition disabled:opacity-50"
+            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition"
           >
-            {loading ? (isRTL ? "جاري..." : "Connexion...") : (isRTL ? "دخول" : "Se connecter")}
+            {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
-
-        <p className="text-center text-sm text-white/40 mt-6">
-          {isRTL ? "ليس لديك حساب؟" : "Pas encore de compte ?"}{" "}
-          <Link href="/auth/register" className="text-white hover:underline">
-            {isRTL ? "سجل الآن" : "S'inscrire"}
-          </Link>
+        <p className="text-center text-white/50 text-sm">
+          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
         </p>
       </div>
     </div>
