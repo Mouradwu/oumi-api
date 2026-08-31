@@ -23,6 +23,15 @@ interface Request {
   hospital: string;
   urgency: string;
   description: string;
+  userId: string;
+  user: { first_name: string; last_name: string; };
+  id: number;
+  blood_group: string;
+  donation_type: string;
+  wilaya: string;
+  hospital: string;
+  urgency: string;
+  description: string;
   userId: string; // ID du demandeur
   user: { first_name: string; last_name: string; };
 }
@@ -207,3 +216,4 @@ export default function ExplorerPage() {
     </div>
   );
 }
+
