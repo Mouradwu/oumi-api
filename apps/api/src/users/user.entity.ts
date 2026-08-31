@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
-import { Donor } from '../donors/donor.entity';
+import { Donor } from '../donors/entities/donor.entity';
 
 @Entity('users')
 export class User {

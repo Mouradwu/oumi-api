@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Donor } from '../donors/donor.entity';
+import { Donor } from '../donors/entities/donor.entity';
 import { DonationRequest } from '../requests/donation-request.entity';
 import { Wilaya } from '../geography/wilaya.entity';
 import { MatchingService } from './matching.service';

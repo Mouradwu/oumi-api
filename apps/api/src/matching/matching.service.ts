@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { Donor } from '../donors/donor.entity';
+import { Donor } from '../donors/entities/donor.entity';
 import { DonationRequest } from '../requests/donation-request.entity';
 import { Wilaya } from '../geography/wilaya.entity';
 
@@ -51,7 +51,7 @@ export class MatchingService {
     const reqLat = parseFloat(wilaya.latitude.toString());
     const reqLng = parseFloat(wilaya.longitude.toString());
 
-    // Étape 1 : Récupérer les donneurs avec le bon groupe sanguin (Import In() correct)
+    // Ã‰tape 1 : RÃ©cupÃ©rer les donneurs avec le bon groupe sanguin (Import In() correct)
     const donors = await this.donorRepo.find({
       where: {
         availability_status: 'green',
@@ -59,7 +59,7 @@ export class MatchingService {
       }
     });
 
-    // Étape 2 : Filtrer par distance et calculer le score
+    // Ã‰tape 2 : Filtrer par distance et calculer le score
     const matches = donors
       .map(donor => {
         if (!donor.latitude || !donor.longitude) return null;
