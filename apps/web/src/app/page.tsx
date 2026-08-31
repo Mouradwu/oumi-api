@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { translations, type Lang } from "@/lib/translations";
 import { useAuth } from "@/context/AuthContext";
 import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface Wilaya {
   id: number;
@@ -15,6 +16,7 @@ interface Wilaya {
 }
 
 export default function Home() {
+  const { user, logout } = useAuth();
   const { user, logout } = useAuth();
   const { user, logout } = useAuth();
   const [lang, setLang] = useState<Lang>("fr");
@@ -41,7 +43,7 @@ export default function Home() {
         setDonorsCount(Array.isArray(donorsData) ? donorsData.length : 0);
         setRequestsCount(Array.isArray(requestsData) ? requestsData.length : 0);
       } catch (err) {
-        console.error("Erreur chargement des donnÃƒÂ©es:", err);
+        console.error("Erreur chargement des donnÃƒÆ’Ã‚Â©es:", err);
       } finally {
         setLoading(false);
       }
@@ -57,7 +59,7 @@ export default function Home() {
     >
       {/* Bandeau de debug */}
       <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
-        {loading ? "Ã¢ÂÂ³ Chargement..." : "Ã¢Å“â€¦ Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
+        {loading ? "ÃƒÂ¢Ã‚ÂÃ‚Â³ Chargement..." : "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
       </div>
 
       {/* Background gradient */}
@@ -86,7 +88,7 @@ export default function Home() {
               onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
               className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
             >
-              {lang === "fr" ? "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©" : "FR"}
+              {lang === "fr" ? "ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¨Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©" : "FR"}
             </button>
             <Link
               href="/auth/register"
@@ -101,7 +103,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 text-center">
         <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">
-          {isRTL ? "Ã˜Â§Ã™â€žÃ™â€¦Ã™â€ Ã˜ÂµÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã™Ë†Ã™â€žÃ™â€° Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â²Ã˜Â§Ã˜Â¦Ã˜Â±" : "Plateforme nÃ‚Â°1 en AlgÃƒÂ©rie"}
+          {isRTL ? "ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â¦Ãƒâ„¢Ã¢â‚¬Â ÃƒËœÃ‚ÂµÃƒËœÃ‚Â© ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â£Ãƒâ„¢Ã‹â€ Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã¢â‚¬Â° Ãƒâ„¢Ã‚ÂÃƒâ„¢Ã…Â  ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚Â¬ÃƒËœÃ‚Â²ÃƒËœÃ‚Â§ÃƒËœÃ‚Â¦ÃƒËœÃ‚Â±" : "Plateforme nÃƒâ€šÃ‚Â°1 en AlgÃƒÆ’Ã‚Â©rie"}
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">
           {t.hero.title}
@@ -124,7 +126,7 @@ export default function Home() {
             href="/wilayas"
             className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition"
           >
-            {t.hero.ctaSecondary} Ã¢â€ â€™
+            {t.hero.ctaSecondary} ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢
           </Link>
         </div>
       </section>
@@ -176,14 +178,14 @@ export default function Home() {
         <div className="flex justify-between items-end mb-10">
           <div>
             <div className="text-xs text-white/40 uppercase tracking-wider mb-2">
-              {isRTL ? "Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂºÃ˜Â·Ã™Å Ã˜Â©" : "Couverture"}
+              {isRTL ? "ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾ÃƒËœÃ‚ÂªÃƒËœÃ‚ÂºÃƒËœÃ‚Â·Ãƒâ„¢Ã…Â ÃƒËœÃ‚Â©" : "Couverture"}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {t.nav.wilayas}
             </h2>
           </div>
           <Link href="/wilayas" className="text-sm text-white/60 hover:text-white transition">
-            {isRTL ? "Ã˜Â¹Ã˜Â±Ã˜Â¶ Ã˜Â§Ã™â€žÃ™Æ’Ã™â€ž Ã¢â€ â€™" : "Voir tout Ã¢â€ â€™"}
+            {isRTL ? "ÃƒËœÃ‚Â¹ÃƒËœÃ‚Â±ÃƒËœÃ‚Â¶ ÃƒËœÃ‚Â§Ãƒâ„¢Ã¢â‚¬Å¾Ãƒâ„¢Ã†â€™Ãƒâ„¢Ã¢â‚¬Å¾ ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢" : "Voir tout ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢"}
           </Link>
         </div>
 
