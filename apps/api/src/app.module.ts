@@ -12,7 +12,6 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { AssociationsModule } from './associations/associations.module';
-import { TestModule } from './test/test.module';
 
 @Module({
   imports: [
@@ -40,7 +39,6 @@ import { TestModule } from './test/test.module';
     MessagesModule,
     CampaignsModule,
     AssociationsModule,
-    TestModule,
   ],
 })
 export class AppModule {}
