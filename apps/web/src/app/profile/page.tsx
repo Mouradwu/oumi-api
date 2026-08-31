@@ -14,7 +14,6 @@ interface Notification {
   read: boolean;
   data: any;
   created_at: string;
-  user?: { first_name: string; last_name: string; email?: string; phone?: string; };
 }
 
 interface DonationRequest {
@@ -26,16 +25,6 @@ interface DonationRequest {
   urgency: string;
   description: string;
   userId: string;
-  user: { first_name: string; last_name: string; };
-}
-  id: number;
-  title: string;
-  message: string;
-  type: string;
-  read: boolean;
-  data: any;
-  created_at: string;
-  user?: { first_name: string; last_name: string; email?: string; phone?: string; };
 }
 
 export default function ProfilePage() {
@@ -43,8 +32,8 @@ export default function ProfilePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [donorProfile, setDonorProfile] = useState(null);
-  const [requests, setRequests] = useState<Notification[]>([]);
+  const [donorProfile, setDonorProfile] = useState<any>(null);
+  const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
     if (!user) {
@@ -54,26 +43,25 @@ export default function ProfilePage() {
     const token = localStorage.getItem("token");
     const fetchAll = async () => {
       try {
-        // Notifications
-        const nRes = await fetch(`https://oumiapi-production.up.railway.app/notifications?userId=${user.id}`, {
-          headers: { Authorization: "Bearer " + token },
-        });
+        const [nRes, dRes, rRes] = await Promise.all([
+          fetch(`https://oumiapi-production.up.railway.app/notifications?userId=${user.id}`, {
+            headers: { Authorization: "Bearer " + token },
+          }),
+          fetch(`https://oumiapi-production.up.railway.app/donors/me?userId=${user.id}`, {
+            headers: { Authorization: "Bearer " + token },
+          }),
+          fetch(`https://oumiapi-production.up.railway.app/requests?userId=${user.id}`, {
+            headers: { Authorization: "Bearer " + token },
+          })
+        ]);
         if (nRes.ok) {
           const nData = await nRes.json();
           setNotifications(Array.isArray(nData) ? nData : []);
         }
-        // Profil donneur
-        const dRes = await fetch(`https://oumiapi-production.up.railway.app/donors/me?userId=${user.id}`, {
-          headers: { Authorization: "Bearer " + token },
-        });
         if (dRes.ok && dRes.status !== 404) {
           const dData = await dRes.json();
           setDonorProfile(dData);
         }
-        // Demandes de l'utilisateur (reçues ou envoyées)
-        const rRes = await fetch(`https://oumiapi-production.up.railway.app/requests?userId=${user.id}`, {
-          headers: { Authorization: "Bearer " + token },
-        });
         if (rRes.ok) {
           const rData = await rRes.json();
           setRequests(Array.isArray(rData) ? rData : []);
@@ -90,10 +78,9 @@ export default function ProfilePage() {
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement...</div>;
   if (!user) return null;
 
-  // Déterminer les rôles actifs
   const roles = user.roles || [];
   const isDonor = roles.includes("donor") || donorProfile !== null;
-  const isRequester = roles.includes("requester") || (requests || []).some(r => r.userId === user.id);
+  const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -115,7 +102,6 @@ export default function ProfilePage() {
 
       <main className="container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Colonne gauche : Infos personnelles */}
           <div className="md:w-1/3">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h1 className="text-2xl font-bold mb-4">👤 Mon profil</h1>
@@ -125,54 +111,31 @@ export default function ProfilePage() {
                 <div><span className="text-white/40 text-sm">Email</span><p className="text-lg">{user.email}</p></div>
                 <div><span className="text-white/40 text-sm">Téléphone</span><p className="text-lg">{user.phone || "Non renseigné"}</p></div>
               </div>
-
               <hr className="border-white/10 my-4" />
-
               <h2 className="text-lg font-semibold mb-3">Mes rôles</h2>
               <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => router.push("/donor/register")}
-                  className={`px-4 py-2 rounded-full text-sm transition ${isDonor ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
-                >
+                <button onClick={() => router.push("/donor/register")} className={`px-4 py-2 rounded-full text-sm transition ${isDonor ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
                   ❤️ Donneur {isDonor ? "✓" : "(activer)"}
                 </button>
-                <button
-                  onClick={() => router.push("/requester/register")}
-                  className={`px-4 py-2 rounded-full text-sm transition ${isRequester ? "bg-blue-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
-                >
+                <button onClick={() => router.push("/requester/register")} className={`px-4 py-2 rounded-full text-sm transition ${isRequester ? "bg-blue-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
                   🩸 Demandeur {isRequester ? "✓" : "(activer)"}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Colonne droite : Activités */}
           <div className="md:w-2/3 space-y-6">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h2 className="text-xl font-semibold mb-4">📋 Mes activités</h2>
               <div className="grid grid-cols-2 gap-4">
-                <Link href="/explorer?tab=donors" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  🔍 Explorer les donneurs
-                </Link>
-                <Link href="/explorer?tab=requests" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  🚨 Explorer les demandes
-                </Link>
-                <Link href="/donor/register" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  ❤️ Devenir donneur
-                </Link>
-                <Link href="/requester/register" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  🩸 Devenir demandeur
-                </Link>
-                <Link href="/messages" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  💬 Messages
-                </Link>
-                <Link href="/notifications" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">
-                  🔔 Notifications
-                </Link>
+                <Link href="/explorer?tab=donors" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">🔍 Explorer les donneurs</Link>
+                <Link href="/explorer?tab=requests" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">🚨 Explorer les demandes</Link>
+                <Link href="/donor/register" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">❤️ Devenir donneur</Link>
+                <Link href="/requester/register" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">🩸 Devenir demandeur</Link>
+                <Link href="/notifications" className="p-4 border border-white/5 rounded-lg hover:border-red-500/30 transition text-center">🔔 Notifications</Link>
               </div>
             </div>
 
-            {/* Demandes récentes */}
             {requests.length > 0 && (
               <div className="bg-white/5 p-6 rounded-xl border border-white/10">
                 <h2 className="text-xl font-semibold mb-4">📝 Mes demandes</h2>
@@ -180,14 +143,13 @@ export default function ProfilePage() {
                   {requests.slice(0, 5).map((req) => (
                     <div key={req.id} className="flex justify-between items-center border-b border-white/5 py-2">
                       <span>{req.blood_group} - {req.donation_type}</span>
-                      <span className="text-sm text-white/40">{req.status || "en attente"}</span>
+                      <span className="text-sm text-white/40">{req.urgency || "normal"}</span>
                     </div>
                   ))}
                 </div>
               </div>
             )}
 
-            {/* Notifications récentes */}
             {notifications.length > 0 && (
               <div className="bg-white/5 p-6 rounded-xl border border-white/10">
                 <h2 className="text-xl font-semibold mb-4">🔔 Notifications récentes</h2>
@@ -207,5 +169,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-
