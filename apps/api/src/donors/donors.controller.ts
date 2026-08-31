@@ -8,19 +8,16 @@ export class DonorsController {
 
   @Post()
   async create(@Body() createDonorDto: CreateDonorDto) {
-    // Log du body reçu (pour debug)
+    // Log pour debug
     console.log('Received body:', JSON.stringify(createDonorDto, null, 2));
 
-    // Vérifier si userId est présent
     if (!createDonorDto.userId) {
-      // Renvoyer une erreur avec les données reçues
       throw new BadRequestException({
         message: 'userId est obligatoire',
         received: createDonorDto,
       });
     }
 
-    // Sinon, enregistrer le donneur
     try {
       const donor = await this.donorsService.create(createDonorDto);
       return {
@@ -40,7 +37,7 @@ export class DonorsController {
 
   @Get('me')
   findMyProfile(@Query('userId') userId: string) {
-    if (!userId) return { message: 'userId requis en paramètre' };
+    if (!userId) return { message: 'userId requis' };
     return this.donorsService.findByUserId(userId);
   }
 
