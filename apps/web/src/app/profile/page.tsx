@@ -41,12 +41,11 @@ export default function ProfilePage() {
       router.push("/auth/login");
       return;
     }
-    // le reste du useEffect
     if (!user) {
       router.push("/auth/login");
       return;
     }
-    const token = localStorage.getItem("token");
+
     const fetchAll = async () => {
       try {
         const [nRes, dRes, rRes] = await Promise.all([
@@ -109,7 +108,6 @@ export default function ProfilePage() {
   const isDonor = roles.includes("donor") || donorProfile !== null;
   const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
 
-  // Filtrer les notifications de type "acceptance" pour l'historique
   const acceptedNotifications = notifications.filter(n => n.type === "acceptance");
 
   return (
@@ -132,7 +130,6 @@ export default function ProfilePage() {
 
       <main className="container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row gap-8">
-          {/* Colonne gauche */}
           <div className="md:w-1/3">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h1 className="text-2xl font-bold mb-4">👤 Mon profil</h1>
@@ -165,7 +162,6 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Colonne droite */}
           <div className="md:w-2/3 space-y-6">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h2 className="text-xl font-semibold mb-4">📋 Mes activités</h2>
@@ -214,4 +210,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
