@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, Logger } from '@nestjs/common';
+﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, Logger, BadRequestException } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -12,8 +12,12 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    if (!dto.userId) dto.userId = req.user.id;
-    this.logger.log(`Création notification pour ${dto.userId}`);
+    // IMPORTANT : le destinataire est obligatoire dans le body
+    if (!dto.userId) {
+      throw new BadRequestException('Le champ "userId" (destinataire) est obligatoire.');
+    }
+    this.logger.log(`Création d'une notification pour le destinataire ${dto.userId}`);
+    // On utilise le userId du body, pas celui du token
     return await this.service.create(dto);
   }
 
