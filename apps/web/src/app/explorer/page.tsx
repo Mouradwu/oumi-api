@@ -74,7 +74,7 @@ export default function ExplorerPage() {
       if (!res.ok) throw new Error(await res.text());
       alert("✅ Demande envoyée");
     } catch (err) {
-      alert("Erreur : " + err.message);
+      alert("Erreur : " + (err as any).message);
     } finally {
       setActionLoading(null);
     }
@@ -99,7 +99,7 @@ export default function ExplorerPage() {
       if (!res.ok) throw new Error(await res.text());
       alert("✅ Offre envoyée");
     } catch (err) {
-      alert("Erreur : " + err.message);
+      alert("Erreur : " + (err as any).message);
     } finally {
       setActionLoading(null);
     }
@@ -206,3 +206,4 @@ export default function ExplorerPage() {
     </div>
   );
 }
+

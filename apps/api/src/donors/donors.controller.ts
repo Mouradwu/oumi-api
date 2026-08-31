@@ -50,7 +50,7 @@ export class DonorsController {
 
   @Get()
   findAll(@Query() query: any) {
-    return this.donorsService.findAll(@Query() query: any);
+    return this.donorsService.findAll();
   }
 
   @Get('me')
@@ -69,3 +69,4 @@ export class DonorsController {
     return this.donorsService.update(+id, updateData);
   }
 }
+

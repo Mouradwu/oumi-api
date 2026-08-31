@@ -1,44 +1,86 @@
 ﻿import { Injectable } from '@nestjs/common';
-
-
-
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Notification } from './entities/notification.entity';
 import { User } from '../users/user.entity';
-
-
-import { Notification } from './notification.entity';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    @InjectRepository(Notification) private notifRepo: Repository<Notification>,
+    @InjectRepository(Notification)
+    private notifRepo: Repository<Notification>,
+    @InjectRepository(User)
+    private userRepo: Repository<User>,
   ) {}
 
-  async create(userId: string, title: string, body: string, type: string, data?: any) {
+  async create(dto: CreateNotificationDto): Promise<Notification> {
+    // Vérification anti-doublon pour les demandes
+    if (dto.type === 'request' && dto.data?.receiverId) {
+      const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
+      if (exists) {
+        throw new Error('Une demande est déjà en attente auprès de ce donneur.');
+      }
+    }
     const notif = this.notifRepo.create({
-      user: { id: userId } as any,
-      title,
-      body,
-      type,
-      data,
+      userId: dto.userId,
+      title: dto.title,
+      message: dto.message,
+      type: dto.type,
+      data: dto.data,
+      read: false,
     });
     return this.notifRepo.save(notif);
   }
 
-  async getMyNotifications(userId: string) {
+  async findForUser(userId: string): Promise<Notification[]> {
     return this.notifRepo.find({
-      where: { user: { id: userId } },
+      where: { userId },
       order: { created_at: 'DESC' },
-      take: 50,
     });
   }
 
-  async markAsRead(notifId: string, userId: string) {
-    await this.notifRepo.update({ id: notifId, user: { id: userId } }, { is_read: true });
-    return { success: true };
+  async markAsRead(id: number): Promise<Notification> {
+    const notif = await this.notifRepo.findOne({ where: { id } });
+    if (!notif) throw new Error('Notification non trouvée');
+    notif.read = true;
+    return this.notifRepo.save(notif);
+  }
+
+  async accept(id: number): Promise<Notification> {
+    const notif = await this.notifRepo.findOne({ where: { id }, relations: ['user'] });
+    if (!notif) throw new Error('Notification non trouvée');
+    notif.read = true;
+    await this.notifRepo.save(notif);
+
+    const donor = notif.user;
+    const receiverId = notif.data?.receiverId;
+    if (!receiverId) throw new Error('Receveur non trouvé');
+
+    const donorWithPhone = await this.userRepo.findOne({ where: { id: donor.id } });
+    const phone = donorWithPhone?.phone || 'non renseigné';
+
+    const receiverNotif = this.notifRepo.create({
+      userId: receiverId,
+      title: '✅ Demande acceptée !',
+      message: `${donor.first_name} ${donor.last_name} a accepté votre demande. Contactez-le au ${phone}.`,
+      type: 'acceptance',
+      data: { donorId: donor.id, donorPhone: phone },
+      read: false,
+    });
+    await this.notifRepo.save(receiverNotif);
+    return notif;
+  }
+
+  private async checkExistingRequest(userId: string, receiverId: string): Promise<boolean> {
+    const existing = await this.notifRepo.findOne({
+      where: {
+        userId: userId,
+        type: 'request',
+        data: { receiverId: receiverId },
+        read: false,
+      },
+    });
+    return !!existing;
   }
 }
-
-
-
-
-
