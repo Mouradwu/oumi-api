@@ -49,8 +49,8 @@ export default function RequesterRegisterPage() {
         body: JSON.stringify({ roles: ["requester"] }),
       });
       setTimeout(() => router.push("/profile"), 2000);
-    } catch (err) {
-      setError(err.message);
+    } catch (err: any) {
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
       setLoading(false);
     }
@@ -111,4 +111,5 @@ export default function RequesterRegisterPage() {
     </div>
   );
 }
+
 
