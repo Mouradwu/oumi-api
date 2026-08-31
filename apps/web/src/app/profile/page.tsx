@@ -33,26 +33,6 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [donorProfile, setDonorProfile] = useState<any>(null);
-    const toggleAvailability = async () => {
-    const token = localStorage.getItem("token");
-    if (!donorProfile) return;
-    try {
-      const res = await fetch(`https://oumiapi-production.up.railway.app/donors/${donorProfile.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ availability: !donorProfile.availability }),
-      });
-      if (res.ok) {
-        const updated = await res.json();
-        setDonorProfile(updated);
-        alert("Disponibilité mise à jour !");
-      } else {
-        throw new Error("Erreur");
-      }
-    } catch (e) {
-      alert("Erreur lors de la mise à jour");
-    }
-  };
   const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
@@ -95,12 +75,36 @@ export default function ProfilePage() {
     fetchAll();
   }, [user, router]);
 
+  const toggleAvailability = async () => {
+    const token = localStorage.getItem("token");
+    if (!donorProfile) return;
+    try {
+      const res = await fetch(`https://oumiapi-production.up.railway.app/donors/${donorProfile.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ availability: !donorProfile.availability }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setDonorProfile(updated);
+        alert("Disponibilité mise à jour !");
+      } else {
+        throw new Error("Erreur");
+      }
+    } catch (e) {
+      alert("Erreur lors de la mise à jour");
+    }
+  };
+
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement...</div>;
   if (!user) return null;
 
   const roles = user.roles || [];
   const isDonor = roles.includes("donor") || donorProfile !== null;
   const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
+
+  // Filtrer les notifications de type "acceptance" pour l'historique
+  const acceptedNotifications = notifications.filter(n => n.type === "acceptance");
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -122,6 +126,7 @@ export default function ProfilePage() {
 
       <main className="container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row gap-8">
+          {/* Colonne gauche */}
           <div className="md:w-1/3">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h1 className="text-2xl font-bold mb-4">👤 Mon profil</h1>
@@ -141,9 +146,20 @@ export default function ProfilePage() {
                   🩸 Demandeur {isRequester ? "✓" : "(activer)"}
                 </button>
               </div>
+              {isDonor && (
+                <div className="mt-4">
+                  <button onClick={toggleAvailability} className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition">
+                    {donorProfile?.availability ? "🟢 Disponible (cliquer pour désactiver)" : "🔴 Indisponible (cliquer pour activer)"}
+                  </button>
+                  <Link href="/donor/update" className="w-full block text-center mt-2 px-4 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition">
+                    ✏️ Modifier mon profil donneur
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
 
+          {/* Colonne droite */}
           <div className="md:w-2/3 space-y-6">
             <div className="bg-white/5 p-6 rounded-xl border border-white/10">
               <h2 className="text-xl font-semibold mb-4">📋 Mes activités</h2>
@@ -170,17 +186,17 @@ export default function ProfilePage() {
               </div>
             )}
 
-            {notifications.length > 0 && (
+            {acceptedNotifications.length > 0 && (
               <div className="bg-white/5 p-6 rounded-xl border border-white/10">
-                <h2 className="text-xl font-semibold mb-4">🔔 Notifications récentes</h2>
+                <h2 className="text-xl font-semibold mb-4">✅ Demandes acceptées (historique)</h2>
                 <div className="space-y-2">
-                  {notifications.slice(0, 3).map((n) => (
-                  {n.type === "acceptance" && n.data?.donorPhone && (
-                    <div className="mt-1 text-green-400 text-sm">📞 {n.data.donorPhone}</div>
-                  )}
+                  {acceptedNotifications.map((n) => (
                     <div key={n.id} className="flex justify-between items-center border-b border-white/5 py-2">
                       <span className="text-sm">{n.message}</span>
                       <span className="text-xs text-white/30">{new Date(n.created_at).toLocaleDateString()}</span>
+                      {n.data?.donorPhone && (
+                        <span className="text-green-400 text-sm">📞 {n.data.donorPhone}</span>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -192,6 +208,3 @@ export default function ProfilePage() {
     </div>
   );
 }
-
-
-
