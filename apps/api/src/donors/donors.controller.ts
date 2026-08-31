@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 
@@ -8,28 +8,28 @@ export class DonorsController {
 
   @Post()
   async create(@Body() createDonorDto: CreateDonorDto) {
+    // Log du body reçu (pour debug)
+    console.log('Received body:', JSON.stringify(createDonorDto, null, 2));
+
+    // Vérifier si userId est présent
+    if (!createDonorDto.userId) {
+      // Renvoyer une erreur avec les données reçues
+      throw new BadRequestException({
+        message: 'userId est obligatoire',
+        received: createDonorDto,
+      });
+    }
+
+    // Sinon, enregistrer le donneur
     try {
-      // VÃƒÂ©rifier que userId est fourni
-      if (!createDonorDto.userId) {
-        throw new BadRequestException('userId est obligatoire');
-      }
-
-      // VÃƒÂ©rifier que l'utilisateur existe (optionnel)
-      const userExists = await this.donorsService.userExists(createDonorDto.userId);
-      if (!userExists) {
-        throw new NotFoundException(`Utilisateur avec id ${createDonorDto.userId} non trouvÃƒÂ©`);
-      }
-
-      // CrÃƒÂ©er le donneur
       const donor = await this.donorsService.create(createDonorDto);
       return {
         success: true,
         data: donor,
-        message: 'Donneur enregistrÃƒÂ© avec succÃƒÂ¨s'
+        message: 'Donneur enregistré avec succès'
       };
     } catch (error) {
-      // Renvoyer une erreur explicite
-      throw error;
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -40,9 +40,7 @@ export class DonorsController {
 
   @Get('me')
   findMyProfile(@Query('userId') userId: string) {
-    if (!userId) {
-      return { message: 'Veuillez fournir userId en paramÃƒÂ¨tre (ex: ?userId=1)' };
-    }
+    if (!userId) return { message: 'userId requis en paramètre' };
     return this.donorsService.findByUserId(userId);
   }
 
