@@ -39,7 +39,7 @@ export default function Home() {
         setDonorsCount(Array.isArray(donorsData) ? donorsData.length : 0);
         setRequestsCount(Array.isArray(requestsData) ? requestsData.length : 0);
       } catch (err) {
-        console.error("Erreur chargement des donnÃ©es:", err);
+        console.error("Erreur chargement des donnÃƒÂ©es:", err);
       } finally {
         setLoading(false);
       }
@@ -55,7 +55,7 @@ export default function Home() {
     >
       {/* Bandeau de debug */}
       <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
-        {loading ? "â³ Chargement..." : "âœ… Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
+        {loading ? "Ã¢ÂÂ³ Chargement..." : "Ã¢Å“â€¦ Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
       </div>
 
       {/* Background gradient */}
@@ -84,7 +84,7 @@ export default function Home() {
               onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
               className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
             >
-              {lang === "fr" ? "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" : "FR"}
+              {lang === "fr" ? "Ã˜Â§Ã™â€žÃ˜Â¹Ã˜Â±Ã˜Â¨Ã™Å Ã˜Â©" : "FR"}
             </button>
             {user ? (
               <>
@@ -95,7 +95,7 @@ export default function Home() {
                   onClick={logout}
                   className="text-sm text-red-400 hover:text-red-300 transition"
                 >
-                  DÃ©connexion
+                  DÃƒÂ©connexion
                 </button>
               </>
             ) : (
@@ -114,14 +114,22 @@ export default function Home() {
                 </Link>
               </>
             )}
-          </div>
+                      <button
+              onClick={() => {
+                localStorage.removeItem("token");
+                window.location.reload();
+              }}
+              className="text-xs text-red-400 hover:text-red-300 transition px-3 py-1 border border-red-400/30 rounded-full"
+            >
+              🔄 Réinitialiser la connexion
+            </button></div>
         </div>
       </header>
 
       {/* Hero */}
       <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 text-center">
         <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">
-          {isRTL ? "Ø§Ù„Ù…Ù†ØµØ© Ø§Ù„Ø£ÙˆÙ„Ù‰ ÙÙŠ Ø§Ù„Ø¬Ø²Ø§Ø¦Ø±" : "Plateforme nÂ°1 en AlgÃ©rie"}
+          {isRTL ? "Ã˜Â§Ã™â€žÃ™â€¦Ã™â€ Ã˜ÂµÃ˜Â© Ã˜Â§Ã™â€žÃ˜Â£Ã™Ë†Ã™â€žÃ™â€° Ã™ÂÃ™Å  Ã˜Â§Ã™â€žÃ˜Â¬Ã˜Â²Ã˜Â§Ã˜Â¦Ã˜Â±" : "Plateforme nÃ‚Â°1 en AlgÃƒÂ©rie"}
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">
           {t.hero.title}
@@ -144,7 +152,7 @@ export default function Home() {
             href="/wilayas"
             className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition"
           >
-            {t.hero.ctaSecondary} â†’
+            {t.hero.ctaSecondary} Ã¢â€ â€™
           </Link>
         </div>
       </section>
@@ -196,14 +204,14 @@ export default function Home() {
         <div className="flex justify-between items-end mb-10">
           <div>
             <div className="text-xs text-white/40 uppercase tracking-wider mb-2">
-              {isRTL ? "Ø§Ù„ØªØºØ·ÙŠØ©" : "Couverture"}
+              {isRTL ? "Ã˜Â§Ã™â€žÃ˜ÂªÃ˜ÂºÃ˜Â·Ã™Å Ã˜Â©" : "Couverture"}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {t.nav.wilayas}
             </h2>
           </div>
           <Link href="/wilayas" className="text-sm text-white/60 hover:text-white transition">
-            {isRTL ? "Ø¹Ø±Ø¶ Ø§Ù„ÙƒÙ„ â†’" : "Voir tout â†’"}
+            {isRTL ? "Ã˜Â¹Ã˜Â±Ã˜Â¶ Ã˜Â§Ã™â€žÃ™Æ’Ã™â€ž Ã¢â€ â€™" : "Voir tout Ã¢â€ â€™"}
           </Link>
         </div>
 
