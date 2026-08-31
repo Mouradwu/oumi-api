@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Request } from '@nestjs/common';
+import { Controller, Get, Post, Put, Body, Param, Query } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 
@@ -7,8 +7,7 @@ export class DonorsController {
   constructor(private readonly donorsService: DonorsService) {}
 
   @Post()
-  create(@Body() createDonorDto: CreateDonorDto, @Request() req) {
-    // On accepte un userId dans le body ou on le récupère du token (ici on le passe dans le body)
+  create(@Body() createDonorDto: CreateDonorDto) {
     return this.donorsService.create(createDonorDto);
   }
 
@@ -18,9 +17,11 @@ export class DonorsController {
   }
 
   @Get('me')
-  findMyProfile(@Request() req) {
-    // On suppose que userId est passé en query ou body, pour l'instant on retourne tous
-    return this.donorsService.findAll();
+  findMyProfile(@Query('userId') userId: string) {
+    if (!userId) {
+      return { message: 'Veuillez fournir userId en paramètre (ex: ?userId=1)' };
+    }
+    return this.donorsService.findByUserId(+userId);
   }
 
   @Get(':id')
