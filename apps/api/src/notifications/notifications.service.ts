@@ -1,4 +1,4 @@
-﻿import { Injectable, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+﻿import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
@@ -17,16 +17,15 @@ export class NotificationsService {
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
-    // Log du DTO reçu
-    this.logger.log('DTO reçu:', JSON.stringify(dto));
+    this.logger.log('Création notification avec DTO:', JSON.stringify(dto));
 
-    // Vérifier que le destinataire existe
+    // Vérifier le destinataire
     const targetUser = await this.userRepo.findOne({ where: { id: dto.userId } });
     if (!targetUser) {
       throw new BadRequestException(`L'utilisateur ${dto.userId} n'existe pas.`);
     }
 
-    // Vérification anti-doublon pour les demandes
+    // Vérification anti-doublon
     if (dto.type === 'request' && dto.data?.receiverId) {
       const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
       if (exists) {
@@ -34,13 +33,14 @@ export class NotificationsService {
       }
     }
 
-    // Assurer que title a une valeur par défaut
-    const title = dto.title || 'Notification';
+    // Définir des valeurs par défaut si les champs sont vides
+    const title = dto.title?.trim() || 'Notification';
+    const message = dto.message?.trim() || 'Message sans contenu';
 
     const notif = this.notifRepo.create({
       userId: dto.userId,
       title: title,
-      message: dto.message,
+      message: message,
       type: dto.type || null,
       data: dto.data || null,
       read: false,
@@ -72,7 +72,7 @@ export class NotificationsService {
 
     const donor = notif.user;
     const receiverId = notif.data?.receiverId;
-    if (!receiverId) throw new BadRequestException('Receveur non trouvé dans la notification');
+    if (!receiverId) throw new BadRequestException('Receveur non trouvé');
 
     const donorWithPhone = await this.userRepo.findOne({ where: { id: donor.id } });
     const phone = donorWithPhone?.phone || 'non renseigné';

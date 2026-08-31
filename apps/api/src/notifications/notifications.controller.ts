@@ -12,10 +12,19 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    // Log du body reçu
-    this.logger.log('Body reçu:', JSON.stringify(dto));
-    if (!dto.userId) dto.userId = req.user.id;
-    return await this.service.create(dto);
+    try {
+      this.logger.log('Body reçu:', JSON.stringify(dto));
+      if (!dto.userId) dto.userId = req.user.id;
+      return await this.service.create(dto);
+    } catch (error) {
+      this.logger.error('Erreur lors de la création de la notification', error.stack);
+      // Renvoyer le message d'erreur exact (utile pour debug)
+      throw new InternalServerErrorException({
+        message: error.message,
+        stack: error.stack,
+        statusCode: 500,
+      });
+    }
   }
 
   @Get()
