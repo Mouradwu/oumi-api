@@ -60,7 +60,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p className="text-center text-white/50 text-sm">
-          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
+          Pas encore de compte ? <Link href="/donor/register" className="text-red-400 hover:underline">S'inscrire</Link>
         </p>
       </div>
     </div>
