@@ -9,7 +9,6 @@ export default function DonorProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [donor, setDonor] = useState<any>(null);
 
   useEffect(() => {
@@ -22,8 +21,15 @@ export default function DonorProfilePage() {
     fetch("https://oumiapi-production.up.railway.app/donors/me", {
       headers: { Authorization: "Bearer " + token },
     })
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => {
+        if (res.status === 404) {
+          setDonor(null);
+          setLoading(false);
+          return;
+        }
+        return res.json();
+      })
+      .then((data) => {
         if (data && data.id) {
           setDonor(data);
         }
@@ -53,26 +59,26 @@ export default function DonorProfilePage() {
                 <p className="text-lg">{user.email}</p>
               </div>
               <div>
-                <span className="text-white/40 text-sm">Téléphone</span>
-                <p className="text-lg">{(user as any)?.phone || "Non renseigné"}</p>
-              </div>
-              <div>
                 <span className="text-white/40 text-sm">Groupe sanguin</span>
-                <p className="text-lg font-bold text-red-400">{donor.blood_group}</p>
+                <p className="text-lg font-bold text-red-400">{donor.blood_group || "Non défini"}</p>
               </div>
               <div>
                 <span className="text-white/40 text-sm">Types de don</span>
-                <div className="flex gap-2 mt-1">
-                  {donor.donation_types?.map((type: string) => (
-                    <span key={type} className="px-3 py-1 bg-red-600/20 text-red-400 rounded-full text-sm">
-                      {type}
-                    </span>
-                  ))}
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {donor.donation_types?.length > 0 ? (
+                    donor.donation_types.map((type: string) => (
+                      <span key={type} className="px-3 py-1 bg-red-600/20 text-red-400 rounded-full text-sm">
+                        {type}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-white/40">Aucun type défini</span>
+                  )}
                 </div>
               </div>
               <div>
                 <span className="text-white/40 text-sm">Wilaya</span>
-                <p className="text-lg">{donor.wilaya}</p>
+                <p className="text-lg">{donor.wilaya || "Non définie"}</p>
               </div>
               <div>
                 <span className="text-white/40 text-sm">Statut</span>
@@ -103,10 +109,10 @@ export default function DonorProfilePage() {
 
         <div className="mt-6 flex flex-wrap gap-4">
           <Link href="/donor/register" className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-            {donor ? "📝 Modifier mon profil" : "➕ Devenir donneur"}
+            {donor ? "📝 Modifier" : "➕ Devenir donneur"}
           </Link>
           <Link href="/request/create" className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
-            🏥 Créer une demande
+            🏥 Demande
           </Link>
           <Link href="/matching" className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
             🤝 Matching
