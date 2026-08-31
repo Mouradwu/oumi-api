@@ -25,22 +25,13 @@ interface DonationRequest {
   description: string;
   userId: string;
   user: { first_name: string; last_name: string; };
-  id: number;
-  blood_group: string;
-  donation_type: string;
-  wilaya: string;
-  hospital: string;
-  urgency: string;
-  description: string;
-  userId: string; // ID du demandeur
-  user: { first_name: string; last_name: string; };
 }
 
 export default function ExplorerPage() {
   const { user } = useAuth();
   const [tab, setTab] = useState<'donors' | 'requests'>('donors');
   const [donors, setDonors] = useState<Donor[]>([]);
-  const [requests, setRequests] = useState<Request[]>([]);
+  const [requests, setRequests] = useState<DonationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<number | null>(null);
   const [filters, setFilters] = useState({ blood_group: "", donation_type: "", wilaya: "" });
@@ -81,10 +72,13 @@ export default function ExplorerPage() {
           data: { receiverId: user.id, receiverName: user.first_name + " " + user.last_name },
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
       alert("✅ Demande envoyée");
     } catch (err: any) {
-      alert("Erreur : " + err.message);
+      alert("Erreur : " + (err.message || "Inconnue"));
     } finally {
       setActionLoading(null);
     }
@@ -106,10 +100,13 @@ export default function ExplorerPage() {
           data: { donorId: user.id, donorName: user.first_name + " " + user.last_name },
         }),
       });
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
       alert("✅ Offre envoyée");
     } catch (err: any) {
-      alert("Erreur : " + err.message);
+      alert("Erreur : " + (err.message || "Inconnue"));
     } finally {
       setActionLoading(null);
     }
@@ -193,7 +190,7 @@ export default function ExplorerPage() {
 
         {tab === 'requests' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredRequests.map((req) => (
+            {filteredRequests.map((request) => (
               <div key={request.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
                 <div className="flex justify-between items-start">
                   <div>
@@ -216,5 +213,3 @@ export default function ExplorerPage() {
     </div>
   );
 }
-
-

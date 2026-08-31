@@ -1,10 +1,17 @@
-﻿import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+﻿import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { Donor } from '../donors/entities/donor.entity';
+import { DonationRequest } from '../requests/entities/request.entity';
 
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column()
+  first_name: string;
+
+  @Column()
+  last_name: string;
 
   @Column({ unique: true })
   email: string;
@@ -12,36 +19,15 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ length: 50 })
-  first_name: string;
-
-  @Column({ length: 50, nullable: true })
-  last_name: string;
-
-  @Column({ length: 20, nullable: true })
+  @Column({ nullable: true })
   phone: string;
 
-  @Column({ default: 'donor' })
-  role: string;
+  @Column('text', { array: true, nullable: true, default: '{}' })
+  roles: string[];
 
-  @Column({ default: true })
-  is_active: boolean;
+  @OneToMany(() => Donor, donor => donor.user)
+  donors: Donor[];
 
-  @Column({ default: false })
-  is_verified: boolean;
-
-  @OneToOne(() => Donor, (donor) => donor.user)
-  donor: Donor;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  @OneToMany(() => DonationRequest, request => request.user)
+  requests: DonationRequest[];
 }
-
-
-
-
-
-
