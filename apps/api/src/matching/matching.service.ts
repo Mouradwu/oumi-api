@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Donor } from '../donors/entities/donor.entity';
 import { DonationRequest } from '../requests/entities/request.entity';
 
@@ -19,16 +19,18 @@ export class MatchingService {
 
     const compatibleGroups = this.getCompatibleBloodGroups(request.blood_group);
     const donors = await this.donorRepository.find({
-      where: { blood_group: compatibleGroups, availability: true },
+      where: { 
+        blood_group: In(compatibleGroups), 
+        availability: true 
+      },
       relations: ['user'],
     });
 
-    // Simuler un score de compatibilité et distance
     return donors.map(donor => ({
       id: donor.id,
       donor: {
         ...donor,
-        distance: Math.random() * 50, // à remplacer par calcul GPS
+        distance: Math.random() * 50,
       },
       score: Math.floor(Math.random() * 100),
       compatibility: 'good',
