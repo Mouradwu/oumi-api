@@ -1,6 +1,5 @@
 ﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, Logger, BadRequestException } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('notifications')
@@ -11,17 +10,26 @@ export class NotificationsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    // Log du body reçu
-    this.logger.log('Body reçu pour /notifications : ' + JSON.stringify(dto));
+  async create(@Body() body: any, @Request() req) {
+    // Log complet du body reçu
+    this.logger.log('Body reçu : ' + JSON.stringify(body));
 
-    // Vérifier que le destinataire est spécifié
-    if (!dto.userId) {
+    // Extraire les champs manuellement (pour éviter les problèmes de DTO)
+    const userId = body.userId || body.user_id || body.userID;
+    const title = body.title || 'Notification';
+    const message = body.message || 'Message sans contenu';
+    const type = body.type || 'general';
+    const data = body.data || null;
+
+    if (!userId) {
+      this.logger.error('userId manquant dans le body');
       throw new BadRequestException('Le champ "userId" (destinataire) est obligatoire.');
     }
 
-    // On utilise le userId du body, PAS celui du token
-    this.logger.log(`Création d'une notification pour l'utilisateur ${dto.userId}`);
+    // Construire le DTO manuellement
+    const dto = { userId, title, message, type, data };
+    this.logger.log('DTO construit : ' + JSON.stringify(dto));
+
     return await this.service.create(dto);
   }
 
