@@ -25,7 +25,7 @@ export default function DonorProfilePage() {
         if (res.status === 404) {
           setDonor(null);
           setLoading(false);
-          return;
+          return null;
         }
         return res.json();
       })
@@ -35,11 +35,16 @@ export default function DonorProfilePage() {
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setDonor(null);
+        setLoading(false);
+      });
   }, [user, router]);
 
   if (!user) return null;
   if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement...</div>;
+
+  const userData = user as any;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
@@ -52,11 +57,11 @@ export default function DonorProfilePage() {
             <div className="space-y-4">
               <div>
                 <span className="text-white/40 text-sm">Nom</span>
-                <p className="text-lg">{user.first_name} {user.last_name}</p>
+                <p className="text-lg">{userData.first_name} {userData.last_name}</p>
               </div>
               <div>
                 <span className="text-white/40 text-sm">Email</span>
-                <p className="text-lg">{user.email}</p>
+                <p className="text-lg">{userData.email}</p>
               </div>
               <div>
                 <span className="text-white/40 text-sm">Groupe sanguin</span>
@@ -101,7 +106,8 @@ export default function DonorProfilePage() {
         ) : (
           <div className="bg-yellow-500/20 text-yellow-400 p-6 rounded-xl mt-6">
             <p className="font-semibold">⚠️ Vous n'êtes pas encore enregistré comme donneur</p>
-            <Link href="/donor/register" className="text-red-400 hover:underline mt-2 inline-block">
+            <p className="text-sm mt-1">Pour sauver des vies, inscrivez-vous en tant que donneur !</p>
+            <Link href="/donor/register" className="text-red-400 hover:underline mt-3 inline-block">
               → Devenir donneur maintenant
             </Link>
           </div>

@@ -2,18 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export interface User {
-  id: number;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone?: string;
-  wilayaId?: number;
-  role?: string;
-}
-
 interface AuthContextType {
-  user: User | null;
+  user: any;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -23,7 +13,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   const API_BASE = "https://oumiapi-production.up.railway.app";
