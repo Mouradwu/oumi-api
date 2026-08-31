@@ -193,8 +193,8 @@ export default function ExplorerPage() {
                     <span className={`text-xs px-2 py-1 rounded ${req.urgency === 'CRITICAL' ? 'bg-red-600/20 text-red-400' : req.urgency === 'URGENT' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-green-600/20 text-green-400'}`}>{req.urgency}</span>
                   </div>
                 </div>
-                {user && user.id !== req.userId && (
-                  <button onClick={() => handleOfferHelp(req.id, req.userId)} disabled={actionLoading === req.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
+                {user && user.id !== (req.userId || req.user?.id) || req.user?.id && (
+                  <button onClick={() => handleOfferHelp(req.id, req.userId || req.user?.id)} disabled={actionLoading === req.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
                     {actionLoading === req.id ? "..." : "💪 Je peux aider"}
                   </button>
                 )}
@@ -206,4 +206,5 @@ export default function ExplorerPage() {
     </div>
   );
 }
+
 

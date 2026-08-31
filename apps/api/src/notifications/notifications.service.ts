@@ -1,4 +1,4 @@
-﻿import { Injectable } from '@nestjs/common';
+﻿import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
@@ -15,7 +15,7 @@ export class NotificationsService {
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
-    // Vérification anti-doublon pour les demandes
+    // Vérifier doublon pour les demandes
     if (dto.type === 'request' && dto.data?.receiverId) {
       const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
       if (exists) {
@@ -26,8 +26,8 @@ export class NotificationsService {
       userId: dto.userId,
       title: dto.title,
       message: dto.message,
-      type: dto.type,
-      data: dto.data,
+      type: dto.type || null,
+      data: dto.data || null,
       read: false,
     });
     return this.notifRepo.save(notif);
@@ -40,16 +40,18 @@ export class NotificationsService {
     });
   }
 
-  async markAsRead(id: number): Promise<Notification> {
+  async markAsRead(id: number, userId: string): Promise<Notification> {
     const notif = await this.notifRepo.findOne({ where: { id } });
-    if (!notif) throw new Error('Notification non trouvée');
+    if (!notif) throw new NotFoundException('Notification non trouvée');
+    if (notif.userId !== userId) throw new ForbiddenException('Non autorisé');
     notif.read = true;
     return this.notifRepo.save(notif);
   }
 
-  async accept(id: number): Promise<Notification> {
+  async accept(id: number, userId: string): Promise<Notification> {
     const notif = await this.notifRepo.findOne({ where: { id }, relations: ['user'] });
-    if (!notif) throw new Error('Notification non trouvée');
+    if (!notif) throw new NotFoundException('Notification non trouvée');
+    if (notif.userId !== userId) throw new ForbiddenException('Non autorisé');
     notif.read = true;
     await this.notifRepo.save(notif);
 
