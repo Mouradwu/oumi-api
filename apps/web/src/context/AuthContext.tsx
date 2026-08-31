@@ -2,13 +2,14 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-interface User {
+export interface User {
   id: number;
   email: string;
   first_name: string;
   last_name: string;
   phone?: string;
   wilayaId?: number;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -90,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth doit Ãªtre utilisÃ© dans un AuthProvider");
+    throw new Error("useAuth doit être utilisé dans un AuthProvider");
   }
   return context;
 }
