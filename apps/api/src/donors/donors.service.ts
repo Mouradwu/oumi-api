@@ -21,22 +21,13 @@ export class DonorsService {
   }
 
   async findOne(id: number): Promise<Donor> {
-    const donor = await this.donorRepository.findOne({ 
-      where: { id }, 
-      relations: ['user'] 
-    });
-    if (!donor) {
-      throw new NotFoundException(`Donor with ID ${id} not found`);
-    }
+    const donor = await this.donorRepository.findOne({ where: { id }, relations: ['user'] });
+    if (!donor) throw new NotFoundException(`Donor with ID ${id} not found`);
     return donor;
   }
 
   async findByUserId(userId: number): Promise<Donor> {
-    const donor = await this.donorRepository.findOne({ 
-      where: { userId }, 
-      relations: ['user'] 
-    });
-    return donor;
+    return this.donorRepository.findOne({ where: { userId }, relations: ['user'] });
   }
 
   async update(id: number, updateData: Partial<CreateDonorDto>): Promise<Donor> {
