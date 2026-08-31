@@ -1,17 +1,25 @@
-"use client";
+﻿"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("registered") === "true") {
+      setSuccess(true);
+      // Afficher le message pendant quelques secondes
+      setTimeout(() => setSuccess(false), 5000);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,8 +27,17 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await login(form.email, form.password);
-      router.push("/");
+      const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Erreur de connexion");
+      // Stocker le token
+      localStorage.setItem("token", data.access_token);
+      // Rediriger vers le profil
+      router.push("/profile");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -33,6 +50,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8">
         <Logo size={36} />
         <h1 className="text-2xl font-bold text-center">Se connecter</h1>
+        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg text-sm">✅ Compte créé ! Connectez-vous.</div>}
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
@@ -60,7 +78,7 @@ export default function LoginPage() {
           </button>
         </form>
         <p className="text-center text-white/50 text-sm">
-          Pas encore de compte ? <Link href="/donor/register" className="text-red-400 hover:underline">S'inscrire</Link>
+          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
         </p>
       </div>
     </div>

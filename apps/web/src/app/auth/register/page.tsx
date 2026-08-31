@@ -33,8 +33,8 @@ export default function RegisterPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur d'inscription");
       setSuccess(true);
-      // Rediriger vers le profil après 2 secondes
-      setTimeout(() => router.push("/profile"), 2000);
+      // Rediriger vers la page de connexion après 2 secondes
+      setTimeout(() => router.push("/auth/login?registered=true"), 2000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -48,7 +48,7 @@ export default function RegisterPage() {
         <Logo size={36} />
         <h1 className="text-2xl font-bold text-center">Créer un compte</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg text-sm">✅ Compte créé ! Redirection...</div>}
+        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg text-sm">✅ Compte créé ! Redirection vers la connexion...</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
