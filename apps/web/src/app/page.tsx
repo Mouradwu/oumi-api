@@ -22,15 +22,13 @@ export default function Home() {
   const t = translations[lang];
   const isRTL = lang === "ar";
 
-  const API_BASE = "https://oumiapi-production.up.railway.app";
-
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [wilayasRes, donorsRes, requestsRes] = await Promise.all([
-          fetch(\/wilayas),
-          fetch(\/donors),
-          fetch(\/requests)
+          fetch("https://oumiapi-production.up.railway.app/wilayas"),
+          fetch("https://oumiapi-production.up.railway.app/donors"),
+          fetch("https://oumiapi-production.up.railway.app/requests")
         ]);
         const wilayasData = await wilayasRes.json();
         const donorsData = await donorsRes.json();
@@ -55,7 +53,7 @@ export default function Home() {
     >
       {/* Bandeau de debug */}
       <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
-        {loading ? "⏳ Chargement..." : ✅ Wilayas: \, Donneurs: \, Demandes: \}
+        {loading ? "⏳ Chargement..." : "✅ Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
       </div>
 
       {/* Background gradient */}
@@ -196,7 +194,7 @@ export default function Home() {
             {wilayas.slice(0, 6).map((w) => (
               <Link
                 key={w.id}
-                href={/wilayas/\}
+                href={"/wilayas/" + w.code}
                 className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition"
               >
                 <div className="text-xs text-white/40 mb-1">{w.code}</div>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
 
 interface Wilaya {
   id: number;
@@ -15,17 +14,15 @@ interface Wilaya {
 }
 
 export default function WilayaDetailPage() {
-  const params = useParams<{ code: string }>();
-  const code = params?.code;
+  const params = useParams();
+  const code = params?.code as string;
   const [wilaya, setWilaya] = useState<Wilaya | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const API_BASE = "https://oumiapi-production.up.railway.app";
-
   useEffect(() => {
     if (!code) return;
-    fetch(\/wilayas/\)
+    fetch("https://oumiapi-production.up.railway.app/wilayas/" + code)
       .then((res) => {
         if (!res.ok) throw new Error("Wilaya non trouvée");
         return res.json();

@@ -25,10 +25,9 @@ export default function WilayasPage() {
 
   const t = translations[lang];
   const isRTL = lang === "ar";
-  const API_BASE = "https://oumiapi-production.up.railway.app";
 
   useEffect(() => {
-    fetch(\/wilayas)
+    fetch("https://oumiapi-production.up.railway.app/wilayas")
       .then((res) => res.json())
       .then((data) => {
         setWilayas(data);
@@ -127,7 +126,7 @@ export default function WilayasPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {sortedWilayas.map(w => (
-              <Link key={w.id} href={/wilayas/\} className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition">
+              <Link key={w.id} href={"/wilayas/" + w.code} className="group p-4 border border-white/5 rounded-xl hover:border-red-500/30 hover:bg-red-500/5 transition">
                 <div className="text-xs text-white/40 mb-1">{w.code}</div>
                 <div className="text-sm font-medium truncate">{isRTL ? w.name_ar : w.name_fr}</div>
               </Link>
