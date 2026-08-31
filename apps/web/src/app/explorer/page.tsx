@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Logo } from "@/components/Logo";
+import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
 
 interface Donor {
@@ -57,9 +57,7 @@ export default function ExplorerPage() {
     fetchData();
   }, []);
 
-  const handleSearch = () => {
-    setSearchTriggered(true);
-  };
+  const handleSearch = () => { setSearchTriggered(true); };
 
   const handleRequestHelp = async (donorId: number, donorName: string) => {
     if (!user) { alert("Connectez-vous"); return; }
@@ -77,10 +75,7 @@ export default function ExplorerPage() {
           data: { receiverId: user.id, receiverName: user.first_name + " " + user.last_name },
         }),
       });
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err);
-      }
+      if (!res.ok) throw new Error(await res.text());
       alert("✅ Demande envoyée");
     } catch (err: any) {
       alert("Erreur : " + (err.message || "Inconnue"));
@@ -105,10 +100,7 @@ export default function ExplorerPage() {
           data: { donorId: user.id, donorName: user.first_name + " " + user.last_name },
         }),
       });
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(err);
-      }
+      if (!res.ok) throw new Error(await res.text());
       alert("✅ Offre envoyée");
     } catch (err: any) {
       alert("Erreur : " + (err.message || "Inconnue"));
@@ -133,18 +125,7 @@ export default function ExplorerPage() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <header className="border-b border-white/5 backdrop-blur-xl bg-black/20 p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <Link href="/"><Logo size={28} /></Link>
-          <nav className="hidden md:flex gap-6">
-            <Link href="/" className="text-sm text-white/70 hover:text-white">Accueil</Link>
-            <Link href="/explorer" className="text-sm text-white/70 hover:text-white font-semibold text-red-400">Explorer</Link>
-            <Link href="/profile" className="text-sm text-white/70 hover:text-white">Profil</Link>
-            <Link href="/notifications" className="text-sm text-white/70 hover:text-white">🔔</Link>
-          </nav>
-        </div>
-      </header>
-
+      <Header />
       <main className="container mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold mb-6">🔍 Explorer</h1>
         <div className="flex gap-4 mb-6">
@@ -169,9 +150,7 @@ export default function ExplorerPage() {
             </select>
             <input type="text" placeholder="Wilaya" value={filters.wilaya} onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
           </div>
-          <button onClick={handleSearch} className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">
-            🔍 Rechercher
-          </button>
+          <button onClick={handleSearch} className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">🔍 Rechercher</button>
         </div>
 
         {loading && <div className="text-center py-12 text-white/50">Chargement...</div>}
@@ -179,7 +158,7 @@ export default function ExplorerPage() {
         {tab === 'donors' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDonors.length === 0 && searchTriggered ? (
-              <div className="col-span-full text-center py-12 text-white/50">Aucun donneur trouvé avec ces critères.</div>
+              <div className="col-span-full text-center py-12 text-white/50">Aucun donneur trouvé.</div>
             ) : (
               filteredDonors.map((donor) => (
                 <div key={donor.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
@@ -203,7 +182,7 @@ export default function ExplorerPage() {
         {tab === 'requests' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredRequests.length === 0 && searchTriggered ? (
-              <div className="col-span-full text-center py-12 text-white/50">Aucune demande trouvée avec ces critères.</div>
+              <div className="col-span-full text-center py-12 text-white/50">Aucune demande trouvée.</div>
             ) : (
               filteredRequests.map((request) => (
                 <div key={request.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">

@@ -40,7 +40,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       const res = await fetch(`${API_BASE}/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Erreur lors du chargement des notifications");
+      if (!res.ok) throw new Error("Erreur de chargement");
       const data = await res.json();
       setNotifications(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -58,17 +58,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (!res.ok) throw new Error("Erreur lors du marquage comme lu");
-      // Mettre à jour localement
-      setNotifications(prev =>
-        prev.map(n => n.id === id ? { ...n, read: true } : n)
-      );
+      if (!res.ok) throw new Error("Erreur");
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
     } catch (error) {
       console.error("Erreur markAsRead:", error);
     }
   };
 
-  // Polling toutes les 10 secondes
   useEffect(() => {
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 10000);
@@ -79,13 +75,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   return (
     <NotificationContext.Provider
-      value={{
-        notifications,
-        unreadCount,
-        loading,
-        fetchNotifications,
-        markAsRead,
-      }}
+      value={{ notifications, unreadCount, loading, fetchNotifications, markAsRead }}
     >
       {children}
     </NotificationContext.Provider>

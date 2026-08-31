@@ -1,4 +1,4 @@
-﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, BadRequestException, InternalServerErrorException, Logger } from '@nestjs/common';
+﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, Logger } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -12,19 +12,9 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    try {
-      this.logger.log('Body reçu:', JSON.stringify(dto));
-      if (!dto.userId) dto.userId = req.user.id;
-      return await this.service.create(dto);
-    } catch (error) {
-      this.logger.error('Erreur lors de la création de la notification', error.stack);
-      // Renvoyer le message d'erreur exact (utile pour debug)
-      throw new InternalServerErrorException({
-        message: error.message,
-        stack: error.stack,
-        statusCode: 500,
-      });
-    }
+    if (!dto.userId) dto.userId = req.user.id;
+    this.logger.log(`Création notification pour ${dto.userId}`);
+    return await this.service.create(dto);
   }
 
   @Get()

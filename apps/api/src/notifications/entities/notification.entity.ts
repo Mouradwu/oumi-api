@@ -13,10 +13,10 @@ export class Notification {
   @JoinColumn({ name: 'userId' })
   user: User;
 
-  @Column()
+  @Column({ nullable: true })
   title: string;
 
-  @Column()
+  @Column({ nullable: true })
   message: string;
 
   @Column({ default: false })
