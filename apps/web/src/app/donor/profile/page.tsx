@@ -18,7 +18,7 @@ export default function DonorProfilePage() {
     }
 
     const token = localStorage.getItem("token");
-    fetch("https://oumiapi-production.up.railway.app/donors/me", {
+    fetch("'$apiBase'/donors/me", {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => {
@@ -102,6 +102,11 @@ export default function DonorProfilePage() {
                 </div>
               </div>
             </div>
+            <div className="mt-4">
+              <Link href="/donor/register" className="inline-block px-4 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
+                ✏️ Modifier mon profil
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="bg-yellow-500/20 text-yellow-400 p-6 rounded-xl mt-6">
@@ -112,18 +117,6 @@ export default function DonorProfilePage() {
             </Link>
           </div>
         )}
-
-        <div className="mt-6 flex flex-wrap gap-4">
-          <Link href="/donor/register" className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-            {donor ? "📝 Modifier" : "➕ Devenir donneur"}
-          </Link>
-          <Link href="/request/create" className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
-            🏥 Demande
-          </Link>
-          <Link href="/matching" className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
-            🤝 Matching
-          </Link>
-        </div>
       </div>
     </div>
   );

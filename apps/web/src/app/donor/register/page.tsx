@@ -7,33 +7,23 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
 export default function DonorRegisterPage() {
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
-  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
-  // Étape 1 : Compte utilisateur
-  const [account, setAccount] = useState({
-    email: "",
-    password: "",
-    first_name: "",
-    last_name: "",
-    phone: "",
-  });
-
-  // Étape 2 : Profil donneur
+  // Profil donneur (tous les champs)
   const [donor, setDonor] = useState({
     blood_group: "",
-    donation_types: [] as string[],
+    donation_types: [] as string[],   // ← plusieurs types possibles
     wilaya: "",
     latitude: 0,
     longitude: 0,
     availability: true,
+    certified: false,
     has_donated_before: false,
     last_donation_date: "",
-    certified: false,
   });
 
   // Récupérer la position GPS
@@ -52,36 +42,33 @@ export default function DonorRegisterPage() {
     }
   }, []);
 
-  const handleAccountSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  // Si l'utilisateur n'est pas connecté, rediriger vers login
+  if (!user) {
+    router.push("/auth/login");
+    return null;
+  }
 
-    try {
-      // 1. Créer le compte
-      const res = await fetch("'$apiBase'/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(account),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur d'inscription");
-
-      // 2. Se connecter automatiquement
-      await login(account.email, account.password);
-      setStep(2);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+  const toggleDonationType = (type: string) => {
+    setDonor(prev => ({
+      ...prev,
+      donation_types: prev.donation_types.includes(type)
+        ? prev.donation_types.filter(t => t !== type)  // Retirer
+        : [...prev.donation_types, type],              // Ajouter
+    }));
   };
 
-  const handleDonorSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     setSuccess(false);
+
+    // Validation : au moins un type de don sélectionné
+    if (donor.donation_types.length === 0) {
+      setError("Veuillez sélectionner au moins un type de don (Sang, Plasma, Plaquettes)");
+      setLoading(false);
+      return;
+    }
 
     try {
       const token = localStorage.getItem("token");
@@ -93,13 +80,13 @@ export default function DonorRegisterPage() {
         },
         body: JSON.stringify({
           ...donor,
-          userId: user?.id,
+          userId: user.id,
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur d'enregistrement donneur");
+      if (!res.ok) throw new Error(data.message || "Erreur d'enregistrement");
       setSuccess(true);
-      setTimeout(() => router.push("/"), 3000);
+      setTimeout(() => router.push("/donor/profile"), 2000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -107,100 +94,22 @@ export default function DonorRegisterPage() {
     }
   };
 
-  const toggleDonationType = (type: string) => {
-    setDonor(prev => ({
-      ...prev,
-      donation_types: prev.donation_types.includes(type)
-        ? prev.donation_types.filter(t => t !== type)
-        : [...prev.donation_types, type],
-    }));
-  };
-
-  // Étape 1 : Création de compte
-  if (step === 1) {
-    return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4">
-        <div className="w-full max-w-md space-y-8">
-          <Logo size={36} />
-          <h1 className="text-2xl font-bold text-center">🩸 Devenir donneur</h1>
-          <p className="text-white/50 text-center">Étape 1/2 : Créez votre compte</p>
-
-          {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
-
-          <form onSubmit={handleAccountSubmit} className="space-y-4">
-            <input
-              type="text"
-              placeholder="Prénom *"
-              value={account.first_name}
-              onChange={(e) => setAccount({ ...account, first_name: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-            <input
-              type="text"
-              placeholder="Nom *"
-              value={account.last_name}
-              onChange={(e) => setAccount({ ...account, last_name: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email *"
-              value={account.email}
-              onChange={(e) => setAccount({ ...account, email: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-            <input
-              type="tel"
-              placeholder="Téléphone *"
-              value={account.phone}
-              onChange={(e) => setAccount({ ...account, phone: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Mot de passe *"
-              value={account.password}
-              onChange={(e) => setAccount({ ...account, password: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
-            >
-              {loading ? "Création..." : "Continuer →"}
-            </button>
-          </form>
-
-          <p className="text-center text-white/50 text-sm">
-            Déjà un compte ? <Link href="/auth/login" className="text-red-400 hover:underline">Se connecter</Link>
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Étape 2 : Profil donneur
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-2xl font-bold mt-6">Étape 2/2 : Profil donneur</h1>
-        <p className="text-white/50 mt-2">Renseignez vos informations médicales</p>
+        <Link href="/donor/profile" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
+        <h1 className="text-3xl font-bold mt-6">🩸 Devenir donneur</h1>
+        <p className="text-white/50 mt-2">Renseignez vos informations pour sauver des vies</p>
 
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
         {success && (
           <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">
-            ✅ Profil enregistré ! Redirection vers l'accueil...
+            ✅ Profil enregistré ! Redirection vers votre profil...
           </div>
         )}
 
-        <form onSubmit={handleDonorSubmit} className="space-y-4 mt-6">
+        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+          {/* Groupe sanguin */}
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
             <select
@@ -221,8 +130,9 @@ export default function DonorRegisterPage() {
             </select>
           </div>
 
+          {/* Types de don (multi-sélection) */}
           <div>
-            <label className="block text-sm text-white/60 mb-1">Types de don *</label>
+            <label className="block text-sm text-white/60 mb-1">Types de don * (sélectionnez un ou plusieurs)</label>
             <div className="flex flex-wrap gap-3">
               {[
                 { value: "SANG", label: "🩸 Sang", color: "red" },
@@ -243,11 +153,14 @@ export default function DonorRegisterPage() {
                 </button>
               ))}
             </div>
-            {donor.donation_types.length === 0 && (
-              <p className="text-yellow-400 text-xs mt-1">Sélectionnez au moins un type de don</p>
+            {donor.donation_types.length > 0 && (
+              <p className="text-green-400 text-xs mt-1">
+                ✅ {donor.donation_types.length} type(s) sélectionné(s) : {donor.donation_types.join(", ")}
+              </p>
             )}
           </div>
 
+          {/* Wilaya */}
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
             <input
@@ -260,6 +173,7 @@ export default function DonorRegisterPage() {
             />
           </div>
 
+          {/* GPS (latitude/longitude) */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm text-white/60 mb-1">Latitude</label>
@@ -285,7 +199,8 @@ export default function DonorRegisterPage() {
             </div>
           </div>
 
-          <div className="space-y-2 border border-white/10 p-4 rounded-lg">
+          {/* Statut du donneur */}
+          <div className="space-y-3 border border-white/10 p-4 rounded-lg">
             <h3 className="text-sm font-semibold">📋 Statut du donneur</h3>
 
             <div className="flex items-center gap-3">
@@ -335,10 +250,10 @@ export default function DonorRegisterPage() {
 
           <button
             type="submit"
-            disabled={loading || donor.donation_types.length === 0}
+            disabled={loading}
             className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
           >
-            {loading ? "Enregistrement..." : "💾 Finaliser mon inscription"}
+            {loading ? "Enregistrement..." : "💾 Enregistrer mon profil donneur"}
           </button>
         </form>
       </div>
