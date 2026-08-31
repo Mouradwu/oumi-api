@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Donor } from './entities/donor.entity';
@@ -16,8 +16,25 @@ export class DonorsService {
     return this.donorRepository.save(donor);
   }
 
-  async findAll(): Promise<Donor[]> {
-    return this.donorRepository.find({ relations: ['user'] });
+  async findAll(filters: any): Promise<Donor[]> {
+            const query = this.donorRepository.createQueryBuilder('donor')
+            .leftJoinAndSelect('donor.user', 'user')
+            .where('1=1');
+
+        if (filters.blood_group) {
+            query.andWhere('donor.blood_group = :blood_group', { blood_group: filters.blood_group });
+        }
+        if (filters.donation_type) {
+            query.andWhere('donor.donation_types LIKE :donation_type', { donation_type: `%${filters.donation_type}%` });
+        }
+        if (filters.wilaya) {
+            query.andWhere('donor.wilaya = :wilaya', { wilaya: filters.wilaya });
+        }
+        if (filters.availability === 'true') {
+            query.andWhere('donor.availability = true');
+        }
+
+        return query.getMany();
   }
 
   async findOne(id: number): Promise<Donor> {

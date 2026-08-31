@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException, Req } from '@nestjs/common';
+﻿import { Controller, Get, Post, Put, Body, Param, Query, BadRequestException, Req } from '@nestjs/common';
 import { DonorsService } from './donors.service';
 import { CreateDonorDto } from './dto/create-donor.dto';
 
@@ -41,7 +41,7 @@ export class DonorsController {
       return {
         success: true,
         data: donor,
-        message: 'Donneur enregistré avec succès'
+        message: 'Donneur enregistrÃ© avec succÃ¨s'
       };
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -49,8 +49,8 @@ export class DonorsController {
   }
 
   @Get()
-  findAll() {
-    return this.donorsService.findAll();
+  findAll(@Query() query: any) {
+    return this.donorsService.findAll(@Query() query: any);
   }
 
   @Get('me')
