@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
+﻿import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne } from 'typeorm';
 import { Donor } from '../donors/entities/donor.entity';
 
 @Entity('users')
@@ -39,3 +39,4 @@ export class User {
   @UpdateDateColumn()
   updated_at: Date;
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -38,12 +38,12 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
         <Logo size={36} />
-        <h1 className="text-2xl font-bold text-center">Créer un compte</h1>
+        <h1 className="text-2xl font-bold text-center">CrÃ©er un compte</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
-            placeholder="Prénom"
+            placeholder="PrÃ©nom"
             value={form.first_name}
             onChange={(e) => setForm({ ...form, first_name: e.target.value })}
             className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
@@ -89,9 +89,10 @@ export default function RegisterPage() {
           </button>
         </form>
         <p className="text-center text-white/50 text-sm">
-          Déjà un compte ? <Link href="/auth/login" className="text-red-400 hover:underline">Se connecter</Link>
+          DÃ©jÃ  un compte ? <Link href="/auth/login" className="text-red-400 hover:underline">Se connecter</Link>
         </p>
       </div>
     </div>
   );
 }
+

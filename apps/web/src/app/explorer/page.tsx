@@ -12,82 +12,112 @@ interface Donor {
   wilaya: string;
   availability: boolean;
   certified: boolean;
-  has_donated_before: boolean;
-  last_donation_date: string;
-  user: {
-    first_name: string;
-    last_name: string;
-  };
+  user: { first_name: string; last_name: string; };
+}
+
+interface Request {
+  id: number;
+  blood_group: string;
+  donation_type: string;
+  wilaya: string;
+  hospital: string;
+  urgency: string;
+  description: string;
+  user: { first_name: string; last_name: string; };
 }
 
 export default function ExplorerPage() {
   const { user } = useAuth();
+  const [tab, setTab] = useState<'donors' | 'requests'>('donors');
   const [donors, setDonors] = useState<Donor[]>([]);
-  const [filtered, setFiltered] = useState<Donor[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searching, setSearching] = useState(false);
-  const [requesting, setRequesting] = useState<number | null>(null);
-  const [requestSuccess, setRequestSuccess] = useState<string | null>(null);
-
-  const [bloodGroup, setBloodGroup] = useState("");
-  const [donationType, setDonationType] = useState("");
-  const [wilaya, setWilaya] = useState("");
-  const [radius, setRadius] = useState(50);
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
+  const [filters, setFilters] = useState({ blood_group: "", donation_type: "", wilaya: "" });
 
   useEffect(() => {
-    fetch("https://oumiapi-production.up.railway.app/donors")
-      .then((res) => res.json())
-      .then((data) => {
-        setDonors(Array.isArray(data) ? data : []);
+    const fetchData = async () => {
+      try {
+        const [dRes, rRes] = await Promise.all([
+          fetch("https://oumiapi-production.up.railway.app/donors"),
+          fetch("https://oumiapi-production.up.railway.app/requests")
+        ]);
+        const dData = await dRes.json();
+        const rData = await rRes.json();
+        setDonors(Array.isArray(dData) ? dData : []);
+        setRequests(Array.isArray(rData) ? rData : []);
+      } catch (e) {
+        console.error(e);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setDonors([]);
-        setLoading(false);
-      });
+      }
+    };
+    fetchData();
   }, []);
 
-  const handleSearch = () => {
-    setSearching(true);
-    let results = donors;
-    if (bloodGroup) results = results.filter((d) => d.blood_group === bloodGroup);
-    if (donationType) results = results.filter((d) => d.donation_types.includes(donationType));
-    if (wilaya) results = results.filter((d) => d.wilaya === wilaya);
-    setFiltered(results);
-    setSearching(false);
-  };
-
   const handleRequestHelp = async (donorId: number, donorName: string) => {
-    if (!user) {
-      alert("Veuillez vous connecter pour faire une demande.");
-      return;
-    }
-    setRequesting(donorId);
+    if (!user) { alert("Connectez-vous"); return; }
+    setActionLoading(donorId);
     try {
       const token = localStorage.getItem("token");
       const res = await fetch("https://oumiapi-production.up.railway.app/notifications", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
           userId: donorId,
           title: "Demande d'aide",
-          message: `${user.first_name} ${user.last_name} a besoin de votre aide pour un don.`,
+          message: `${user.first_name} ${user.last_name} a besoin de votre aide.`,
           type: "request",
           data: { receiverId: user.id, receiverName: user.first_name + " " + user.last_name },
         }),
       });
-      if (!res.ok) throw new Error("Erreur lors de l'envoi");
-      setRequestSuccess(`✅ Demande envoyée à ${donorName}`);
-      setTimeout(() => setRequestSuccess(null), 5000);
-    } catch (err: any) {
+      if (!res.ok) throw new Error(await res.text());
+      alert("✅ Demande envoyée");
+    } catch (err) {
       alert("Erreur : " + err.message);
     } finally {
-      setRequesting(null);
+      setActionLoading(null);
     }
   };
+
+  const handleOfferHelp = async (requestId: number, requesterId: string) => {
+    if (!user) { alert("Connectez-vous"); return; }
+    setActionLoading(requestId);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("https://oumiapi-production.up.railway.app/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({
+          userId: requesterId,
+          title: "Offre d'aide",
+          message: `${user.first_name} ${user.last_name} peut vous aider pour votre demande.`,
+          type: "offer",
+          data: { donorId: user.id, donorName: user.first_name + " " + user.last_name },
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      alert("✅ Offre envoyée");
+    } catch (err) {
+      alert("Erreur : " + err.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const filteredDonors = donors.filter(d => {
+    if (filters.blood_group && d.blood_group !== filters.blood_group) return false;
+    if (filters.donation_type && !d.donation_types.includes(filters.donation_type)) return false;
+    if (filters.wilaya && d.wilaya !== filters.wilaya) return false;
+    return true;
+  });
+
+  const filteredRequests = requests.filter(r => {
+    if (filters.blood_group && r.blood_group !== filters.blood_group) return false;
+    if (filters.donation_type && r.donation_type !== filters.donation_type) return false;
+    if (filters.wilaya && r.wilaya !== filters.wilaya) return false;
+    return true;
+  });
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
@@ -97,89 +127,77 @@ export default function ExplorerPage() {
           <nav className="hidden md:flex gap-6">
             <Link href="/" className="text-sm text-white/70 hover:text-white">Accueil</Link>
             <Link href="/explorer" className="text-sm text-white/70 hover:text-white font-semibold text-red-400">Explorer</Link>
-            <Link href="/notifications" className="text-sm text-white/70 hover:text-white">🔔 Notifications</Link>
-            {user ? (
-              <Link href="/donor/profile" className="text-sm text-white/70 hover:text-white">Profil</Link>
-            ) : (
-              <Link href="/auth/login" className="text-sm text-white/70 hover:text-white">Connexion</Link>
-            )}
+            <Link href="/profile" className="text-sm text-white/70 hover:text-white">Profil</Link>
+            <Link href="/notifications" className="text-sm text-white/70 hover:text-white">🔔</Link>
           </nav>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-6">🔍 Explorer les donneurs</h1>
-        {requestSuccess && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mb-4">{requestSuccess}</div>}
-        <div className="bg-white/5 p-6 rounded-xl border border-white/10 mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Groupe sanguin</label>
-              <select value={bloodGroup} onChange={(e) => setBloodGroup(e.target.value)} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white">
-                <option value="">Tous</option>
-                <option value="A+">A+</option><option value="A-">A-</option>
-                <option value="B+">B+</option><option value="B-">B-</option>
-                <option value="AB+">AB+</option><option value="AB-">AB-</option>
-                <option value="O+">O+</option><option value="O-">O-</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Type de don</label>
-              <select value={donationType} onChange={(e) => setDonationType(e.target.value)} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white">
-                <option value="">Tous</option>
-                <option value="SANG">🩸 Sang</option>
-                <option value="PLASMA">💧 Plasma</option>
-                <option value="PLAQUETTES">🧬 Plaquettes</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Wilaya</label>
-              <input type="text" placeholder="Ex: 16" value={wilaya} onChange={(e) => setWilaya(e.target.value)} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
-            </div>
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Rayon (km)</label>
-              <input type="number" value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white" min="5" max="500" />
-            </div>
-          </div>
-          <button onClick={handleSearch} disabled={searching} className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition disabled:opacity-50">
-            {searching ? "Recherche..." : "🔍 Rechercher"}
-          </button>
+        <h1 className="text-3xl font-bold mb-6">🔍 Explorer</h1>
+        <div className="flex gap-4 mb-6">
+          <button onClick={() => setTab('donors')} className={`px-6 py-2 rounded-lg transition ${tab === 'donors' ? 'bg-red-600' : 'bg-white/10'}`}>❤️ Donneurs</button>
+          <button onClick={() => setTab('requests')} className={`px-6 py-2 rounded-lg transition ${tab === 'requests' ? 'bg-red-600' : 'bg-white/10'}`}>🚨 Demandes</button>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12 text-white/50">Chargement...</div>
-        ) : filtered.length === 0 ? (
-          <div className="text-center py-12 text-white/50">Aucun donneur trouvé.</div>
-        ) : (
+        <div className="bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <select value={filters.blood_group} onChange={(e) => setFilters({ ...filters, blood_group: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white">
+              <option value="">Tous groupes</option>
+              <option value="A+">A+</option><option value="A-">A-</option>
+              <option value="B+">B+</option><option value="B-">B-</option>
+              <option value="AB+">AB+</option><option value="AB-">AB-</option>
+              <option value="O+">O+</option><option value="O-">O-</option>
+            </select>
+            <select value={filters.donation_type} onChange={(e) => setFilters({ ...filters, donation_type: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white">
+              <option value="">Tous types</option>
+              <option value="SANG">🩸 Sang</option>
+              <option value="PLASMA">💧 Plasma</option>
+              <option value="PLAQUETTES">🧬 Plaquettes</option>
+            </select>
+            <input type="text" placeholder="Wilaya" value={filters.wilaya} onChange={(e) => setFilters({ ...filters, wilaya: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
+          </div>
+        </div>
+
+        {loading && <div className="text-center py-12 text-white/50">Chargement...</div>}
+
+        {tab === 'donors' && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filtered.map((donor) => (
+            {filteredDonors.map((donor) => (
               <div key={donor.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold">{donor.user?.first_name} {donor.user?.last_name}</h3>
-                    <p className="text-sm text-white/60">🩸 {donor.blood_group}</p>
-                    <p className="text-sm text-white/60">{donor.donation_types.join(", ")}</p>
+                    <p className="text-sm text-white/60">🩸 {donor.blood_group} - {donor.donation_types.join(", ")}</p>
                     <p className="text-sm text-white/40">📍 Wilaya {donor.wilaya}</p>
-                  </div>
-                  <div className="text-right">
                     {donor.availability && <span className="text-green-400 text-sm">🟢 Disponible</span>}
-                    {donor.certified && <span className="block text-blue-400 text-xs">✅ Certifié</span>}
                   </div>
                 </div>
-                <div className="mt-3">
-                  {user ? (
-                    <button
-                      onClick={() => handleRequestHelp(donor.id, donor.user.first_name + " " + donor.user.last_name)}
-                      disabled={requesting === donor.id}
-                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition disabled:opacity-50"
-                    >
-                      {requesting === donor.id ? "Envoi..." : "🤝 Demander de l'aide"}
-                    </button>
-                  ) : (
-                    <Link href="/auth/login" className="px-4 py-2 bg-white/10 text-white text-sm rounded hover:bg-white/20 transition">
-                      🔒 Se connecter
-                    </Link>
-                  )}
+                <button onClick={() => handleRequestHelp(donor.id, donor.user.first_name)} disabled={actionLoading === donor.id} className="mt-3 w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition disabled:opacity-50">
+                  {actionLoading === donor.id ? "..." : "🤝 Demander de l'aide"}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === 'requests' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredRequests.map((req) => (
+              <div key={req.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-semibold">{req.donation_type} - {req.blood_group}</p>
+                    <p className="text-sm text-white/60">🏥 {req.hospital || "Établissement"}</p>
+                    <p className="text-sm text-white/40">📍 Wilaya {req.wilaya}</p>
+                    <span className={`text-xs px-2 py-1 rounded ${req.urgency === 'CRITICAL' ? 'bg-red-600/20 text-red-400' : req.urgency === 'URGENT' ? 'bg-yellow-600/20 text-yellow-400' : 'bg-green-600/20 text-green-400'}`}>{req.urgency}</span>
+                  </div>
                 </div>
+                {user && user.id !== req.userId && (
+                  <button onClick={() => handleOfferHelp(req.id, req.userId)} disabled={actionLoading === req.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
+                    {actionLoading === req.id ? "..." : "💪 Je peux aider"}
+                  </button>
+                )}
               </div>
             ))}
           </div>
