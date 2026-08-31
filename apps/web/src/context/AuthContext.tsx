@@ -7,6 +7,7 @@ interface User {
   email: string;
   first_name: string;
   last_name: string;
+  phone?: string;
   wilayaId?: number;
 }
 
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth doit être utilisé dans un AuthProvider");
+    throw new Error("useAuth doit Ãªtre utilisÃ© dans un AuthProvider");
   }
   return context;
 }
