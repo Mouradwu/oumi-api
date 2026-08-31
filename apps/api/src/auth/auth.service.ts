@@ -1,4 +1,4 @@
-﻿import { Injectable, UnauthorizedException, NotFoundException } from '@nestjs/common';
+﻿import { Injectable, UnauthorizedException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -16,17 +16,27 @@ export class AuthService {
   ) {}
 
   async register(registerDto: RegisterDto): Promise<User> {
-    const { email, password, first_name, last_name, phone } = registerDto;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = this.usersRepository.create({
-      email,
-      password: hashedPassword,
-      first_name,
-      last_name,
-      phone,
-      roles: [],
-    });
-    return this.usersRepository.save(user);
+    try {
+      const { email, password, first_name, last_name, phone } = registerDto;
+      // Vérifier si l'utilisateur existe déjà
+      const existing = await this.usersRepository.findOne({ where: { email } });
+      if (existing) {
+        throw new BadRequestException('Cet email est déjà utilisé.');
+      }
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const user = this.usersRepository.create({
+        email,
+        password: hashedPassword,
+        first_name,
+        last_name,
+        phone,
+        roles: [],
+      });
+      return this.usersRepository.save(user);
+    } catch (error) {
+      console.error('Erreur lors de l\'inscription:', error);
+      throw error;
+    }
   }
 
   async login(loginDto: LoginDto): Promise<{ access_token: string; user: any }> {
