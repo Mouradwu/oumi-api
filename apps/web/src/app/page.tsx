@@ -74,7 +74,7 @@ export default function Home() {
         <p className="text-lg text-white/60 max-w-xl mx-auto mb-10 leading-relaxed">{t.hero.description}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link href="/donor/register" className="px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-white/90 transition">{t.hero.ctaPrimary}</Link>
-          <Link href="/wilayas" className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition">{t.hero.ctaSecondary} →</Link>
+          <Link href="/explorer" className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition">{t.hero.ctaSecondary} →</Link>
         </div>
       </section>
 
@@ -138,3 +138,4 @@ export default function Home() {
     </div>
   );
 }
+
