@@ -4,15 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [form, setForm] = useState({ 
-    email: "", 
-    password: "", 
-    first_name: "", 
+  const { register } = useAuth();
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+    first_name: "",
     last_name: "",
-    wilayaId: "" 
+    wilayaId: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,13 +25,7 @@ export default function RegisterPage() {
     setError("");
 
     try {
-      const res = await fetch("https://oumiapi-production.up.railway.app/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur d'inscription");
+      await register(form);
       router.push("/auth/login");
     } catch (err: any) {
       setError(err.message);
@@ -45,48 +41,48 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold text-center">Créer un compte</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input 
-            type="text" 
-            placeholder="Prénom" 
-            value={form.first_name} 
-            onChange={(e) => setForm({ ...form, first_name: e.target.value })} 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" 
-            required 
+          <input
+            type="text"
+            placeholder="Prénom"
+            value={form.first_name}
+            onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
           />
-          <input 
-            type="text" 
-            placeholder="Nom" 
-            value={form.last_name} 
-            onChange={(e) => setForm({ ...form, last_name: e.target.value })} 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" 
-            required 
+          <input
+            type="text"
+            placeholder="Nom"
+            value={form.last_name}
+            onChange={(e) => setForm({ ...form, last_name: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
           />
-          <input 
-            type="email" 
-            placeholder="Email" 
-            value={form.email} 
-            onChange={(e) => setForm({ ...form, email: e.target.value })} 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" 
-            required 
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
           />
-          <input 
-            type="password" 
-            placeholder="Mot de passe" 
-            value={form.password} 
-            onChange={(e) => setForm({ ...form, password: e.target.value })} 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" 
-            required 
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
           />
-          <input 
-            type="text" 
-            placeholder="Code wilaya (ex: 16)" 
-            value={form.wilayaId} 
-            onChange={(e) => setForm({ ...form, wilayaId: e.target.value })} 
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" 
+          <input
+            type="text"
+            placeholder="Code wilaya (ex: 16)"
+            value={form.wilayaId}
+            onChange={(e) => setForm({ ...form, wilayaId: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
           />
-          <button 
-            type="submit" 
-            disabled={loading} 
+          <button
+            type="submit"
+            disabled={loading}
             className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition"
           >
             {loading ? "Inscription..." : "S'inscrire"}

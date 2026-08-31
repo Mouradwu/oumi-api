@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { translations, type Lang } from "@/lib/translations";
+import { useAuth } from "@/context/AuthContext";
 
 interface Wilaya {
   id: number;
@@ -13,6 +14,7 @@ interface Wilaya {
 }
 
 export default function Home() {
+  const { user, logout } = useAuth();
   const [lang, setLang] = useState<Lang>("fr");
   const [wilayas, setWilayas] = useState<Wilaya[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function Home() {
         setDonorsCount(Array.isArray(donorsData) ? donorsData.length : 0);
         setRequestsCount(Array.isArray(requestsData) ? requestsData.length : 0);
       } catch (err) {
-        console.error("Erreur chargement des données:", err);
+        console.error("Erreur chargement des donnÃ©es:", err);
       } finally {
         setLoading(false);
       }
@@ -53,7 +55,7 @@ export default function Home() {
     >
       {/* Bandeau de debug */}
       <div style={{ backgroundColor: "#222", color: "lime", textAlign: "center", padding: "8px", fontSize: "14px" }}>
-        {loading ? "⏳ Chargement..." : "✅ Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
+        {loading ? "â³ Chargement..." : "âœ… Wilayas: " + wilayas.length + ", Donneurs: " + donorsCount + ", Demandes: " + requestsCount}
       </div>
 
       {/* Background gradient */}
@@ -82,7 +84,7 @@ export default function Home() {
               onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
               className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
             >
-              {lang === "fr" ? "العربية" : "FR"}
+              {lang === "fr" ? "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" : "FR"}
             </button>
             <Link
               href="/auth/register"
@@ -97,7 +99,7 @@ export default function Home() {
       {/* Hero */}
       <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 text-center">
         <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">
-          {isRTL ? "المنصة الأولى في الجزائر" : "Plateforme n°1 en Algérie"}
+          {isRTL ? "Ø§Ù„Ù…Ù†ØµØ© Ø§Ù„Ø£ÙˆÙ„Ù‰ ÙÙŠ Ø§Ù„Ø¬Ø²Ø§Ø¦Ø±" : "Plateforme nÂ°1 en AlgÃ©rie"}
         </div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">
           {t.hero.title}
@@ -120,7 +122,7 @@ export default function Home() {
             href="/wilayas"
             className="px-6 py-3 border border-white/10 rounded-full font-medium hover:bg-white/5 transition"
           >
-            {t.hero.ctaSecondary} →
+            {t.hero.ctaSecondary} â†’
           </Link>
         </div>
       </section>
@@ -172,14 +174,14 @@ export default function Home() {
         <div className="flex justify-between items-end mb-10">
           <div>
             <div className="text-xs text-white/40 uppercase tracking-wider mb-2">
-              {isRTL ? "التغطية" : "Couverture"}
+              {isRTL ? "Ø§Ù„ØªØºØ·ÙŠØ©" : "Couverture"}
             </div>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
               {t.nav.wilayas}
             </h2>
           </div>
           <Link href="/wilayas" className="text-sm text-white/60 hover:text-white transition">
-            {isRTL ? "عرض الكل →" : "Voir tout →"}
+            {isRTL ? "Ø¹Ø±Ø¶ Ø§Ù„ÙƒÙ„ â†’" : "Voir tout â†’"}
           </Link>
         </div>
 

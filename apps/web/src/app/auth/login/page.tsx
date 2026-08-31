@@ -4,9 +4,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -17,14 +19,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur de connexion");
-      localStorage.setItem("token", data.access_token);
+      await login(form.email, form.password);
       router.push("/");
     } catch (err: any) {
       setError(err.message);
@@ -40,11 +35,33 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center">Se connecter</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="email" placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
-          <input type="password" placeholder="Mot de passe" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
-          <button type="submit" disabled={loading} className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition">{loading ? "Connexion..." : "Se connecter"}</button>
+          <input
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Mot de passe"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            required
+          />
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition"
+          >
+            {loading ? "Connexion..." : "Se connecter"}
+          </button>
         </form>
-        <p className="text-center text-white/50 text-sm">Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link></p>
+        <p className="text-center text-white/50 text-sm">
+          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
+        </p>
       </div>
     </div>
   );
