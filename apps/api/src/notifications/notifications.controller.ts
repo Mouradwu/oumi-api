@@ -12,12 +12,16 @@ export class NotificationsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async create(@Body() dto: CreateNotificationDto, @Request() req) {
-    // IMPORTANT : le destinataire est obligatoire dans le body
+    // Log du body reçu
+    this.logger.log('Body reçu pour /notifications : ' + JSON.stringify(dto));
+
+    // Vérifier que le destinataire est spécifié
     if (!dto.userId) {
       throw new BadRequestException('Le champ "userId" (destinataire) est obligatoire.');
     }
-    this.logger.log(`Création d'une notification pour le destinataire ${dto.userId}`);
-    // On utilise le userId du body, pas celui du token
+
+    // On utilise le userId du body, PAS celui du token
+    this.logger.log(`Création d'une notification pour l'utilisateur ${dto.userId}`);
     return await this.service.create(dto);
   }
 
