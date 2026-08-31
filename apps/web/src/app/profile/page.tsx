@@ -36,6 +36,14 @@ export default function ProfilePage() {
   const [requests, setRequests] = useState<DonationRequest[]>([]);
 
   useEffect(() => {
+    console.log("🔍 Page /profile chargée");
+    const token = localStorage.getItem("token");
+    console.log("Token présent :", token ? "Oui (" + token.substring(0, 20) + "...)" : "Non");
+    if (!token) {
+      console.log("❌ Pas de token, redirection vers login");
+      router.push("/auth/login");
+      return;
+    }
     // Vérification du token
     const token = localStorage.getItem("token");
     if (!token) {
@@ -210,3 +218,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

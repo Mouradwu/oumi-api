@@ -22,9 +22,22 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de connexion");
-      
-      localStorage.setItem("token", data.access_token);
-      // Redirection immédiate
+
+      const token = data.access_token;
+      localStorage.setItem("token", token);
+
+      // Vérifier que le token est valide avant de rediriger
+      const verifyRes = await fetch("https://oumiapi-production.up.railway.app/auth/me", {
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!verifyRes.ok) {
+        localStorage.removeItem("token");
+        throw new Error("Token invalide, veuillez réessayer.");
+      }
+      const user = await verifyRes.json();
+      console.log("✅ Utilisateur connecté :", user);
+
+      // Redirection vers le profil
       window.location.href = "/profile";
     } catch (err: any) {
       setError(err.message);
