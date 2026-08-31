@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "OUMI - Don de sang",
-  description: "Plateforme de don de sang en AlgÃ©rie",
+  description: "Plateforme de don de sang en AlgÃƒÂ©rie",
 };
 
 export default function RootLayout({

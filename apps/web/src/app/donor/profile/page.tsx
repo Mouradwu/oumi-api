@@ -9,181 +9,109 @@ export default function DonorProfilePage() {
   const { user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    blood_group: "",
-    donation_types: [] as string[],
-    wilaya: "",
-    latitude: 0,
-    longitude: 0,
-    availability: true,
-  });
+  const [success, setSuccess] = useState(false);
+  const [donor, setDonor] = useState<any>(null);
 
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setForm(prev => ({
-            ...prev,
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          }));
-        },
-        () => console.log("Position non disponible")
-      );
+    if (!user) {
+      router.push("/auth/login");
+      return;
     }
-  }, []);
 
-  if (!user) {
-    router.push("/auth/login");
-    return null;
-  }
+    // Charger le profil donneur existant
+    const token = localStorage.getItem("token");
+    fetch("'$apiBase'/donors/me", {
+      headers: { Authorization: "Bearer " + token },
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.id) {
+          setDonor(data);
+        }
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [user]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess(false);
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("'$apiBase'/donors", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
-        body: JSON.stringify({
-          ...form,
-          userId: user.id,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur d'enregistrement");
-      setSuccess(true);
-      setTimeout(() => router.push("/"), 2000);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleDonationType = (type: string) => {
-    setForm(prev => ({
-      ...prev,
-      donation_types: prev.donation_types.includes(type)
-        ? prev.donation_types.filter(t => t !== type)
-        : [...prev.donation_types, type],
-    }));
-  };
+  if (!user) return null;
+  if (loading) return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement...</div>;
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <div className="max-w-2xl mx-auto">
         <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">🩸 Profil donneur</h1>
-        <p className="text-white/50 mt-2">Renseignez vos informations pour sauver des vies</p>
+        <h1 className="text-3xl font-bold mt-6">👤 Mon profil donneur</h1>
 
-        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ Profil enregistré ! Redirection...</div>}
-
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select
-              value={form.blood_group}
-              onChange={(e) => setForm({ ...form, blood_group: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
-              required
-            >
-              <option value="">Sélectionnez</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Types de don *</label>
-            <div className="flex flex-wrap gap-3">
-              {["SANG", "PLASMA", "PLAQUETTES"].map(type => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleDonationType(type)}
-                  className={`px-4 py-2 rounded-full text-sm transition ${
-                    form.donation_types.includes(type)
-                      ? "bg-red-600 text-white"
-                      : "bg-white/10 text-white/60 hover:bg-white/20"
-                  }`}
-                >
-                  {type}
-                </button>
-              ))}
+        {donor ? (
+          <div className="bg-white/5 p-6 rounded-xl border border-white/10 mt-6">
+            <div className="space-y-4">
+              <div>
+                <span className="text-white/40 text-sm">Nom</span>
+                <p className="text-lg">{user.first_name} {user.last_name}</p>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Email</span>
+                <p className="text-lg">{user.email}</p>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Téléphone</span>
+                <p className="text-lg">{user.phone || "Non renseigné"}</p>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Groupe sanguin</span>
+                <p className="text-lg font-bold text-red-400">{donor.blood_group}</p>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Types de don</span>
+                <div className="flex gap-2 mt-1">
+                  {donor.donation_types?.map((type: string) => (
+                    <span key={type} className="px-3 py-1 bg-red-600/20 text-red-400 rounded-full text-sm">
+                      {type}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Wilaya</span>
+                <p className="text-lg">{donor.wilaya}</p>
+              </div>
+              <div>
+                <span className="text-white/40 text-sm">Statut</span>
+                <div className="flex gap-2 mt-1">
+                  {donor.availability && (
+                    <span className="px-3 py-1 bg-green-600/20 text-green-400 rounded-full text-sm">Disponible</span>
+                  )}
+                  {donor.certified && (
+                    <span className="px-3 py-1 bg-blue-600/20 text-blue-400 rounded-full text-sm">✅ Certifié</span>
+                  )}
+                  {donor.has_donated_before && (
+                    <span className="px-3 py-1 bg-yellow-600/20 text-yellow-400 rounded-full text-sm">
+                      Dernier don: {donor.last_donation_date || "Non précisé"}
+                    </span>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Wilaya</label>
-            <input
-              type="text"
-              placeholder="Ex: 16"
-              value={form.wilaya}
-              onChange={(e) => setForm({ ...form, wilaya: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            />
+        ) : (
+          <div className="bg-yellow-500/20 text-yellow-400 p-6 rounded-xl mt-6">
+            <p className="font-semibold">⚠️ Vous n'êtes pas encore enregistré comme donneur</p>
+            <Link href="/donor/register" className="text-red-400 hover:underline mt-2 inline-block">
+              → Devenir donneur maintenant
+            </Link>
           </div>
+        )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Latitude</label>
-              <input
-                type="number"
-                step="any"
-                placeholder="36.75"
-                value={form.latitude}
-                onChange={(e) => setForm({ ...form, latitude: parseFloat(e.target.value) || 0 })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              />
-            </div>
-            <div>
-              <label className="block text-sm text-white/60 mb-1">Longitude</label>
-              <input
-                type="number"
-                step="any"
-                placeholder="3.05"
-                value={form.longitude}
-                onChange={(e) => setForm({ ...form, longitude: parseFloat(e.target.value) || 0 })}
-                className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <input
-              type="checkbox"
-              checked={form.availability}
-              onChange={(e) => setForm({ ...form, availability: e.target.checked })}
-              className="w-4 h-4 accent-red-600"
-            />
-            <label className="text-sm text-white/60">Disponible pour donner</label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
-          >
-            {loading ? "Enregistrement..." : "💾 Enregistrer mon profil donneur"}
-          </button>
-        </form>
+        <div className="mt-6 flex gap-4">
+          <Link href="/donor/register" className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
+            {donor ? "📝 Modifier mon profil" : "➕ Devenir donneur"}
+          </Link>
+          <Link href="/request/create" className="px-6 py-2 bg-white/10 text-white rounded-lg hover:bg-white/20 transition">
+            🏥 Créer une demande
+          </Link>
+        </div>
       </div>
     </div>
   );

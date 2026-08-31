@@ -19,6 +19,10 @@ export default function CreateRequestPage() {
     hospital: "",
     urgency: "NORMAL",
     description: "",
+    patient_name: "",
+    patient_age: "",
+    quantity: "1",
+    contact_phone: "",
   });
 
   if (!user) {
@@ -34,7 +38,7 @@ export default function CreateRequestPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://oumiapi-production.up.railway.app/requests", {
+      const res = await fetch("'$apiBase'/requests", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,7 +52,7 @@ export default function CreateRequestPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de création");
       setSuccess(true);
-      setTimeout(() => router.push("/"), 2000);
+      setTimeout(() => router.push("/requests"), 2000);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -61,7 +65,7 @@ export default function CreateRequestPage() {
       <div className="max-w-2xl mx-auto">
         <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
         <h1 className="text-3xl font-bold mt-6">🏥 Nouvelle demande de sang</h1>
-        <p className="text-white/50 mt-2">Sauvez une vie en faisant une demande</p>
+        <p className="text-white/50 mt-2">Pour les hôpitaux, cliniques et associations</p>
 
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
         {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ Demande créée !</div>}
@@ -88,15 +92,16 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Type de don</label>
+            <label className="block text-sm text-white/60 mb-1">Type de don *</label>
             <select
               value={form.donation_type}
               onChange={(e) => setForm({ ...form, donation_type: e.target.value })}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
+              required
             >
-              <option value="SANG">Sang</option>
-              <option value="PLASMA">Plasma</option>
-              <option value="PLAQUETTES">Plaquettes</option>
+              <option value="SANG">🩸 Sang</option>
+              <option value="PLASMA">💧 Plasma</option>
+              <option value="PLAQUETTES">🧬 Plaquettes</option>
             </select>
           </div>
 
@@ -113,13 +118,63 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Hôpital / Association</label>
+            <label className="block text-sm text-white/60 mb-1">Hôpital / Association *</label>
             <input
               type="text"
               placeholder="Nom de l'établissement"
               value={form.hospital}
               onChange={(e) => setForm({ ...form, hospital: e.target.value })}
               className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Nom du patient (optionnel)</label>
+            <input
+              type="text"
+              placeholder="Nom du patient"
+              value={form.patient_name}
+              onChange={(e) => setForm({ ...form, patient_name: e.target.value })}
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Âge du patient (optionnel)</label>
+            <input
+              type="number"
+              placeholder="Ex: 45"
+              value={form.patient_age}
+              onChange={(e) => setForm({ ...form, patient_age: e.target.value })}
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Quantité (poches) *</label>
+            <select
+              value={form.quantity}
+              onChange={(e) => setForm({ ...form, quantity: e.target.value })}
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
+            >
+              <option value="1">1 poche</option>
+              <option value="2">2 poches</option>
+              <option value="3">3 poches</option>
+              <option value="4">4 poches</option>
+              <option value="5">5 poches</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Téléphone de contact *</label>
+            <input
+              type="tel"
+              placeholder="06 XX XX XX XX"
+              value={form.contact_phone}
+              onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
+              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+              required
             />
           </div>
 
@@ -137,7 +192,7 @@ export default function CreateRequestPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Description</label>
+            <label className="block text-sm text-white/60 mb-1">Description / Notes</label>
             <textarea
               placeholder="Informations complémentaires..."
               value={form.description}
