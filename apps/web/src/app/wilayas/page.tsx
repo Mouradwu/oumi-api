@@ -69,7 +69,7 @@ export default function WilayasPage() {
             <Link href="/" className="text-sm text-white/70 hover:text-white transition">
               Accueil
             </Link>
-            <Link href="/wilayas" className="text-sm text-white/70 hover:text-white transition">
+            <Link href="https://oumiapi-production.up.railway.app/wilayas" className="text-sm text-white/70 hover:text-white transition">
               Wilayas
             </Link>
             <Link href="/auth/login" className="text-sm text-white/70 hover:text-white transition">
@@ -81,7 +81,7 @@ export default function WilayasPage() {
               onClick={() => setLang(lang === "fr" ? "ar" : "fr")}
               className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition"
             >
-              {lang === "fr" ? "العربية" : "FR"}
+              {lang === "fr" ? "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©" : "FR"}
             </button>
             <Link
               href="/auth/register"
@@ -97,11 +97,11 @@ export default function WilayasPage() {
       <main className="relative z-10 container mx-auto px-6 py-12">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">
-            {isRTL ? "الولايات" : "Les wilayas"}
+            {isRTL ? "Ø§Ù„ÙˆÙ„Ø§ÙŠØ§Øª" : "Les wilayas"}
           </h1>
           <input
             type="text"
-            placeholder={isRTL ? "بحث..." : "Rechercher..."}
+            placeholder={isRTL ? "Ø¨Ø­Ø«..." : "Rechercher..."}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full md:w-64 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-white placeholder-white/40 focus:outline-none focus:border-red-500/50"
@@ -137,7 +137,7 @@ export default function WilayasPage() {
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <Logo size={20} />
           <div className="text-xs text-white/40">{t?.footer?.tagline || "OUMI - Don de sang"}</div>
-          <div className="text-xs text-white/30">{t?.footer?.rights || "© 2026 Tous droits réservés"}</div>
+          <div className="text-xs text-white/30">{t?.footer?.rights || "Â© 2026 Tous droits rÃ©servÃ©s"}</div>
         </div>
       </footer>
     </div>
