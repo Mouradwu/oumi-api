@@ -29,14 +29,14 @@ export default function ProfilePage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [processing, setProcessing] = useState<number | null>(null);
 
-  // Rediriger si non connecté
   useEffect(() => {
     if (!user) {
       router.push("/auth/login");
       return;
     }
     const token = localStorage.getItem("token");
-    fetch("https://oumiapi-production.up.railway.app/notifications?userId=me", {
+    // Récupérer les notifications de l'utilisateur
+    fetch(`https://oumiapi-production.up.railway.app/notifications?userId=${user.id}`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => {
@@ -53,10 +53,10 @@ export default function ProfilePage() {
       });
   }, [user, router]);
 
-  // Filtrer les demandes reçues (type "request") – pour le donneur
-  const receivedRequests = notifications.filter(n => n.type === "request" && !n.read);
-  // Filtrer les demandes acceptées (type "acceptance") – pour le receveur
-  const acceptedRequests = notifications.filter(n => n.type === "acceptance" && n.read);
+  // Séparer les notifications par type
+  const requestsReceived = notifications.filter(n => n.type === "request" && !n.read); // reçues (donneur)
+  const requestsSent = notifications.filter(n => n.type === "request" && n.read); // envoyées et lues (receveur)
+  const accepted = notifications.filter(n => n.type === "acceptance"); // acceptées (les deux)
 
   const handleAccept = async (notifId: number) => {
     setProcessing(notifId);
@@ -117,11 +117,11 @@ export default function ProfilePage() {
         </div>
 
         {/* Demandes reçues (pour donneur) */}
-        {receivedRequests.length > 0 && (
+        {requestsReceived.length > 0 && (
           <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">🩸 Demandes d'aide reçues</h2>
             <div className="space-y-4">
-              {receivedRequests.map((notif) => (
+              {requestsReceived.map((notif) => (
                 <div key={notif.id} className="bg-white/5 p-4 rounded-xl border border-red-500/30">
                   <div className="flex justify-between items-start">
                     <div>
@@ -142,12 +142,28 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {/* Demandes acceptées (pour receveur) */}
-        {acceptedRequests.length > 0 && (
+        {/* Demandes que vous avez envoyées (pour receveur) */}
+        {requestsSent.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-xl font-semibold mb-4">📤 Demandes que vous avez envoyées</h2>
+            <div className="space-y-4">
+              {requestsSent.map((notif) => (
+                <div key={notif.id} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                  <p className="text-white/70">{notif.message}</p>
+                  <p className="text-xs text-white/40 mt-1">Envoyée le {new Date(notif.created_at).toLocaleDateString()}</p>
+                  <span className="text-yellow-400 text-sm mt-1 inline-block">⏳ En attente de réponse</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Demandes acceptées (contact) */}
+        {accepted.length > 0 && (
           <div>
             <h2 className="text-xl font-semibold mb-4">✅ Demandes acceptées</h2>
             <div className="space-y-4">
-              {acceptedRequests.map((notif) => (
+              {accepted.map((notif) => (
                 <div key={notif.id} className="bg-white/5 p-4 rounded-xl border border-green-500/30">
                   <div className="flex justify-between items-start">
                     <div>
@@ -155,6 +171,9 @@ export default function ProfilePage() {
                       <p className="text-xs text-white/40 mt-1">Acceptée le {new Date(notif.created_at).toLocaleDateString()}</p>
                       {notif.data?.donorPhone && (
                         <p className="text-sm text-green-400 mt-2">📞 {notif.data.donorPhone}</p>
+                      )}
+                      {notif.data?.recipientPhone && (
+                        <p className="text-sm text-green-400 mt-2">📞 {notif.data.recipientPhone}</p>
                       )}
                     </div>
                     <span className="text-green-400 text-sm">✓</span>
@@ -165,7 +184,7 @@ export default function ProfilePage() {
           </div>
         )}
 
-        {receivedRequests.length === 0 && acceptedRequests.length === 0 && (
+        {requestsReceived.length === 0 && requestsSent.length === 0 && accepted.length === 0 && (
           <div className="text-center py-12 text-white/50">Aucune activité récente.</div>
         )}
       </main>
