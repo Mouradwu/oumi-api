@@ -24,13 +24,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const API_BASE = "https://oumiapi-production.up.railway.app";
-
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      fetch(\/auth/me, {
-        headers: { Authorization: Bearer \ },
+      fetch("https://oumiapi-production.up.railway.app/auth/me", {
+        headers: { Authorization: "Bearer " + token },
       })
         .then((res) => {
           if (res.ok) return res.json();
@@ -50,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch(\/auth/login, {
+    const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -58,15 +56,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Erreur de connexion");
     localStorage.setItem("token", data.access_token);
-    const userRes = await fetch(\/auth/me, {
-      headers: { Authorization: Bearer \ },
+    const userRes = await fetch("https://oumiapi-production.up.railway.app/auth/me", {
+      headers: { Authorization: "Bearer " + data.access_token },
     });
     const userData = await userRes.json();
     setUser(userData);
   };
 
   const register = async (formData: any) => {
-    const res = await fetch(\/auth/register, {
+    const res = await fetch("https://oumiapi-production.up.railway.app/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
