@@ -62,7 +62,13 @@ export default function DonorRegisterPage() {
     }
     try {
       const token = localStorage.getItem("token");
-      const payload = { ...donor, userId: user.id, latitude: 0, longitude: 0 };
+      const payload = {
+        ...donor,
+        last_donation_date: donor.has_donated_before && donor.last_donation_date ? donor.last_donation_date : null,
+        userId: user.id,
+        latitude: 0,
+        longitude: 0,
+      };
       const res = await fetch(`${API_URL}/donors`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },

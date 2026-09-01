@@ -16,7 +16,7 @@ export class Donor {
   @Column({ length: 5 })
   blood_type: string;
 
-  @Column('simple-array', { nullable: true })
+  @Column('text', { array: true, nullable: true })
   donation_types: string[];
 
   @Column({ nullable: true })
