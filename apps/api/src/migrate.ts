@@ -539,6 +539,35 @@ async function migrate() {
     }
   }
 
+  // Neutralise d'anciennes colonnes camelCase (ex: "userId") laissees par
+  // une periode anterieure ou TypeORM avait synchronise le schema
+  // automatiquement, avant le passage a des migrations explicites. Ces
+  // colonnes sont NOT NULL mais plus jamais ecrites par le code actuel
+  // (qui utilise user_id) : elles bloquent toute nouvelle insertion tant
+  // qu'elles restent obligatoires. On les rend nullable plutot que de les
+  // supprimer, par prudence.
+  const legacyNotNullFixes = [
+    { table: 'donors', column: 'userId' },
+    { table: 'donation_requests', column: 'userId' },
+    { table: 'notifications', column: 'userId' },
+    { table: 'donors', column: 'wilayaId' },
+    { table: 'donation_requests', column: 'wilayaId' },
+  ];
+  for (const { table, column } of legacyNotNullFixes) {
+    try {
+      const check = await client.query(
+        `SELECT is_nullable FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`,
+        [table, column],
+      );
+      if (check.rows.length > 0 && check.rows[0].is_nullable === 'NO') {
+        await client.query(`ALTER TABLE ${table} ALTER COLUMN "${column}" DROP NOT NULL`);
+        console.log(`Migration - ancienne colonne "${column}" de ${table} rendue nullable (n'est plus utilisee par le code actuel).`);
+      }
+    } catch (error) {
+      console.error(`Migration - impossible de neutraliser ${table}."${column}" : ${error.message}`);
+    }
+  }
+
   console.log(`Migration de schema terminee : ${okCount} instruction(s) appliquee(s), ${failCount} ignoree(s).`);
   await client.end();
 }
