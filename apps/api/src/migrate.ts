@@ -9,9 +9,7 @@ import { Client } from 'pg';
 // etrangere incompatible suite a une derive historique du schema), seule
 // CETTE instruction est ignoree - toutes les autres s'appliquent quand
 // meme. Une transaction unique ferait annuler l'integralite de la
-// migration a la moindre erreur isolee, ce qui s'est reellement produit
-// en production (l'ajout de donors.user_id, pourtant reussi, avait ete
-// annule par l'echec ulterieur et sans rapport de matches.request_id).
+// migration a la moindre erreur isolee.
 const MIGRATION_STATEMENTS: string[] = [
   `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
   `CREATE TABLE IF NOT EXISTS wilayas (
@@ -505,6 +503,282 @@ END $$;`,
   `ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`,
 ];
 
+// Colonnes legitimes de chaque table, telles que definies par le schema
+// actuel (database/schema/schema-complete.sql). Sert de reference pour la
+// neutralisation generique ci-dessous : toute colonne NOT NULL presente en
+// base mais ABSENTE de cette liste est consideree comme un residu d'une
+// generation anterieure du schema (l'application est passee par plusieurs
+// structures de donnees differentes avant d'etre stabilisee) et est rendue
+// nullable automatiquement, quel que soit son nom. C'est la correction
+// generale qui remplace le traitement au cas par cas colonne par colonne.
+const EXPECTED_COLUMNS: Record<string, string[]> = {
+  "wilayas": [
+    "id",
+    "code",
+    "name_fr",
+    "name_ar",
+    "latitude",
+    "longitude"
+  ],
+  "dairas": [
+    "id",
+    "code",
+    "name_fr",
+    "name_ar",
+    "wilaya_code"
+  ],
+  "communes": [
+    "id",
+    "code",
+    "name_fr",
+    "name_ar",
+    "daira_code",
+    "latitude",
+    "longitude"
+  ],
+  "users": [
+    "id",
+    "email",
+    "password",
+    "first_name",
+    "last_name",
+    "phone",
+    "roles",
+    "is_active",
+    "is_verified",
+    "created_at",
+    "updated_at"
+  ],
+  "donors": [
+    "id",
+    "user_id",
+    "blood_type",
+    "donation_types",
+    "wilaya_id",
+    "daira_id",
+    "commune_id",
+    "latitude",
+    "longitude",
+    "availability_status",
+    "last_donation_date",
+    "is_verified",
+    "certified",
+    "has_donated_before",
+    "created_at",
+    "updated_at"
+  ],
+  "recipients": [
+    "id",
+    "user_id",
+    "wilaya_id",
+    "commune_id",
+    "created_at"
+  ],
+  "donation_requests": [
+    "id",
+    "requester_id",
+    "blood_type",
+    "donation_type",
+    "wilaya_id",
+    "commune_id",
+    "hospital_name",
+    "service",
+    "urgency_level",
+    "needed_date",
+    "contact_phone",
+    "additional_info",
+    "status",
+    "is_verified",
+    "verified_by",
+    "created_at",
+    "updated_at"
+  ],
+  "matches": [
+    "id",
+    "request_id",
+    "donor_id",
+    "score",
+    "distance_km",
+    "status",
+    "created_at"
+  ],
+  "conversations": [
+    "id",
+    "match_id",
+    "created_at",
+    "updated_at"
+  ],
+  "messages": [
+    "id",
+    "conversation_id",
+    "sender_id",
+    "content",
+    "is_read",
+    "created_at"
+  ],
+  "notifications": [
+    "id",
+    "user_id",
+    "title",
+    "body",
+    "type",
+    "is_read",
+    "data",
+    "created_at"
+  ],
+  "hospitals": [
+    "id",
+    "name_fr",
+    "name_ar",
+    "type",
+    "wilaya_id",
+    "daira_id",
+    "commune_id",
+    "address",
+    "latitude",
+    "longitude",
+    "phone",
+    "phone_emergency",
+    "email",
+    "website",
+    "opening_hours",
+    "services",
+    "blood_services",
+    "source",
+    "source_url",
+    "verified",
+    "verified_at",
+    "created_at"
+  ],
+  "clinics": [
+    "id",
+    "name_fr",
+    "name_ar",
+    "wilaya_id",
+    "daira_id",
+    "commune_id",
+    "address",
+    "latitude",
+    "longitude",
+    "phone",
+    "services",
+    "source",
+    "verified",
+    "created_at"
+  ],
+  "transfusion_centers": [
+    "id",
+    "name_fr",
+    "name_ar",
+    "wilaya_id",
+    "daira_id",
+    "commune_id",
+    "address",
+    "latitude",
+    "longitude",
+    "phone",
+    "opening_hours",
+    "accepted_donation_types",
+    "source",
+    "verified",
+    "created_at"
+  ],
+  "pharmacies": [
+    "id",
+    "name_fr",
+    "name_ar",
+    "wilaya_id",
+    "commune_id",
+    "address",
+    "latitude",
+    "longitude",
+    "phone",
+    "opening_hours",
+    "is_on_duty",
+    "created_at"
+  ],
+  "campaigns": [
+    "id",
+    "name",
+    "organizer_id",
+    "organizer_type",
+    "start_date",
+    "end_date",
+    "wilaya_id",
+    "commune_id",
+    "location",
+    "latitude",
+    "longitude",
+    "donation_types",
+    "description",
+    "contact_phone",
+    "status",
+    "created_at"
+  ],
+  "associations": [
+    "id",
+    "name",
+    "name_ar",
+    "admin_user_id",
+    "wilaya_id",
+    "address",
+    "phone",
+    "email",
+    "description",
+    "is_verified",
+    "created_at"
+  ],
+  "reports": [
+    "id",
+    "reporter_id",
+    "reported_user_id",
+    "reason",
+    "status",
+    "reviewed_by",
+    "created_at"
+  ],
+  "blocks": [
+    "id",
+    "blocker_id",
+    "blocked_user_id",
+    "created_at"
+  ],
+  "verifications": [
+    "id",
+    "user_id",
+    "document_type",
+    "document_url",
+    "status",
+    "reviewed_by",
+    "reviewed_at",
+    "created_at"
+  ],
+  "audit_logs": [
+    "id",
+    "user_id",
+    "action",
+    "entity_type",
+    "entity_id",
+    "details",
+    "ip_address",
+    "created_at"
+  ],
+  "consents": [
+    "id",
+    "user_id",
+    "consent_type",
+    "granted",
+    "granted_at",
+    "revoked_at"
+  ],
+  "app_settings": [
+    "key",
+    "value",
+    "description",
+    "updated_at"
+  ]
+};
+
 async function migrate() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) {
@@ -532,43 +806,45 @@ async function migrate() {
       okCount++;
     } catch (error) {
       failCount++;
-      // On logue puis on continue : une instruction en echec (ex. table
-      // deja dans un etat incompatible) ne doit jamais bloquer les
-      // suivantes ni empecher le demarrage de l'API.
       console.error(`Migration - instruction ignoree (${error.message}) : ${statement.slice(0, 80).replace(/\n/g, ' ')}...`);
     }
   }
+  console.log(`Migration de schema terminee : ${okCount} instruction(s) appliquee(s), ${failCount} ignoree(s).`);
 
-  // Neutralise d'anciennes colonnes camelCase (ex: "userId") laissees par
-  // une periode anterieure ou TypeORM avait synchronise le schema
-  // automatiquement, avant le passage a des migrations explicites. Ces
-  // colonnes sont NOT NULL mais plus jamais ecrites par le code actuel
-  // (qui utilise user_id) : elles bloquent toute nouvelle insertion tant
-  // qu'elles restent obligatoires. On les rend nullable plutot que de les
-  // supprimer, par prudence.
-  const legacyNotNullFixes = [
-    { table: 'donors', column: 'userId' },
-    { table: 'donation_requests', column: 'userId' },
-    { table: 'notifications', column: 'userId' },
-    { table: 'donors', column: 'wilayaId' },
-    { table: 'donation_requests', column: 'wilayaId' },
-  ];
-  for (const { table, column } of legacyNotNullFixes) {
+  // ---- Neutralisation generique des colonnes obligatoires heritees ----
+  // Pour chaque table connue, on recupere la VRAIE liste de ses colonnes
+  // NOT NULL directement depuis la base (pas depuis nos hypotheses), et on
+  // rend nullable toute colonne qui n'appartient pas au schema actuel.
+  // Cette approche est volontairement dynamique et exhaustive : elle
+  // corrige aussi bien "userId" que "blood_group" ou n'importe quel autre
+  // nom herite d'une iteration anterieure du projet, sans avoir besoin de
+  // connaitre son nom a l'avance.
+  let neutralized = 0;
+  for (const table of Object.keys(EXPECTED_COLUMNS)) {
     try {
-      const check = await client.query(
-        `SELECT is_nullable FROM information_schema.columns WHERE table_name = $1 AND column_name = $2`,
-        [table, column],
+      const result = await client.query(
+        `SELECT column_name FROM information_schema.columns
+         WHERE table_name = $1 AND is_nullable = 'NO' AND column_default IS NULL`,
+        [table],
       );
-      if (check.rows.length > 0 && check.rows[0].is_nullable === 'NO') {
-        await client.query(`ALTER TABLE ${table} ALTER COLUMN "${column}" DROP NOT NULL`);
-        console.log(`Migration - ancienne colonne "${column}" de ${table} rendue nullable (n'est plus utilisee par le code actuel).`);
+      const expected = new Set(EXPECTED_COLUMNS[table]);
+      for (const row of result.rows) {
+        const col = row.column_name;
+        if (col === 'id' || col === 'key' || expected.has(col)) continue;
+        try {
+          await client.query(`ALTER TABLE ${table} ALTER COLUMN "${col}" DROP NOT NULL`);
+          console.log(`Migration - colonne heritee neutralisee : ${table}."${col}" (n'appartient pas au schema actuel).`);
+          neutralized++;
+        } catch (err) {
+          console.error(`Migration - impossible de neutraliser ${table}."${col}" : ${err.message}`);
+        }
       }
-    } catch (error) {
-      console.error(`Migration - impossible de neutraliser ${table}."${column}" : ${error.message}`);
+    } catch (err) {
+      console.error(`Migration - impossible d'inspecter la table ${table} : ${err.message}`);
     }
   }
+  console.log(`Migration - ${neutralized} colonne(s) heritee(s) neutralisee(s).`);
 
-  console.log(`Migration de schema terminee : ${okCount} instruction(s) appliquee(s), ${failCount} ignoree(s).`);
   await client.end();
 }
 
