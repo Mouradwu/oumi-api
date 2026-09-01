@@ -1,13 +1,43 @@
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+
 export class CreateRequestDto {
-  userId: string;
-  blood_group: string;
+  @IsString()
+  @IsNotEmpty()
+  blood_type: string;
+
+  @IsString()
+  @IsNotEmpty()
   donation_type: string;
-  wilaya: string;
-  hospital?: string;
-  urgency?: string;
-  description?: string;
-  patient_name?: string;
-  patient_age?: number;
-  quantity?: number;
-  contact_phone?: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  wilaya_id: number;
+
+  @IsNumber()
+  @IsOptional()
+  commune_id?: number;
+
+  @IsString()
+  @IsOptional()
+  hospital_name?: string;
+
+  @IsString()
+  @IsOptional()
+  service?: string;
+
+  @IsString()
+  @IsOptional()
+  urgency_level?: string;
+
+  @IsString()
+  @IsOptional()
+  needed_date?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  contact_phone: string;
+
+  @IsString()
+  @IsOptional()
+  additional_info?: string;
 }

@@ -1,37 +1,53 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { DonationRequest } from './entities/request.entity';
+import { DonationRequest } from './donation-request.entity';
+import { User } from '../users/user.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
 
 @Injectable()
 export class RequestsService {
   constructor(
-    @InjectRepository(DonationRequest)
-    private requestRepository: Repository<DonationRequest>,
+    @InjectRepository(DonationRequest) private readonly repo: Repository<DonationRequest>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
-  async create(createRequestDto: CreateRequestDto): Promise<DonationRequest> {
-    const request = this.requestRepository.create(createRequestDto);
-    return this.requestRepository.save(request);
+  async create(userId: string, dto: CreateRequestDto) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur introuvable');
+
+    const request = this.repo.create({
+      requester: user,
+      blood_type: dto.blood_type,
+      donation_type: dto.donation_type,
+      wilaya_id: dto.wilaya_id,
+      commune_id: dto.commune_id,
+      hospital_name: dto.hospital_name,
+      service: dto.service,
+      urgency_level: dto.urgency_level || 'normal',
+      needed_date: dto.needed_date,
+      contact_phone: dto.contact_phone,
+      additional_info: dto.additional_info,
+      status: 'pending',
+    });
+
+    return this.repo.save(request);
   }
 
-  async findAll(): Promise<DonationRequest[]> {
-    return this.requestRepository.find({ relations: ['user'] });
+  async findAll() {
+    return this.repo.find({ relations: ['requester'], order: { created_at: 'DESC' } });
   }
 
-  async findOne(id: number): Promise<DonationRequest> {
-    const request = await this.requestRepository.findOne({ where: { id }, relations: ['user'] });
-    if (!request) throw new NotFoundException(`Request with ID ${id} not found`);
-    return request;
+  async findOne(id: string) {
+    const req = await this.repo.findOne({ where: { id }, relations: ['requester'] });
+    if (!req) throw new NotFoundException();
+    return req;
   }
 
-  async findByUserId(userId: string): Promise<DonationRequest[]> {
-    return this.requestRepository.find({ where: { userId }, relations: ['user'] });
-  }
-
-  async updateStatus(id: number, status: string): Promise<DonationRequest> {
-    await this.requestRepository.update(id, { status });
-    return this.findOne(id);
+  async updateStatus(id: string, status: string) {
+    const req = await this.repo.findOne({ where: { id } });
+    if (!req) throw new NotFoundException();
+    req.status = status;
+    return this.repo.save(req);
   }
 }
