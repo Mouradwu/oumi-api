@@ -22,6 +22,7 @@ export default function RequesterRegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [resultMessage, setResultMessage] = useState("");
 
   useEffect(() => {
     fetch(`${API_URL}/wilayas`)
@@ -49,6 +50,38 @@ export default function RequesterRegisterPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur");
+      const requestId = data.id;
+
+      // Alerte les donneurs compatibles (meme wilaya en priorite) - sans
+      // cette etape, la demande est creee mais personne n'est prevenu.
+      let notified = 0;
+      try {
+        const dres = await fetch(`${API_URL}/donors?blood_type=${encodeURIComponent(form.blood_type)}`);
+        const donors = await dres.json();
+        const donorsList = Array.isArray(donors) ? donors : [];
+        const sameWilaya = donorsList.filter((d: any) => Number(d.wilaya_id) === Number(form.wilaya_id));
+        const targets = (sameWilaya.length > 0 ? sameWilaya : donorsList).slice(0, 10);
+        const requesterName = `${user.first_name || ""} ${user.last_name || ""}`.trim();
+
+        for (const d of targets) {
+          if (!d.userId) continue;
+          const nres = await fetch(`${API_URL}/notifications`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+            body: JSON.stringify({
+              userId: d.userId,
+              title: form.urgency_level === "critical" ? "🔴 Demande urgente de sang" : "Demande de sang",
+              body: `${requesterName} a besoin de ${form.blood_type} (${form.donation_type}).`,
+              type: "request",
+              data: { requestId, receiverId: user.id, receiverName: requesterName },
+            }),
+          });
+          if (nres.ok) notified++;
+        }
+      } catch {
+        // la demande reste creee meme si l'envoi des alertes echoue partiellement
+      }
+
       setSuccess(true);
       // Ajoute le rôle "requester" à l'utilisateur (n'empêche pas la
       // redirection si ça échoue : la demande est déjà créée).
@@ -61,7 +94,8 @@ export default function RequesterRegisterPage() {
       } catch {
         // non bloquant
       }
-      setTimeout(() => router.push("/profile"), 2000);
+      setResultMessage(notified > 0 ? `Demande créée et ${notified} donneur(s) alerté(s).` : "Demande créée. Aucun donneur compatible trouvé pour le moment.");
+      setTimeout(() => router.push("/profile"), 2500);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
     } finally {
@@ -76,7 +110,7 @@ export default function RequesterRegisterPage() {
         <h1 className="text-3xl font-bold mt-6">🩸 Devenir demandeur</h1>
         <p className="text-white/50 mt-2">Créez une demande de sang, plasma ou plaquettes</p>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ Demande créée !</div>}
+        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ {resultMessage || "Demande créée !"}</div>}
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
             <label className="block text-sm text-white/60 mb-1">Type de besoin *</label>
