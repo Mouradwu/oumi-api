@@ -6,7 +6,7 @@ export class Notification {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'userId', type: 'uuid' })
+  @Column({ type: 'uuid' })
   userId: string;
 
   @ManyToOne(() => User)
