@@ -1,213 +1,179 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 
+const API_URL = "https://oumiapi-production.up.railway.app";
+const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+function getToken() {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("token") || localStorage.getItem("access_token") || localStorage.getItem("jwt") || null;
+}
+function getUser() {
+  if (typeof window === "undefined") return null;
+  try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
+}
+
 export default function CreateRequestPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [wilayas, setWilayas] = useState<any[]>([]);
   const [form, setForm] = useState({
-    blood_group: "",
-    donation_type: "SANG",
-    wilaya: "",
-    hospital: "",
-    urgency: "NORMAL",
-    description: "",
-    patient_name: "",
-    patient_age: "",
-    quantity: "1",
-    contact_phone: "",
+    blood_type: "O+", donation_type: "Sang", wilaya_id: "",
+    hospital_name: "", contact_phone: "", urgency_level: "normal",
+    needed_date: "", additional_info: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
 
-  if (!user) {
-    router.push("/auth/login");
-    return null;
-  }
+  useEffect(() => {
+    fetch(`${API_URL}/wilayas`).then((r) => r.json()).then(setWilayas).catch(() => {});
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess(false);
-
+    setResult(null);
+    const token = getToken();
+    const user = getUser();
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${token}` };
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("'$apiBase'/requests", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+      const res = await fetch(`${API_URL}/requests`, {
+        method: "POST", headers,
         body: JSON.stringify({
-          ...form,
-          userId: user.id,
+          blood_type: form.blood_type,
+          donation_type: form.donation_type,
+          wilaya_id: Number(form.wilaya_id),
+          hospital_name: form.hospital_name,
+          contact_phone: form.contact_phone,
+          urgency_level: form.urgency_level,
+          needed_date: form.needed_date || null,
+          additional_info: form.additional_info,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Erreur de crÃ©ation");
-      setSuccess(true);
-      setTimeout(() => router.push("/requests"), 2000);
+      const created = await res.json();
+      if (!res.ok) throw new Error(created?.message || "Erreur création demande");
+      const requestId = created?.id ?? created?.request?.id;
+
+      const dres = await fetch(`${API_URL}/donors`);
+      const donors = (await dres.json()) || [];
+      const valid = donors.filter((d: any) => d?.user?.id);
+      const sameWilaya = valid.filter((d: any) => Number(d.wilaya_id) === Number(form.wilaya_id));
+      const targets = (sameWilaya.length ? sameWilaya : valid).slice(0, 20);
+
+      const requesterName = user ? `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim() : "Quelqu'un";
+      let notified = 0;
+      for (const d of targets) {
+        const nres = await fetch(`${API_URL}/notifications`, {
+          method: "POST", headers,
+          body: JSON.stringify({
+            userId: d.user.id,
+            title: "Demande d'aide urgente",
+            message: `${requesterName} a besoin de ${form.blood_type} (${form.donation_type}).`,
+            type: "request",
+            data: {
+              requestId,
+              receiverId: d.user.id,
+              receiverName: d.user.first_name,
+              blood_type: form.blood_type,
+              donation_type: form.donation_type,
+              wilaya_id: Number(form.wilaya_id),
+            },
+          }),
+        });
+        if (nres.ok) notified++;
+      }
+      setResult({ ok: true, message: `Demande créée et ${notified} donneur(s) notifié(s).` });
     } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setResult({ ok: false, message: `Erreur : ${err.message}` });
     }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">ðŸ¥ Nouvelle demande de sang</h1>
-        <p className="text-white/50 mt-2">Pour les hÃ´pitaux, cliniques et associations</p>
+    <div className="min-h-screen bg-[#0a0a0f] text-white py-12 px-6">
+      <div className="relative z-10 w-full max-w-2xl mx-auto">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-block mb-6"><Logo size={40} /></Link>
+          <h1 className="text-3xl font-bold mb-2">Demander de l'aide</h1>
+          <p className="text-white/60">Votre demande sera envoyée aux donneurs compatibles</p>
+        </div>
 
-        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">âœ… Demande crÃ©Ã©e !</div>}
+        {result && (
+          <div className={`mb-6 p-4 rounded-xl border text-sm ${result.ok ? "border-green-500/30 bg-green-500/10" : "border-red-500/30 bg-red-500/10"}`}>
+            {result.message}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select
-              value={form.blood_group}
-              onChange={(e) => setForm({ ...form, blood_group: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
-              required
-            >
-              <option value="">SÃ©lectionnez</option>
-              <option value="A+">A+</option>
-              <option value="A-">A-</option>
-              <option value="B+">B+</option>
-              <option value="B-">B-</option>
-              <option value="AB+">AB+</option>
-              <option value="AB-">AB-</option>
-              <option value="O+">O+</option>
-              <option value="O-">O-</option>
-            </select>
+        <form onSubmit={submit} className="space-y-4 bg-white/[0.02] border border-white/5 rounded-2xl p-6 md:p-8">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Groupe sanguin</label>
+              <select value={form.blood_type} onChange={(e) => setForm({ ...form, blood_type: e.target.value })}
+                className="w-full px-4 py-3 bg-[#0f0f1a] border border-white/20 rounded-xl text-white">
+                {BLOOD_TYPES.map((b) => <option key={b} value={b}>{b}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Type de don</label>
+              <select value={form.donation_type} onChange={(e) => setForm({ ...form, donation_type: e.target.value })}
+                className="w-full px-4 py-3 bg-[#0f0f1a] border border-white/20 rounded-xl text-white">
+                <option value="Sang">Sang</option>
+                <option value="Plasma">Plasma</option>
+                <option value="Plaquettes">Plaquettes</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Wilaya</label>
+              <select value={form.wilaya_id} onChange={(e) => setForm({ ...form, wilaya_id: e.target.value })} required
+                className="w-full px-4 py-3 bg-[#0f0f1a] border border-white/20 rounded-xl text-white">
+                <option value="">Sélectionnez</option>
+                {wilayas.map((w) => <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Urgence</label>
+              <select value={form.urgency_level} onChange={(e) => setForm({ ...form, urgency_level: e.target.value })}
+                className="w-full px-4 py-3 bg-[#0f0f1a] border border-white/20 rounded-xl text-white">
+                <option value="normal">Normal</option>
+                <option value="important">Important</option>
+                <option value="urgent">Urgent</option>
+                <option value="critical">Critique</option>
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Type de don *</label>
-            <select
-              value={form.donation_type}
-              onChange={(e) => setForm({ ...form, donation_type: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
-              required
-            >
-              <option value="SANG">ðŸ©¸ Sang</option>
-              <option value="PLASMA">ðŸ’§ Plasma</option>
-              <option value="PLAQUETTES">ðŸ§¬ Plaquettes</option>
-            </select>
+            <label className="block text-sm text-white/60 mb-2">Hôpital / lieu</label>
+            <input type="text" value={form.hospital_name} onChange={(e) => setForm({ ...form, hospital_name: e.target.value })}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" placeholder="CHU Mustapha..." />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Téléphone de contact</label>
+              <input type="tel" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} required
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" placeholder="0550123456" />
+            </div>
+            <div>
+              <label className="block text-sm text-white/60 mb-2">Date souhaitée</label>
+              <input type="date" value={form.needed_date} onChange={(e) => setForm({ ...form, needed_date: e.target.value })}
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" />
+            </div>
           </div>
 
           <div>
-            <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
-            <input
-              type="text"
-              placeholder="Ex: 16"
-              value={form.wilaya}
-              onChange={(e) => setForm({ ...form, wilaya: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
+            <label className="block text-sm text-white/60 mb-2">Informations complémentaires</label>
+            <textarea value={form.additional_info} onChange={(e) => setForm({ ...form, additional_info: e.target.value })}
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white" rows={3} />
           </div>
 
-          <div>
-            <label className="block text-sm text-white/60 mb-1">HÃ´pital / Association *</label>
-            <input
-              type="text"
-              placeholder="Nom de l'Ã©tablissement"
-              value={form.hospital}
-              onChange={(e) => setForm({ ...form, hospital: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Nom du patient (optionnel)</label>
-            <input
-              type="text"
-              placeholder="Nom du patient"
-              value={form.patient_name}
-              onChange={(e) => setForm({ ...form, patient_name: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Ã‚ge du patient (optionnel)</label>
-            <input
-              type="number"
-              placeholder="Ex: 45"
-              value={form.patient_age}
-              onChange={(e) => setForm({ ...form, patient_age: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">QuantitÃ© (poches) *</label>
-            <select
-              value={form.quantity}
-              onChange={(e) => setForm({ ...form, quantity: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
-            >
-              <option value="1">1 poche</option>
-              <option value="2">2 poches</option>
-              <option value="3">3 poches</option>
-              <option value="4">4 poches</option>
-              <option value="5">5 poches</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">TÃ©lÃ©phone de contact *</label>
-            <input
-              type="tel"
-              placeholder="06 XX XX XX XX"
-              value={form.contact_phone}
-              onChange={(e) => setForm({ ...form, contact_phone: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Urgence</label>
-            <select
-              value={form.urgency}
-              onChange={(e) => setForm({ ...form, urgency: e.target.value })}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white"
-            >
-              <option value="NORMAL">ðŸŸ¢ Normal</option>
-              <option value="URGENT">ðŸŸ¡ Urgent</option>
-              <option value="CRITICAL">ðŸ”´ Critique</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Description / Notes</label>
-            <textarea
-              placeholder="Informations complÃ©mentaires..."
-              value={form.description}
-              onChange={(e) => setForm({ ...form, description: e.target.value })}
-              rows={3}
-              className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
-          >
-            {loading ? "CrÃ©ation..." : "ðŸ“¢ CrÃ©er la demande"}
+          <button type="submit" disabled={loading}
+            className="w-full py-3 bg-white text-black rounded-xl font-medium hover:bg-white/90 disabled:opacity-50">
+            {loading ? "Envoi..." : "Envoyer la demande"}
           </button>
         </form>
       </div>

@@ -1,103 +1,119 @@
-﻿import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Notification } from './entities/notification.entity';
+import { Notification } from './notification.entity';
 import { User } from '../users/user.entity';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { DonationRequest } from '../requests/donation-request.entity';
 
 @Injectable()
 export class NotificationsService {
-  private readonly logger = new Logger(NotificationsService.name);
-
   constructor(
-    @InjectRepository(Notification)
-    private notifRepo: Repository<Notification>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
+    @InjectRepository(Notification) private readonly notifRepo: Repository<Notification>,
+    @InjectRepository(User) private readonly userRepo: Repository<User>,
+    @InjectRepository(DonationRequest) private readonly requestRepo: Repository<DonationRequest>,
   ) {}
 
-  async create(dto: CreateNotificationDto): Promise<Notification> {
-    this.logger.log('Création notification avec DTO:', JSON.stringify(dto));
+  async create(userId: string, dto: { title: string; body: string; type: string; data?: any }) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) return { success: false, error: 'Destinataire introuvable' };
 
-    // Vérifier le destinataire
-    const targetUser = await this.userRepo.findOne({ where: { id: dto.userId } });
-    if (!targetUser) {
-      throw new BadRequestException(`L'utilisateur ${dto.userId} n'existe pas.`);
-    }
-
-    // Vérification anti-doublon
-    if (dto.type === 'request' && dto.data?.receiverId) {
-      const exists = await this.checkExistingRequest(dto.userId, dto.data.receiverId);
-      if (exists) {
-        throw new BadRequestException('Une demande est déjà en attente auprès de ce donneur.');
+    const data = dto.data ?? {};
+    const requestId = data.requestId ?? data.request_id;
+    if (requestId) {
+      const req = await this.requestRepo.findOne({ where: { id: requestId } });
+      if (req) {
+        data.request = {
+          id: req.id,
+          blood_type: req.blood_type,
+          donation_type: req.donation_type,
+          urgency_level: req.urgency_level,
+          hospital_name: req.hospital_name,
+          needed_date: req.needed_date,
+          requester: {
+            id: req.requester?.id,
+            name: ((req.requester?.first_name ?? '') + ' ' + (req.requester?.last_name ?? '')).trim(),
+            phone: req.requester?.phone ?? req.contact_phone,
+            email: req.requester?.email,
+          },
+        };
       }
     }
 
-    // Définir des valeurs par défaut si les champs sont vides
-    const title = dto.title?.trim() || 'Notification';
-    const message = dto.message?.trim() || 'Message sans contenu';
-
-    const notif = this.notifRepo.create({
-      userId: dto.userId,
-      title: title,
-      message: message,
-      type: dto.type || null,
-      data: dto.data || null,
-      read: false,
-    });
-    return this.notifRepo.save(notif);
+    const n = this.notifRepo.create({ user, title: dto.title, body: dto.body, type: dto.type, data });
+    const saved = await this.notifRepo.save(n);
+    return { success: true, notification: this.serialize(saved) };
   }
 
-  async findForUser(userId: string): Promise<Notification[]> {
-    return this.notifRepo.find({
-      where: { userId },
-      order: { created_at: 'DESC' },
-    });
+  async getMyNotifications(userId: string) {
+    const list = await this.notifRepo.find({ where: { user: { id: userId } }, order: { created_at: 'DESC' } });
+    return list.map((n) => this.serialize(n));
   }
 
-  async markAsRead(id: number, userId: string): Promise<Notification> {
-    const notif = await this.notifRepo.findOne({ where: { id } });
-    if (!notif) throw new BadRequestException('Notification non trouvée');
-    if (notif.userId !== userId) throw new BadRequestException('Non autorisé');
-    notif.read = true;
-    return this.notifRepo.save(notif);
+  async markAsRead(id: string) {
+    const n = await this.notifRepo.findOne({ where: { id } });
+    if (!n) throw new NotFoundException();
+    n.is_read = true;
+    return this.serialize(await this.notifRepo.save(n));
   }
 
-  async accept(id: number, userId: string): Promise<Notification> {
-    const notif = await this.notifRepo.findOne({ where: { id }, relations: ['user'] });
-    if (!notif) throw new BadRequestException('Notification non trouvée');
-    if (notif.userId !== userId) throw new BadRequestException('Non autorisé');
-    notif.read = true;
-    await this.notifRepo.save(notif);
+  async accept(id: string, userId: string) {
+    const n = await this.notifRepo.findOne({ where: { id } });
+    if (!n) throw new NotFoundException();
 
-    const donor = notif.user;
-    const receiverId = notif.data?.receiverId;
-    if (!receiverId) throw new BadRequestException('Receveur non trouvé');
+    const data = n.data ?? {};
+    data.accepted = true;
+    data.accepted_at = new Date().toISOString();
+    data.accepted_by = userId;
+    n.is_read = true;
+    n.data = data;
+    await this.notifRepo.save(n);
 
-    const donorWithPhone = await this.userRepo.findOne({ where: { id: donor.id } });
-    const phone = donorWithPhone?.phone || 'non renseigné';
+    const donorUser = await this.userRepo.findOne({ where: { id: userId } });
+    const requestId = data.requestId ?? data.request_id ?? data.request?.id;
 
-    const receiverNotif = this.notifRepo.create({
-      userId: receiverId,
-      title: '✅ Demande acceptée !',
-      message: `${donor.first_name} ${donor.last_name} a accepté votre demande. Contactez-le au ${phone}.`,
-      type: 'acceptance',
-      data: { donorId: donor.id, donorPhone: phone },
-      read: false,
-    });
-    await this.notifRepo.save(receiverNotif);
-    return notif;
+    let contact = data.request?.requester ?? null;
+    let requestInfo = data.request ?? null;
+
+    if (requestId) {
+      const req = await this.requestRepo.findOne({ where: { id: requestId } });
+      if (req) {
+        requestInfo = {
+          id: req.id, blood_type: req.blood_type, donation_type: req.donation_type,
+          urgency_level: req.urgency_level, hospital_name: req.hospital_name,
+          service: req.service, needed_date: req.needed_date, contact_phone: req.contact_phone,
+        };
+        contact = {
+          name: ((req.requester?.first_name ?? '') + ' ' + (req.requester?.last_name ?? '')).trim(),
+          phone: req.requester?.phone ?? req.contact_phone,
+          email: req.requester?.email,
+        };
+        await this.requestRepo.update(requestId, { status: 'matched' });
+
+        if (req.requester?.id) {
+          await this.create(req.requester.id, {
+            title: 'Aide acceptée',
+            body: (donorUser ? ((donorUser.first_name ?? '') + ' ' + (donorUser.last_name ?? '')).trim() : 'Un donneur') + ' a accepté votre demande.',
+            type: 'accept',
+            data: {
+              requestId,
+              contact: {
+                name: donorUser ? ((donorUser.first_name ?? '') + ' ' + (donorUser.last_name ?? '')).trim() : '',
+                phone: donorUser?.phone,
+                email: donorUser?.email,
+              },
+            },
+          });
+        }
+      }
+    }
+
+    return { success: true, notification: this.serialize(n), contact, request: requestInfo };
   }
 
-  private async checkExistingRequest(userId: string, receiverId: string): Promise<boolean> {
-    const existing = await this.notifRepo.findOne({
-      where: {
-        userId: userId,
-        type: 'request',
-        data: { receiverId: receiverId },
-        read: false,
-      },
-    });
-    return !!existing;
+  private serialize(n: Notification) {
+    return {
+      id: n.id, title: n.title, body: n.body, message: n.body,
+      type: n.type, is_read: n.is_read, created_at: n.created_at, data: n.data,
+    };
   }
 }

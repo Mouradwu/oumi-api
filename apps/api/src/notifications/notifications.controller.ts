@@ -1,53 +1,46 @@
-﻿import { Controller, Get, Post, Patch, Body, Param, Request, UseGuards, Logger, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 @Controller('notifications')
 export class NotificationsController {
-  private readonly logger = new Logger(NotificationsController.name);
-
   constructor(private readonly service: NotificationsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
-  async create(@Body() body: any, @Request() req) {
-    // Log complet du body reçu
-    this.logger.log('Body reçu : ' + JSON.stringify(body));
-
-    // Extraire les champs manuellement (pour éviter les problèmes de DTO)
-    const userId = body.userId || body.user_id || body.userID;
-    const title = body.title || 'Notification';
-    const message = body.message || 'Message sans contenu';
-    const type = body.type || 'general';
-    const data = body.data || null;
-
-    if (!userId) {
-      this.logger.error('userId manquant dans le body');
-      throw new BadRequestException('Le champ "userId" (destinataire) est obligatoire.');
+  async create(@Body() body: any) {
+    let userId = typeof body?.userId === 'string' ? body.userId : null;
+    if (!userId || !UUID_RE.test(userId)) {
+      const alt = body?.data?.receiverId ?? body?.receiverId ?? body?.data?.userId;
+      userId = typeof alt === 'string' && UUID_RE.test(alt) ? alt : null;
     }
-
-    // Construire le DTO manuellement
-    const dto = { userId, title, message, type, data };
-    this.logger.log('DTO construit : ' + JSON.stringify(dto));
-
-    return await this.service.create(dto);
+    if (!userId) {
+      return { success: false, error: 'Destinataire invalide (UUID requis)' };
+    }
+    return this.service.create(userId, {
+      title: body?.title ?? 'Notification',
+      body: body?.body ?? body?.message ?? '',
+      type: body?.type ?? 'system',
+      data: body?.data ?? null,
+    });
   }
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getMyNotifications(@Request() req) {
-    return this.service.findForUser(req.user.id);
+  getMine(@Request() req) {
+    return this.service.getMyNotifications(req.user.id);
   }
 
   @Patch(':id/read')
   @UseGuards(JwtAuthGuard)
-  async markAsRead(@Param('id') id: string, @Request() req) {
-    return this.service.markAsRead(+id, req.user.id);
+  markRead(@Param('id') id: string) {
+    return this.service.markAsRead(id);
   }
 
   @Post(':id/accept')
   @UseGuards(JwtAuthGuard)
-  async accept(@Param('id') id: string, @Request() req) {
-    return this.service.accept(+id, req.user.id);
+  accept(@Param('id') id: string, @Request() req) {
+    return this.service.accept(id, req.user.id);
   }
 }
