@@ -734,3 +734,30 @@ ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT N
 --   SELECT column_name FROM information_schema.columns WHERE table_name = 'users';
 --   SELECT column_name FROM information_schema.columns WHERE table_name = 'donors';
 --   SELECT count(*) FROM wilayas;
+
+-- ---- Neutralisation des anciennes colonnes camelCase (heritage d'une
+--      periode ou TypeORM synchronisait automatiquement le schema) qui
+--      restent NOT NULL mais ne sont plus jamais ecrites par le code
+--      actuel (qui utilise user_id, wilaya_id, etc.). Rendues nullable
+--      plutot que supprimees, par prudence. Voir aussi apps/api/src/migrate.ts
+--      qui applique la meme logique dynamiquement (verifie l'existence
+--      avant d'agir, ce qui n'est pas necessaire ici grace a IF EXISTS). ----
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'donors' AND column_name = 'userId' AND is_nullable = 'NO') THEN
+    ALTER TABLE donors ALTER COLUMN "userId" DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'donation_requests' AND column_name = 'userId' AND is_nullable = 'NO') THEN
+    ALTER TABLE donation_requests ALTER COLUMN "userId" DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'notifications' AND column_name = 'userId' AND is_nullable = 'NO') THEN
+    ALTER TABLE notifications ALTER COLUMN "userId" DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'donors' AND column_name = 'wilayaId' AND is_nullable = 'NO') THEN
+    ALTER TABLE donors ALTER COLUMN "wilayaId" DROP NOT NULL;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'donation_requests' AND column_name = 'wilayaId' AND is_nullable = 'NO') THEN
+    ALTER TABLE donation_requests ALTER COLUMN "wilayaId" DROP NOT NULL;
+  END IF;
+END $$;
