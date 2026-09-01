@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { translations, type Lang } from "@/lib/translations";
+import { API_URL } from "@/lib/api";
 
 interface Wilaya {
   id: number;
@@ -24,7 +25,7 @@ export default function WilayasPage() {
   const isRTL = lang === "ar";
 
   useEffect(() => {
-    fetch("https://oumiapi-production.up.railway.app/wilayas")
+    fetch(`${API_URL}/wilayas`)
       .then((res) => res.json())
       .then((data) => {
         setWilayas(Array.isArray(data) ? data : []);

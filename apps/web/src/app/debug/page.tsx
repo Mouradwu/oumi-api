@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { API_URL } from "@/lib/api";
 
 export default function DebugPage() {
   const { user, logout } = useAuth();
@@ -32,7 +33,7 @@ export default function DebugPage() {
       return;
     }
     try {
-      const res = await fetch("https://oumiapi-production.up.railway.app/donors/me", {
+      const res = await fetch(`${API_URL}/donors/me`, {
         headers: { Authorization: "Bearer " + token },
       });
       const data = await res.json();

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 export default function DonorRegisterPage() {
   const { user } = useAuth();
@@ -13,14 +14,22 @@ export default function DonorRegisterPage() {
   const [success, setSuccess] = useState(false);
 
   const [donor, setDonor] = useState({
-    blood_group: "",
+    blood_type: "",
     donation_types: [] as string[],
-    wilaya: "",
-    availability: true,
+    wilaya_id: "" as number | "",
+    availability_status: "green",
     certified: false,
     has_donated_before: false,
     last_donation_date: "",
   });
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/wilayas`)
+      .then((res) => res.json())
+      .then((data) => setWilayas(Array.isArray(data) ? data : []))
+      .catch(() => setWilayas([]));
+  }, []);
 
   if (!user) {
     router.push("/auth/login");
@@ -46,10 +55,15 @@ export default function DonorRegisterPage() {
       setLoading(false);
       return;
     }
+    if (!donor.wilaya_id) {
+      setError("Veuillez sélectionner une wilaya");
+      setLoading(false);
+      return;
+    }
     try {
       const token = localStorage.getItem("token");
       const payload = { ...donor, userId: user.id, latitude: 0, longitude: 0 };
-      const res = await fetch("https://oumiapi-production.up.railway.app/donors", {
+      const res = await fetch(`${API_URL}/donors`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify(payload),
@@ -78,7 +92,7 @@ export default function DonorRegisterPage() {
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select value={donor.blood_group} onChange={(e) => setDonor({ ...donor, blood_group: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <select value={donor.blood_type} onChange={(e) => setDonor({ ...donor, blood_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
               <option value="">Sélectionnez</option>
               <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
             </select>
@@ -95,7 +109,12 @@ export default function DonorRegisterPage() {
           </div>
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
-            <input type="text" placeholder="Ex: 16" value={donor.wilaya} onChange={(e) => setDonor({ ...donor, wilaya: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
+            <select value={donor.wilaya_id} onChange={(e) => setDonor({ ...donor, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+              <option value="">Sélectionnez une wilaya</option>
+              {wilayas.map((w) => (
+                <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-3 border border-white/10 p-4 rounded-lg">
             <h3 className="text-sm font-semibold">📋 Statut</h3>
@@ -114,7 +133,7 @@ export default function DonorRegisterPage() {
               <label className="text-sm text-white/60">✅ Certifié médicalement</label>
             </div>
             <div className="flex items-center gap-3">
-              <input type="checkbox" checked={donor.availability} onChange={(e) => setDonor({ ...donor, availability: e.target.checked })} className="w-4 h-4 accent-red-600" />
+              <input type="checkbox" checked={donor.availability_status === "green"} onChange={(e) => setDonor({ ...donor, availability_status: e.target.checked ? "green" : "red" })} className="w-4 h-4 accent-red-600" />
               <label className="text-sm text-white/60">Disponible pour donner</label>
             </div>
           </div>

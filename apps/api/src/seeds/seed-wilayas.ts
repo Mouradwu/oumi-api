@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm';
-import { Wilaya } from '../geography/wilaya.entity';
+import { Wilaya } from '../geography/entities/wilaya.entity';
+import { Daira } from '../geography/entities/daira.entity';
+import { Commune } from '../geography/entities/commune.entity';
 
 const wilayasData = [
   { code: '01', name_fr: 'Adrar', name_ar: 'أدرار', latitude: 27.9, longitude: -0.28 },
@@ -66,7 +68,11 @@ async function seedWilayas() {
   const dataSource = new DataSource({
     type: 'postgres',
     url: process.env.DATABASE_URL,
-    entities: [Wilaya],
+    // Wilaya a une relation @OneToMany vers Daira (qui elle-meme relie
+    // Commune) : TypeORM doit connaitre toutes les entites du graphe de
+    // relations pour construire ses metadonnees, meme si ce script ne
+    // manipule que Wilaya.
+    entities: [Wilaya, Daira, Commune],
     synchronize: false,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });

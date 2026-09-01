@@ -14,8 +14,8 @@ export class RequestsController {
   }
 
   @Get()
-  findAll() {
-    return this.requestsService.findAll();
+  findAll(@Query('userId') userId?: string) {
+    return this.requestsService.findAll(userId);
   }
 
   @Get(':id')

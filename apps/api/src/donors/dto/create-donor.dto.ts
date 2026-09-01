@@ -1,21 +1,29 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsBoolean, IsDateString, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateDonorDto {
   @IsString()
-  @IsOptional()
-  userId?: string;
+  @IsNotEmpty()
+  userId: string;
 
   @IsString()
   @IsNotEmpty()
-  blood_group: string;
+  blood_type: string;
 
   @IsArray()
   @IsOptional()
   donation_types?: string[];
 
-  @IsString()
-  @IsNotEmpty()
-  wilaya: string;
+  @IsNumber()
+  @IsOptional()
+  wilaya_id?: number;
+
+  @IsNumber()
+  @IsOptional()
+  daira_id?: number;
+
+  @IsNumber()
+  @IsOptional()
+  commune_id?: number;
 
   @IsNumber()
   @IsOptional()
@@ -25,9 +33,9 @@ export class CreateDonorDto {
   @IsOptional()
   longitude?: number;
 
-  @IsBoolean()
+  @IsIn(['green', 'orange', 'red'])
   @IsOptional()
-  availability?: boolean;
+  availability_status?: string;
 
   @IsBoolean()
   @IsOptional()
@@ -37,7 +45,7 @@ export class CreateDonorDto {
   @IsOptional()
   has_donated_before?: boolean;
 
-  @IsString()
+  @IsDateString()
   @IsOptional()
   last_donation_date?: string;
 }

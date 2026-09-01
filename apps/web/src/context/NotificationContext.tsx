@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { API_URL } from "@/lib/api";
 
 interface Notification {
   id: number;
@@ -23,7 +24,7 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const API_BASE = "https://oumiapi-production.up.railway.app";
+const API_BASE = `${API_URL}`;
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);

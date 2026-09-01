@@ -2,8 +2,7 @@ packages:
   - 'apps/*'
   - 'packages/*'
 allowBuilds:
-  '@nestjs/core': set this to true or false
-  '@scarf/scarf': set this to true or false
-  bcrypt: set this to true or false
-  esbuild: set this to true or false
-  unrs-resolver: set this to true or false
+  '@nestjs/core': true
+  bcrypt: true
+  esbuild: true
+  unrs-resolver: true

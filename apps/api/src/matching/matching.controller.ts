@@ -10,10 +10,6 @@ export class MatchingController {
     if (!requestId) {
       throw new BadRequestException('requestId est obligatoire');
     }
-    const id = parseInt(requestId, 10);
-    if (isNaN(id)) {
-      throw new BadRequestException('requestId doit être un nombre valide');
-    }
-    return this.matchingService.findMatches(id);
+    return this.matchingService.findMatches(requestId);
   }
 }

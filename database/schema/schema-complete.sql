@@ -5,6 +5,39 @@
 -- Extension pour les UUID
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- Table des wilayas (division administrative niveau 1)
+CREATE TABLE IF NOT EXISTS wilayas (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    name_fr VARCHAR(100) NOT NULL,
+    name_ar VARCHAR(100),
+    latitude DECIMAL(10, 7),
+    longitude DECIMAL(10, 7)
+);
+
+-- Table des daïras (division administrative niveau 2)
+CREATE TABLE IF NOT EXISTS dairas (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    name_fr VARCHAR(100) NOT NULL,
+    name_ar VARCHAR(100),
+    wilaya_code VARCHAR(10) REFERENCES wilayas(code) ON DELETE CASCADE
+);
+
+-- Table des communes (division administrative niveau 3)
+-- NOTE: table créée mais NON peuplée. Aucune donnée fiable de commune
+-- n'a été inventée ici : importez un jeu de données officiel (ONS/ANCT,
+-- OpenStreetMap, GADM...) avant de vous appuyer sur cette table en prod.
+CREATE TABLE IF NOT EXISTS communes (
+    id SERIAL PRIMARY KEY,
+    code VARCHAR(10) UNIQUE NOT NULL,
+    name_fr VARCHAR(100) NOT NULL,
+    name_ar VARCHAR(100),
+    daira_code VARCHAR(10) REFERENCES dairas(code) ON DELETE CASCADE,
+    latitude DECIMAL(10, 7),
+    longitude DECIMAL(10, 7)
+);
+
 -- Table des utilisateurs
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -13,7 +46,7 @@ CREATE TABLE IF NOT EXISTS users (
     first_name VARCHAR(50) NOT NULL,
     last_name VARCHAR(50),
     phone VARCHAR(20),
-    role VARCHAR(20) DEFAULT 'donor',
+    roles TEXT[] DEFAULT ARRAY['donor']::TEXT[],
     is_active BOOLEAN DEFAULT true,
     is_verified BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
@@ -34,6 +67,8 @@ CREATE TABLE IF NOT EXISTS donors (
     availability_status VARCHAR(10) DEFAULT 'green',
     last_donation_date DATE,
     is_verified BOOLEAN DEFAULT false,
+    certified BOOLEAN DEFAULT false,
+    has_donated_before BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -55,7 +90,7 @@ CREATE TABLE IF NOT EXISTS donation_requests (
     donation_type VARCHAR(20) NOT NULL,
     wilaya_id INTEGER NOT NULL,
     commune_id INTEGER,
-    hospital_id UUID,
+    hospital_name VARCHAR(255),
     service VARCHAR(100),
     urgency_level VARCHAR(20) DEFAULT 'normal',
     needed_date DATE,

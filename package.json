@@ -5,8 +5,5 @@
   "scripts": {
     "build": "pnpm --filter @oumi/api build",
     "start:prod": "pnpm --filter @oumi/api start:prod"
-  },
-  "dependencies": {
-    "cached": "^6.1.0"
   }
 }

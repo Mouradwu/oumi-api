@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { API_URL } from "@/lib/api";
 
 interface AuthContextType {
   user: any;
@@ -19,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("https://oumiapi-production.up.railway.app/auth/me", {
+      fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: "Bearer " + token },
       })
         .then((res) => {
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -48,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || "Erreur de connexion");
     localStorage.setItem("token", data.access_token);
-    const userRes = await fetch("https://oumiapi-production.up.railway.app/auth/me", {
+    const userRes = await fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: "Bearer " + data.access_token },
     });
     const userData = await userRes.json();
@@ -56,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (formData: any) => {
-    const res = await fetch("https://oumiapi-production.up.railway.app/auth/register", {
+    const res = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formData),
