@@ -71,7 +71,7 @@ export class NotificationsService {
     const donorUser = await this.userRepo.findOne({ where: { id: userId } });
     const requestId = data.requestId ?? data.request_id ?? data.request?.id;
 
-    let contact = data.request?.requester ?? null;
+    let contact = data.request?.requester ?? data.contact ?? null;
     let requestInfo = data.request ?? null;
 
     if (requestId) {
@@ -96,6 +96,35 @@ export class NotificationsService {
             type: 'accept',
             data: {
               requestId,
+              contact: {
+                name: donorUser ? ((donorUser.first_name ?? '') + ' ' + (donorUser.last_name ?? '')).trim() : '',
+                phone: donorUser?.phone,
+                email: donorUser?.email,
+              },
+            },
+          });
+        }
+      }
+    } else {
+      // Pas de demande formelle associee (ex: contact direct depuis la
+      // page Explorer, "Demander de l'aide" sur un profil donneur). Le
+      // demandeur d'origine est identifie via data.receiverId - on
+      // reconstruit ses coordonnees, et on le notifie en retour avec les
+      // coordonnees de la personne qui vient d'accepter.
+      const originalRequesterId = data.receiverId ?? data.userId ?? null;
+      if (originalRequesterId) {
+        const originalRequester = await this.userRepo.findOne({ where: { id: originalRequesterId } });
+        if (originalRequester) {
+          contact = {
+            name: ((originalRequester.first_name ?? '') + ' ' + (originalRequester.last_name ?? '')).trim(),
+            phone: originalRequester.phone,
+            email: originalRequester.email,
+          };
+          await this.create(originalRequesterId, {
+            title: 'Aide acceptée',
+            body: (donorUser ? ((donorUser.first_name ?? '') + ' ' + (donorUser.last_name ?? '')).trim() : 'Quelqu\'un') + ' a accepté de vous aider.',
+            type: 'accept',
+            data: {
               contact: {
                 name: donorUser ? ((donorUser.first_name ?? '') + ' ' + (donorUser.last_name ?? '')).trim() : '',
                 phone: donorUser?.phone,

@@ -31,7 +31,7 @@ export class DonorsService {
       query.andWhere('donor.blood_type = :blood_type', { blood_type: filters.blood_type });
     }
     if (filters.donation_type) {
-      query.andWhere('donor.donation_types LIKE :donation_type', { donation_type: `%${filters.donation_type}%` });
+      query.andWhere(':donation_type = ANY(donor.donation_types)', { donation_type: filters.donation_type });
     }
     if (filters.wilaya_id) {
       query.andWhere('donor.wilaya_id = :wilaya_id', { wilaya_id: filters.wilaya_id });

@@ -87,10 +87,14 @@ export default function UpdateDonorPage() {
     }
     try {
       const token = localStorage.getItem("token");
+      const payload = {
+        ...form,
+        last_donation_date: form.has_donated_before && form.last_donation_date ? form.last_donation_date : null,
+      };
       const res = await fetch(`${API_URL}/donors/${donor.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur");

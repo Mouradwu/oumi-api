@@ -1,4 +1,5 @@
 import { IsArray, IsBoolean, IsDateString, IsIn, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateDonorDto {
   @IsString()
@@ -45,6 +46,10 @@ export class CreateDonorDto {
   @IsOptional()
   has_donated_before?: boolean;
 
+  // Convertit "" ou toute valeur vide en undefined avant validation, pour
+  // qu'un champ date optionnel non renseigne ne fasse jamais echouer
+  // @IsDateString() avec "must be a valid ISO 8601 date string".
+  @Transform(({ value }) => (value ? value : undefined))
   @IsDateString()
   @IsOptional()
   last_donation_date?: string;
