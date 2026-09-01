@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/lib/api";
+import { toArray } from "@/lib/safe";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Donor {
   id: string;
@@ -117,7 +119,7 @@ export default function ExplorerPage() {
 
   const filteredDonors = searchTriggered ? donors.filter(d => {
     if (filters.blood_type && d.blood_type !== filters.blood_type) return false;
-    if (filters.donation_type && !d.donation_types?.includes(filters.donation_type)) return false;
+    if (filters.donation_type && !toArray(d.donation_types).includes(filters.donation_type)) return false;
     if (filters.wilaya_id && d.wilaya_id !== filters.wilaya_id) return false;
     return true;
   }) : [];
@@ -137,6 +139,7 @@ export default function ExplorerPage() {
   };
 
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage de l'explorateur">
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <Header />
       <main className="container mx-auto px-6 py-12">
@@ -183,7 +186,7 @@ export default function ExplorerPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold">{donor.user?.first_name} {donor.user?.last_name}</h3>
-                      <p className="text-sm text-white/60">🩸 {donor.blood_type} - {donor.donation_types?.join(", ")}</p>
+                      <p className="text-sm text-white/60">🩸 {donor.blood_type} - {toArray(donor.donation_types).join(", ")}</p>
                       <p className="text-sm text-white/40">📍 {wilayaName(donor.wilaya_id)}</p>
                       {donor.availability_status === 'green' && <span className="text-green-400 text-sm">🟢 Disponible</span>}
                     </div>
@@ -224,5 +227,6 @@ export default function ExplorerPage() {
         )}
       </main>
     </div>
+    </ErrorBoundary>
   );
 }

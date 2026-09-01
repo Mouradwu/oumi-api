@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import { toArray } from "@/lib/safe";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Match {
   id: string;
@@ -84,6 +86,7 @@ export default function MatchingPage() {
   };
 
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage du matching">
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <div className="max-w-4xl mx-auto">
         <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
@@ -175,7 +178,7 @@ export default function MatchingPage() {
                           )}
                         </div>
                         <p className="text-sm text-white/60">
-                          🩸 {match.donor.blood_type} · {match.donor.donation_types?.join(", ") || "Aucun type"}
+                          🩸 {match.donor.blood_type} · {toArray(match.donor.donation_types).join(", ") || "Aucun type"}
                         </p>
                         <p className="text-sm text-white/40">
                           📍 {wilayaName(match.donor.wilaya_id)} · {match.donor.distance?.toFixed(1)} km
@@ -214,5 +217,6 @@ export default function MatchingPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }

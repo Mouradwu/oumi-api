@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import { toArray } from "@/lib/safe";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface Donor {
   id: string;
@@ -74,6 +76,7 @@ export default function ExploreDonorsPage() {
   };
 
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage des donneurs">
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
       <div className="max-w-6xl mx-auto">
         <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
@@ -150,7 +153,7 @@ export default function ExploreDonorsPage() {
                   <div>
                     <h3 className="font-semibold text-lg">{donor.user.first_name} {donor.user.last_name}</h3>
                     <p className="text-sm text-white/60">🩸 {donor.blood_type}</p>
-                    <p className="text-sm text-white/60">📦 {donor.donation_types?.join(", ")}</p>
+                    <p className="text-sm text-white/60">📦 {toArray(donor.donation_types).join(", ")}</p>
                     <p className="text-sm text-white/40">📍 {wilayaName(donor.wilaya_id)}</p>
                   </div>
                   <div className="text-right">
@@ -176,5 +179,6 @@ export default function ExploreDonorsPage() {
         )}
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
