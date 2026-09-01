@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { API_URL } from "@/lib/api";
 
 export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -15,7 +16,7 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const res = await fetch("https://oumiapi-production.up.railway.app/auth/login", {
+      const res = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -27,7 +28,7 @@ export default function LoginPage() {
       localStorage.setItem("token", token);
 
       // Vérifier que le token est valide
-      const verifyRes = await fetch("https://oumiapi-production.up.railway.app/auth/me", {
+      const verifyRes = await fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: "Bearer " + token },
       });
       if (!verifyRes.ok) {

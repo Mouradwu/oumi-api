@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 export default function UpdateDonorPage() {
   const { user } = useAuth();
@@ -13,15 +14,23 @@ export default function UpdateDonorPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [donor, setDonor] = useState<any>(null);
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [form, setForm] = useState({
-    blood_group: "",
+    blood_type: "",
     donation_types: [] as string[],
-    wilaya: "",
-    availability: true,
+    wilaya_id: "" as number | "",
+    availability_status: "green",
     certified: false,
     has_donated_before: false,
     last_donation_date: "",
   });
+
+  useEffect(() => {
+    fetch(`${API_URL}/wilayas`)
+      .then((res) => res.json())
+      .then((data) => setWilayas(Array.isArray(data) ? data : []))
+      .catch(() => setWilayas([]));
+  }, []);
 
   useEffect(() => {
     if (!user) {
@@ -29,7 +38,7 @@ export default function UpdateDonorPage() {
       return;
     }
     const token = localStorage.getItem("token");
-    fetch(`https://oumiapi-production.up.railway.app/donors/me?userId=${user.id}`, {
+    fetch(`${API_URL}/donors/me?userId=${user.id}`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => {
@@ -43,10 +52,10 @@ export default function UpdateDonorPage() {
         if (data) {
           setDonor(data);
           setForm({
-            blood_group: data.blood_group || "",
+            blood_type: data.blood_type || "",
             donation_types: data.donation_types || [],
-            wilaya: data.wilaya || "",
-            availability: data.availability !== undefined ? data.availability : true,
+            wilaya_id: data.wilaya_id ?? "",
+            availability_status: data.availability_status || "green",
             certified: data.certified || false,
             has_donated_before: data.has_donated_before || false,
             last_donation_date: data.last_donation_date || "",
@@ -78,8 +87,8 @@ export default function UpdateDonorPage() {
     }
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`https://oumiapi-production.up.railway.app/donors/${donor.id}`, {
-        method: "PATCH",
+      const res = await fetch(`${API_URL}/donors/${donor.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify(form),
       });
@@ -107,7 +116,7 @@ export default function UpdateDonorPage() {
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <select value={form.blood_type} onChange={(e) => setForm({ ...form, blood_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
               <option value="">Sélectionnez</option>
               <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
             </select>
@@ -124,12 +133,17 @@ export default function UpdateDonorPage() {
           </div>
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya</label>
-            <input type="text" placeholder="Ex: 16" value={form.wilaya} onChange={(e) => setForm({ ...form, wilaya: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
+            <select value={form.wilaya_id} onChange={(e) => setForm({ ...form, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white">
+              <option value="">Sélectionnez une wilaya</option>
+              {wilayas.map((w) => (
+                <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-3 border border-white/10 p-4 rounded-lg">
             <h3 className="text-sm font-semibold">Statut</h3>
             <div className="flex items-center gap-3">
-              <input type="checkbox" checked={form.availability} onChange={(e) => setForm({ ...form, availability: e.target.checked })} className="w-4 h-4 accent-red-600" />
+              <input type="checkbox" checked={form.availability_status === "green"} onChange={(e) => setForm({ ...form, availability_status: e.target.checked ? "green" : "red" })} className="w-4 h-4 accent-red-600" />
               <label className="text-sm text-white/60">Disponible</label>
             </div>
             <div className="flex items-center gap-3">

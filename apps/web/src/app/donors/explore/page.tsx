@@ -1,20 +1,20 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 interface Donor {
-  id: number;
-  blood_group: string;
+  id: string;
+  blood_type: string;
   donation_types: string[];
-  wilaya: string;
-  availability: boolean;
+  wilaya_id: number;
+  availability_status: string;
   certified: boolean;
   has_donated_before: boolean;
   last_donation_date: string | null;
   user: {
-    id: number;
+    id: string;
     first_name: string;
     last_name: string;
     phone: string;
@@ -24,33 +24,41 @@ interface Donor {
 
 export default function ExploreDonorsPage() {
   const [donors, setDonors] = useState<Donor[]>([]);
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filters, setFilters] = useState({
-    blood_group: "",
+    blood_type: "",
     donation_type: "",
-    wilaya: "",
-    availability: true,
+    wilaya_id: "" as number | "",
+    availability_status: "green",
   });
+
+  const wilayaName = (id: number) => wilayas.find((w) => w.id === id)?.name_fr || `#${id}`;
+
+  useEffect(() => {
+    fetch(`${API_URL}/wilayas`)
+      .then((res) => res.json())
+      .then((data) => setWilayas(Array.isArray(data) ? data : []))
+      .catch(() => setWilayas([]));
+  }, []);
 
   useEffect(() => {
     fetchDonors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchDonors = async () => {
     setLoading(true);
     setError("");
     try {
-      const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams();
-      if (filters.blood_group) queryParams.append("blood_group", filters.blood_group);
+      if (filters.blood_type) queryParams.append("blood_type", filters.blood_type);
       if (filters.donation_type) queryParams.append("donation_type", filters.donation_type);
-      if (filters.wilaya) queryParams.append("wilaya", filters.wilaya);
-      if (filters.availability) queryParams.append("availability", "true");
+      if (filters.wilaya_id) queryParams.append("wilaya_id", String(filters.wilaya_id));
+      if (filters.availability_status) queryParams.append("availability_status", filters.availability_status);
 
-      const res = await fetch(`https://oumiapi-production.up.railway.app/donors?${queryParams.toString()}`, {
-        headers: { Authorization: "Bearer " + localStorage.getItem("token") },
-      });
+      const res = await fetch(`${API_URL}/donors?${queryParams.toString()}`);
       if (!res.ok) throw new Error("Erreur lors de la récupération des donneurs");
       const data = await res.json();
       setDonors(Array.isArray(data) ? data : []);
@@ -76,8 +84,8 @@ export default function ExploreDonorsPage() {
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin</label>
             <select
-              value={filters.blood_group}
-              onChange={(e) => handleFilterChange("blood_group", e.target.value)}
+              value={filters.blood_type}
+              onChange={(e) => handleFilterChange("blood_type", e.target.value)}
               className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white"
             >
               <option value="">Tous</option>
@@ -106,13 +114,16 @@ export default function ExploreDonorsPage() {
           </div>
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya</label>
-            <input
-              type="text"
-              placeholder="Ex: 16"
-              value={filters.wilaya}
-              onChange={(e) => handleFilterChange("wilaya", e.target.value)}
-              className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
-            />
+            <select
+              value={filters.wilaya_id}
+              onChange={(e) => handleFilterChange("wilaya_id", e.target.value ? Number(e.target.value) : "")}
+              className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white"
+            >
+              <option value="">Toutes</option>
+              {wilayas.map((w) => (
+                <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
+              ))}
+            </select>
           </div>
           <div className="flex items-end">
             <button
@@ -138,12 +149,12 @@ export default function ExploreDonorsPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h3 className="font-semibold text-lg">{donor.user.first_name} {donor.user.last_name}</h3>
-                    <p className="text-sm text-white/60">🩸 {donor.blood_group}</p>
-                    <p className="text-sm text-white/60">📦 {donor.donation_types.join(", ")}</p>
-                    <p className="text-sm text-white/40">📍 Wilaya {donor.wilaya}</p>
+                    <p className="text-sm text-white/60">🩸 {donor.blood_type}</p>
+                    <p className="text-sm text-white/60">📦 {donor.donation_types?.join(", ")}</p>
+                    <p className="text-sm text-white/40">📍 {wilayaName(donor.wilaya_id)}</p>
                   </div>
                   <div className="text-right">
-                    {donor.availability ? (
+                    {donor.availability_status === 'green' ? (
                       <span className="text-xs bg-green-600/20 text-green-400 px-2 py-1 rounded">✅ Disponible</span>
                     ) : (
                       <span className="text-xs bg-red-600/20 text-red-400 px-2 py-1 rounded">⛔ Indisponible</span>

@@ -1,6 +1,7 @@
-﻿import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Donor } from '../donors/entities/donor.entity';
-import { DonationRequest } from '../requests/entities/request.entity';
+import { DonationRequest } from '../requests/donation-request.entity';
 
 @Entity('users')
 export class User {
@@ -16,6 +17,9 @@ export class User {
   @Column({ unique: true })
   email: string;
 
+  // Jamais renvoye dans les reponses API (voir ClassSerializerInterceptor
+  // active globalement dans main.ts).
+  @Exclude()
   @Column()
   password: string;
 
@@ -28,6 +32,6 @@ export class User {
   @OneToMany(() => Donor, donor => donor.user)
   donors: Donor[];
 
-  @OneToMany(() => DonationRequest, request => request.user)
+  @OneToMany(() => DonationRequest, request => request.requester)
   requests: DonationRequest[];
 }

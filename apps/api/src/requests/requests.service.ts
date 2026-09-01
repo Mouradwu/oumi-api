@@ -34,7 +34,10 @@ export class RequestsService {
     return this.repo.save(request);
   }
 
-  async findAll() {
+  async findAll(requesterId?: string) {
+    if (requesterId) {
+      return this.repo.find({ where: { requester: { id: requesterId } }, relations: ['requester'], order: { created_at: 'DESC' } });
+    }
     return this.repo.find({ relations: ['requester'], order: { created_at: 'DESC' } });
   }
 

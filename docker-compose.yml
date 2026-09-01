@@ -1,13 +1,13 @@
 version: '3.8'
 
 services:
-  # Base de données PostgreSQL
+  # Base de donnees PostgreSQL
   postgres:
     image: postgres:16-alpine
     container_name: oumi-postgres
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: oumi_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: oumi_db
     ports:
       - "5432:5432"
@@ -31,13 +31,9 @@ services:
     container_name: oumi-api
     environment:
       NODE_ENV: production
-      API_PORT: 3000
-      DATABASE_HOST: postgres
-      DATABASE_PORT: 5432
-      DATABASE_USER: postgres
-      DATABASE_PASSWORD: oumi_password
-      DATABASE_NAME: oumi_db
-      JWT_SECRET: oumi_production_secret_key_2026
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/oumi_db
+      JWT_SECRET: ${JWT_SECRET}
     ports:
       - "3000:3000"
     depends_on:

@@ -5,26 +5,27 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { useAuth } from "@/context/AuthContext";
+import { API_URL } from "@/lib/api";
 
 interface Notification {
-  id: number;
+  id: string;
   title: string;
+  body: string;
   message: string;
   type: string;
-  read: boolean;
+  is_read: boolean;
   data: any;
   created_at: string;
 }
 
 interface DonationRequest {
-  id: number;
-  blood_group: string;
+  id: string;
+  blood_type: string;
   donation_type: string;
-  wilaya: string;
-  hospital: string;
-  urgency: string;
-  description: string;
-  userId: string;
+  wilaya_id: number;
+  hospital_name: string | null;
+  urgency_level: string;
+  requester: { id: string };
 }
 
 export default function ProfilePage() {
@@ -50,13 +51,13 @@ export default function ProfilePage() {
     const fetchAll = async () => {
       try {
         const [nRes, dRes, rRes] = await Promise.all([
-          fetch(`https://oumiapi-production.up.railway.app/notifications?userId=${user.id}`, {
+          fetch(`${API_URL}/notifications?userId=${user.id}`, {
             headers: { Authorization: "Bearer " + token },
           }),
-          fetch(`https://oumiapi-production.up.railway.app/donors/me?userId=${user.id}`, {
+          fetch(`${API_URL}/donors/me?userId=${user.id}`, {
             headers: { Authorization: "Bearer " + token },
           }),
-          fetch(`https://oumiapi-production.up.railway.app/requests?userId=${user.id}`, {
+          fetch(`${API_URL}/requests?userId=${user.id}`, {
             headers: { Authorization: "Bearer " + token },
           })
         ]);
@@ -85,10 +86,10 @@ export default function ProfilePage() {
     const token = localStorage.getItem("token");
     if (!donorProfile) return;
     try {
-      const res = await fetch(`https://oumiapi-production.up.railway.app/donors/${donorProfile.id}`, {
-        method: "PATCH",
+      const res = await fetch(`${API_URL}/donors/${donorProfile.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ availability: !donorProfile.availability }),
+        body: JSON.stringify({ availability_status: donorProfile.availability_status === "green" ? "red" : "green" }),
       });
       if (res.ok) {
         const updated = await res.json();
@@ -107,7 +108,7 @@ export default function ProfilePage() {
 
   const roles = user.roles || [];
   const isDonor = roles.includes("donor") || donorProfile !== null;
-  const isRequester = roles.includes("requester") || requests.some(r => r.userId === user.id);
+  const isRequester = roles.includes("requester") || requests.some(r => r.requester?.id === user.id);
   const acceptedNotifications = notifications.filter(n => n.type === "acceptance");
 
   return (
@@ -152,7 +153,7 @@ export default function ProfilePage() {
               {isDonor && (
                 <div className="mt-4">
                   <button onClick={toggleAvailability} className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition">
-                    {donorProfile?.availability ? "🟢 Disponible (cliquer pour désactiver)" : "🔴 Indisponible (cliquer pour activer)"}
+                    {donorProfile?.availability_status === "green" ? "🟢 Disponible (cliquer pour désactiver)" : "🔴 Indisponible (cliquer pour activer)"}
                   </button>
                   <Link href="/donor/update" className="w-full block text-center mt-2 px-4 py-2 bg-white/10 text-white rounded-lg text-sm hover:bg-white/20 transition">
                     ✏️ Modifier mon profil donneur
@@ -180,8 +181,8 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   {requests.slice(0, 5).map((req) => (
                     <div key={req.id} className="flex justify-between items-center border-b border-white/5 py-2">
-                      <span>{req.blood_group} - {req.donation_type}</span>
-                      <span className="text-sm text-white/40">{req.urgency || "normal"}</span>
+                      <span>{req.blood_type} - {req.donation_type}</span>
+                      <span className="text-sm text-white/40">{req.urgency_level || "normal"}</span>
                     </div>
                   ))}
                 </div>
@@ -194,7 +195,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   {acceptedNotifications.map((n) => (
                     <div key={n.id} className="flex justify-between items-center border-b border-white/5 py-2">
-                      <span className="text-sm">{n.message}</span>
+                      <span className="text-sm">{n.body || n.message}</span>
                       <span className="text-xs text-white/30">{new Date(n.created_at).toLocaleDateString()}</span>
                       {n.data?.donorPhone && (
                         <span className="text-green-400 text-sm">📞 {n.data.donorPhone}</span>

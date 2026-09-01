@@ -3,33 +3,37 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 interface Request {
-  id: number;
-  blood_group: string;
+  id: string;
+  blood_type: string;
   donation_type: string;
-  wilaya: string;
-  hospital: string;
-  urgency: string;
+  wilaya_id: number;
+  hospital_name: string | null;
+  urgency_level: string;
   status: string;
   created_at: string;
-  patient_name: string;
 }
 
 export default function RequestsPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<Request[]>([]);
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
+  const wilayaName = (id: number) => wilayas.find((w) => w.id === id)?.name_fr || `#${id}`;
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("'$apiBase'/requests", {
-      headers: { Authorization: "Bearer " + token },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setRequests(data);
+    Promise.all([
+      fetch(`${API_URL}/requests`, { headers: { Authorization: "Bearer " + token } }).then((r) => r.json()),
+      fetch(`${API_URL}/wilayas`).then((r) => r.json()),
+    ])
+      .then(([reqData, wilayaData]) => {
+        setRequests(Array.isArray(reqData) ? reqData : []);
+        setWilayas(Array.isArray(wilayaData) ? wilayaData : []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -40,7 +44,7 @@ export default function RequestsPage() {
       pending: { color: "bg-yellow-600/20 text-yellow-400", label: "⏳ En attente" },
       matched: { color: "bg-blue-600/20 text-blue-400", label: "🔵 Donneur trouvé" },
       fulfilled: { color: "bg-green-600/20 text-green-400", label: "✅ Vie sauvée" },
-      expired: { color: "bg-gray-600/20 text-gray-400", label: "⏰ Expirée" },
+      cancelled: { color: "bg-gray-600/20 text-gray-400", label: "✖️ Annulée" },
     };
     return map[status] || map.pending;
   };
@@ -105,13 +109,10 @@ export default function RequestsPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <h3 className="font-semibold">
-                        🩸 {req.blood_group} - {req.donation_type}
+                        🩸 {req.blood_type} - {req.donation_type}
                       </h3>
-                      <p className="text-sm text-white/60">🏥 {req.hospital || "Hôpital"}</p>
-                      <p className="text-sm text-white/40">📍 Wilaya {req.wilaya}</p>
-                      {req.patient_name && (
-                        <p className="text-sm text-white/40">👤 Patient: {req.patient_name}</p>
-                      )}
+                      <p className="text-sm text-white/60">🏥 {req.hospital_name || "Établissement non précisé"}</p>
+                      <p className="text-sm text-white/40">📍 {wilayaName(req.wilaya_id)}</p>
                     </div>
                     <div className="text-right">
                       <span className={`text-sm px-2 py-1 rounded ${status.color}`}>
@@ -123,11 +124,8 @@ export default function RequestsPage() {
                     </div>
                   </div>
                   <div className="mt-3 flex gap-2">
-                    <Link href={`/matching`} className="px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded hover:bg-red-600/30 transition">
+                    <Link href="/matching" className="px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded hover:bg-red-600/30 transition">
                       🤝 Trouver un donneur
-                    </Link>
-                    <Link href={`/requests/${req.id}`} className="px-3 py-1 bg-white/10 text-white text-sm rounded hover:bg-white/20 transition">
-                      📋 Détails
                     </Link>
                   </div>
                 </div>

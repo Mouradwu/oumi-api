@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
+import { API_URL } from "@/lib/api";
 
-const API_URL = "https://oumiapi-production.up.railway.app";
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function CreateRequestPage() {

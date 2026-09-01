@@ -1,26 +1,34 @@
-﻿"use client";
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 export default function RequesterRegisterPage() {
   const { user } = useAuth();
   const router = useRouter();
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [form, setForm] = useState({
-    blood_group: "",
+    blood_type: "",
     donation_type: "SANG",
-    wilaya: "",
-    hospital: "",
-    urgency: "NORMAL",
-    description: "",
-    patient_name: "",
-    patient_age: "",
+    wilaya_id: "" as number | "",
+    hospital_name: "",
+    urgency_level: "normal",
+    additional_info: "",
+    contact_phone: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch(`${API_URL}/wilayas`)
+      .then((res) => res.json())
+      .then((data) => setWilayas(Array.isArray(data) ? data : []))
+      .catch(() => setWilayas([]));
+  }, []);
 
   if (!user) {
     router.push("/auth/login");
@@ -34,20 +42,25 @@ export default function RequesterRegisterPage() {
     setSuccess(false);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("https://oumiapi-production.up.railway.app/requests", {
+      const res = await fetch(`${API_URL}/requests`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ ...form, userId: user.id }),
+        body: JSON.stringify(form),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur");
       setSuccess(true);
-      // Ajouter le rôle "requester" à l'utilisateur
-      await fetch("https://oumiapi-production.up.railway.app/users/me/roles", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ roles: ["requester"] }),
-      });
+      // Ajoute le rôle "requester" à l'utilisateur (n'empêche pas la
+      // redirection si ça échoue : la demande est déjà créée).
+      try {
+        await fetch(`${API_URL}/users/me/roles`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ roles: Array.from(new Set([...(user.roles || []), "requester"])) }),
+        });
+      } catch {
+        // non bloquant
+      }
       setTimeout(() => router.push("/profile"), 2000);
     } catch (err: any) {
       setError(err instanceof Error ? err.message : "Erreur inconnue");
@@ -75,7 +88,7 @@ export default function RequesterRegisterPage() {
           </div>
           <div>
             <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select value={form.blood_group} onChange={(e) => setForm({ ...form, blood_group: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <select value={form.blood_type} onChange={(e) => setForm({ ...form, blood_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
               <option value="">Sélectionnez</option>
               <option value="A+">A+</option><option value="A-">A-</option>
               <option value="B+">B+</option><option value="B-">B-</option>
@@ -85,23 +98,33 @@ export default function RequesterRegisterPage() {
           </div>
           <div>
             <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
-            <input type="text" placeholder="Ex: 16" value={form.wilaya} onChange={(e) => setForm({ ...form, wilaya: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
-          </div>
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Hôpital / Association</label>
-            <input type="text" placeholder="Nom de l'établissement" value={form.hospital} onChange={(e) => setForm({ ...form, hospital: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
-          </div>
-          <div>
-            <label className="block text-sm text-white/60 mb-1">Urgence</label>
-            <select value={form.urgency} onChange={(e) => setForm({ ...form, urgency: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white">
-              <option value="NORMAL">🟢 Normal</option>
-              <option value="URGENT">🟡 Urgent</option>
-              <option value="CRITICAL">🔴 Critique</option>
+            <select value={form.wilaya_id} onChange={(e) => setForm({ ...form, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+              <option value="">Sélectionnez une wilaya</option>
+              {wilayas.map((w) => (
+                <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
+              ))}
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Description / Notes</label>
-            <textarea rows={3} placeholder="Informations complémentaires..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none" />
+            <label className="block text-sm text-white/60 mb-1">Hôpital / Association</label>
+            <input type="text" placeholder="Nom de l'établissement" value={form.hospital_name} onChange={(e) => setForm({ ...form, hospital_name: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
+          </div>
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Téléphone de contact *</label>
+            <input type="tel" placeholder="06/07XXXXXXXX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
+          </div>
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Urgence</label>
+            <select value={form.urgency_level} onChange={(e) => setForm({ ...form, urgency_level: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white">
+              <option value="normal">🟢 Normal</option>
+              <option value="important">🟡 Important</option>
+              <option value="urgent">🟠 Urgent</option>
+              <option value="critical">🔴 Critique</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm text-white/60 mb-1">Informations complémentaires</label>
+            <textarea rows={3} placeholder="Service, contexte..." value={form.additional_info} onChange={(e) => setForm({ ...form, additional_info: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none" />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50">
             {loading ? "Création..." : "📢 Créer la demande"}
@@ -111,6 +134,3 @@ export default function RequesterRegisterPage() {
     </div>
   );
 }
-
-
-

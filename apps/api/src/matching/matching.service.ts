@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { Donor } from '../donors/entities/donor.entity';
-import { DonationRequest } from '../requests/entities/request.entity';
+import { DonationRequest } from '../requests/donation-request.entity';
 
 @Injectable()
 export class MatchingService {
@@ -13,23 +13,29 @@ export class MatchingService {
     private requestRepository: Repository<DonationRequest>,
   ) {}
 
-  async findMatches(requestId: number) {
+  async findMatches(requestId: string) {
     const request = await this.requestRepository.findOne({ where: { id: requestId } });
-    if (!request) throw new Error('Request not found');
-    const compatibleGroups = this.getCompatibleBloodGroups(request.blood_group);
+    if (!request) throw new NotFoundException('Demande introuvable');
+
+    const compatibleGroups = this.getCompatibleBloodGroups(request.blood_type);
     const donors = await this.donorRepository.find({
-      where: { blood_group: In(compatibleGroups), availability: true },
+      where: {
+        blood_type: In(compatibleGroups),
+        availability_status: 'green',
+        ...(request.wilaya_id ? { wilaya_id: request.wilaya_id } : {}),
+      },
       relations: ['user'],
     });
-    return donors.map(donor => ({
+
+    return donors.map((donor) => ({
       id: donor.id,
-      donor: { ...donor, distance: Math.random() * 50 }, // à remplacer par calcul GPS
+      donor: { ...donor, distance: Math.random() * 50 }, // a remplacer par un calcul GPS reel
       score: Math.floor(Math.random() * 100),
       compatibility: 'good',
     }));
   }
 
-  getCompatibleBloodGroups(blood_group: string): string[] {
+  getCompatibleBloodGroups(blood_type: string): string[] {
     const compatibility: Record<string, string[]> = {
       'A+': ['A+', 'A-', 'O+', 'O-'],
       'A-': ['A-', 'O-'],
@@ -40,6 +46,6 @@ export class MatchingService {
       'O+': ['O+', 'O-'],
       'O-': ['O-'],
     };
-    return compatibility[blood_group] || [];
+    return compatibility[blood_type] || [];
   }
 }

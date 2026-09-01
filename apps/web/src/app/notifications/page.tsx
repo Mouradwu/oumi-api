@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
-
-const API_URL = "https://oumiapi-production.up.railway.app";
+import { API_URL } from "@/lib/api";
 
 function getToken() {
   if (typeof window === "undefined") return null;

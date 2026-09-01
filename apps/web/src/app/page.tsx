@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { translations, type Lang } from "@/lib/translations";
+import { API_URL } from "@/lib/api";
 
 export default function Home() {
   const [lang, setLang] = useState<Lang>("fr");
@@ -18,8 +19,8 @@ export default function Home() {
     const fetchData = async () => {
       try {
         const [donorsRes, requestsRes] = await Promise.all([
-          fetch("https://oumiapi-production.up.railway.app/donors"),
-          fetch("https://oumiapi-production.up.railway.app/requests")
+          fetch(`${API_URL}/donors`),
+          fetch(`${API_URL}/requests`)
         ]);
         const donorsData = await donorsRes.json();
         const requestsData = await requestsRes.json();

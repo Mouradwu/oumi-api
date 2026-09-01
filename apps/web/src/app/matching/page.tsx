@@ -3,23 +3,21 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import { API_URL } from "@/lib/api";
 
 interface Match {
-  id: number;
+  id: string;
   donor: {
-    id: number;
-    first_name: string;
-    last_name: string;
-    blood_group: string;
+    id: string;
+    blood_type: string;
     donation_types: string[];
-    wilaya: string;
-    latitude: number;
-    longitude: number;
+    wilaya_id: number;
     distance: number;
-    availability: boolean;
+    availability_status: string;
     certified: boolean;
     has_donated_before: boolean;
-    last_donation_date: string;
+    last_donation_date: string | null;
+    user: { first_name: string; last_name: string };
   };
   score: number;
   compatibility: string;
@@ -28,6 +26,7 @@ interface Match {
 export default function MatchingPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
+  const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [selectedRequest, setSelectedRequest] = useState("");
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(false);
@@ -35,15 +34,17 @@ export default function MatchingPage() {
   const [error, setError] = useState("");
   const [viewMode, setViewMode] = useState<"list" | "matches">("list");
 
-  // Charger les demandes disponibles
+  const wilayaName = (id: number) => wilayas.find((w) => w.id === id)?.name_fr || `#${id}`;
+
   useEffect(() => {
     const token = localStorage.getItem("token");
-    fetch("'$apiBase'/requests", {
-      headers: { Authorization: "Bearer " + token },
-    })
-      .then(res => res.json())
-      .then(data => {
-        setRequests(data);
+    Promise.all([
+      fetch(`${API_URL}/requests`, { headers: { Authorization: "Bearer " + token } }).then((r) => r.json()),
+      fetch(`${API_URL}/wilayas`).then((r) => r.json()),
+    ])
+      .then(([reqData, wilayaData]) => {
+        setRequests(Array.isArray(reqData) ? reqData : []);
+        setWilayas(Array.isArray(wilayaData) ? wilayaData : []);
         setLoadingRequests(false);
       })
       .catch(() => setLoadingRequests(false));
@@ -57,7 +58,7 @@ export default function MatchingPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`'$apiBase'/matching/find/${selectedRequest}`, {
+      const res = await fetch(`${API_URL}/matching/find/${selectedRequest}`, {
         headers: { Authorization: "Bearer " + token },
       });
       const data = await res.json();
@@ -74,6 +75,13 @@ export default function MatchingPage() {
   if (loadingRequests) {
     return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement des demandes...</div>;
   }
+
+  const urgencyStyle = (level: string) => {
+    if (level === 'critical') return 'bg-red-600 text-white';
+    if (level === 'urgent') return 'bg-orange-600 text-white';
+    if (level === 'important') return 'bg-yellow-600 text-white';
+    return 'bg-green-600 text-white';
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
@@ -95,26 +103,22 @@ export default function MatchingPage() {
                 requests.map((req: any) => (
                   <div
                     key={req.id}
-                    onClick={() => setSelectedRequest(req.id.toString())}
+                    onClick={() => setSelectedRequest(req.id)}
                     className={`p-4 border rounded-xl cursor-pointer transition ${
-                      selectedRequest === req.id.toString()
+                      selectedRequest === req.id
                         ? "border-red-500 bg-red-500/10"
                         : "border-white/10 hover:border-white/30"
                     }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-semibold">🩸 {req.blood_group} - {req.donation_type}</h3>
-                        <p className="text-sm text-white/60">🏥 {req.hospital || "Hôpital"}</p>
-                        <p className="text-sm text-white/40">📍 Wilaya {req.wilaya}</p>
+                        <h3 className="font-semibold">🩸 {req.blood_type} - {req.donation_type}</h3>
+                        <p className="text-sm text-white/60">🏥 {req.hospital_name || "Établissement non précisé"}</p>
+                        <p className="text-sm text-white/40">📍 {wilayaName(req.wilaya_id)}</p>
                       </div>
                       <div className="text-right">
-                        <span className={`text-sm px-2 py-1 rounded ${
-                          req.urgency === "CRITICAL" ? "bg-red-600 text-white" :
-                          req.urgency === "URGENT" ? "bg-yellow-600 text-white" :
-                          "bg-green-600 text-white"
-                        }`}>
-                          {req.urgency}
+                        <span className={`text-sm px-2 py-1 rounded ${urgencyStyle(req.urgency_level)}`}>
+                          {req.urgency_level}
                         </span>
                       </div>
                     </div>
@@ -161,20 +165,20 @@ export default function MatchingPage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h3 className="font-semibold">
-                            {match.donor.first_name} {match.donor.last_name}
+                            {match.donor.user?.first_name} {match.donor.user?.last_name}
                           </h3>
                           {match.donor.certified && (
                             <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded">✅ Certifié</span>
                           )}
-                          {!match.donor.availability && (
+                          {match.donor.availability_status !== 'green' && (
                             <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded">⏳ Indisponible</span>
                           )}
                         </div>
                         <p className="text-sm text-white/60">
-                          🩸 {match.donor.blood_group} · {match.donor.donation_types?.join(", ") || "Aucun type"}
+                          🩸 {match.donor.blood_type} · {match.donor.donation_types?.join(", ") || "Aucun type"}
                         </p>
                         <p className="text-sm text-white/40">
-                          📍 Wilaya {match.donor.wilaya} · {match.donor.distance?.toFixed(1)} km
+                          📍 {wilayaName(match.donor.wilaya_id)} · {match.donor.distance?.toFixed(1)} km
                         </p>
                         {match.donor.has_donated_before && (
                           <p className="text-xs text-green-400 mt-1">

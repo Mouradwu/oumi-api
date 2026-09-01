@@ -9,3 +9,7 @@ dist
 Thumbs.db
 coverage
 .nyc_output
+test-config.local.json
+*.bak
+_quarantine/
+*.tsbuildinfo
