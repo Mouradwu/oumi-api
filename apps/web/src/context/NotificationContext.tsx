@@ -4,11 +4,11 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { API_URL } from "@/lib/api";
 
 interface Notification {
-  id: number;
+  id: string;
   userId: string;
   title: string;
   message: string;
-  read: boolean;
+  is_read: boolean;
   type: string;
   data: any;
   created_at: string;
@@ -19,7 +19,7 @@ interface NotificationContextType {
   unreadCount: number;
   loading: boolean;
   fetchNotifications: () => Promise<void>;
-  markAsRead: (id: number) => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -51,7 +51,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const markAsRead = async (id: number) => {
+  const markAsRead = async (id: string) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
@@ -60,7 +60,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Erreur");
-      setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
     } catch (error) {
       console.error("Erreur markAsRead:", error);
     }
@@ -72,7 +72,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(interval);
   }, []);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.is_read).length;
 
   return (
     <NotificationContext.Provider

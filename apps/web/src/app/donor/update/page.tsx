@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import { toArray } from "@/lib/safe";
 
 export default function UpdateDonorPage() {
   const { user } = useAuth();
@@ -53,7 +54,7 @@ export default function UpdateDonorPage() {
           setDonor(data);
           setForm({
             blood_type: data.blood_type || "",
-            donation_types: data.donation_types || [],
+            donation_types: toArray(data.donation_types),
             wilaya_id: data.wilaya_id ?? "",
             availability_status: data.availability_status || "green",
             certified: data.certified || false,
