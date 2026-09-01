@@ -1,12 +1,43 @@
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+
 export class CreateDonorDto {
-  userId: string;
+  @IsString()
+  @IsOptional()
+  userId?: string;
+
+  @IsString()
+  @IsNotEmpty()
   blood_group: string;
-  donation_types: string[];
+
+  @IsArray()
+  @IsOptional()
+  donation_types?: string[];
+
+  @IsString()
+  @IsNotEmpty()
   wilaya: string;
-  latitude: number;
-  longitude: number;
-  availability: boolean;
-  certified: boolean;
-  has_donated_before: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  latitude?: number;
+
+  @IsNumber()
+  @IsOptional()
+  longitude?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  availability?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  certified?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  has_donated_before?: boolean;
+
+  @IsString()
+  @IsOptional()
   last_donation_date?: string;
 }
