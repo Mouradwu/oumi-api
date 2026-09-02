@@ -38,6 +38,23 @@ CREATE TABLE IF NOT EXISTS communes (
     longitude DECIMAL(10, 7)
 );
 
+-- Table des établissements de santé importés depuis OpenStreetMap (via
+-- HOTOSM raw-data-api, licence ODbL). Distincte des tables hospitals/
+-- clinics/pharmacies/transfusion_centers (qui restent pour des fiches
+-- detaillees gerees manuellement) : celle-ci est le jeu de donnees brut
+-- et complet utilise pour la recherche par wilaya/geolocalisation.
+CREATE TABLE IF NOT EXISTS osm_health_facilities (
+    id SERIAL PRIMARY KEY,
+    osm_id BIGINT UNIQUE,
+    category VARCHAR(20) NOT NULL, -- pharmacy | doctors | clinic | dentist | hospital
+    name VARCHAR(255),
+    name_ar VARCHAR(255),
+    addr_city VARCHAR(255),
+    wilaya_id INTEGER,
+    latitude DECIMAL(10, 7) NOT NULL,
+    longitude DECIMAL(10, 7) NOT NULL
+);
+
 -- Table des utilisateurs
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -136,6 +153,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     body TEXT,
     type VARCHAR(50),
@@ -343,6 +361,11 @@ CREATE INDEX IF NOT EXISTS idx_donation_requests_urgency ON donation_requests(ur
 CREATE INDEX IF NOT EXISTS idx_donation_requests_status ON donation_requests(status);
 CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(is_read);
+
+-- Un meme expediteur ne peut avoir qu'une seule demande ACTIVE (non encore
+-- acceptee) envers une meme personne. Index partiel : une fois acceptee
+-- (data.accepted = true), la contrainte ne s'applique plus.
+CREATE UNIQUE INDEX IF NOT EXISTS ux_notifications_active_request ON notifications (sender_id, user_id) WHERE type = 'request' AND (data->>'accepted') IS NULL AND sender_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_matches_request ON matches(request_id);
 CREATE INDEX IF NOT EXISTS idx_matches_donor ON matches(donor_id);
 

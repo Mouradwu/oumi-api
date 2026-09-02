@@ -9,7 +9,7 @@
         "start:dev": "nest start --watch",
         "seed:wilayas": "ts-node -r tsconfig-paths/register src/seeds/seed-wilayas.ts",
         "migrate": "node dist/migrate.js",
-        "start:prod": "npm run migrate && node dist/seeds/seed-wilayas.js && node dist/main"
+        "start:prod": "npm run migrate && node dist/seeds/seed-wilayas.js && node dist/seeds/seed-health-facilities.js && node dist/main"
     },
     "dependencies": {
         "@nestjs/common": "^10.0.0",

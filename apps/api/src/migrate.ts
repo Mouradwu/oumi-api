@@ -5,11 +5,8 @@ import { Client } from 'pg';
 // dossier apps/api est deploye (rootDirectory = apps/api).
 //
 // IMPORTANT : chaque instruction s'execute INDEPENDAMMENT (pas de gros
-// BEGIN/COMMIT global). Si une instruction echoue (ex: contrainte de cle
-// etrangere incompatible suite a une derive historique du schema), seule
-// CETTE instruction est ignoree - toutes les autres s'appliquent quand
-// meme. Une transaction unique ferait annuler l'integralite de la
-// migration a la moindre erreur isolee.
+// BEGIN/COMMIT global). Si une instruction echoue, seule CETTE instruction
+// est ignoree - toutes les autres s'appliquent quand meme.
 const MIGRATION_STATEMENTS: string[] = [
   `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
   `CREATE TABLE IF NOT EXISTS wilayas (
@@ -35,6 +32,17 @@ const MIGRATION_STATEMENTS: string[] = [
     daira_code VARCHAR(10) REFERENCES dairas(code) ON DELETE CASCADE,
     latitude DECIMAL(10, 7),
     longitude DECIMAL(10, 7)
+);`,
+  `CREATE TABLE IF NOT EXISTS osm_health_facilities (
+    id SERIAL PRIMARY KEY,
+    osm_id BIGINT UNIQUE,
+    category VARCHAR(20) NOT NULL, -- pharmacy | doctors | clinic | dentist | hospital
+    name VARCHAR(255),
+    name_ar VARCHAR(255),
+    addr_city VARCHAR(255),
+    wilaya_id INTEGER,
+    latitude DECIMAL(10, 7) NOT NULL,
+    longitude DECIMAL(10, 7) NOT NULL
 );`,
   `CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -119,6 +127,7 @@ const MIGRATION_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    sender_id UUID REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
     body TEXT,
     type VARCHAR(50),
@@ -320,6 +329,14 @@ END $$;`,
   `ALTER TABLE communes ADD COLUMN IF NOT EXISTS daira_code VARCHAR(10);`,
   `ALTER TABLE communes ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7);`,
   `ALTER TABLE communes ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS osm_id BIGINT;`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS category VARCHAR(20) , -- pharmacy | doctors | clinic | dentist | hospital;`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS name VARCHAR(255);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS name_ar VARCHAR(255);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS addr_city VARCHAR(255);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS wilaya_id INTEGER;`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7);`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255);`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255);`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(50);`,
@@ -380,6 +397,7 @@ END $$;`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;`,
   `ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();`,
   `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS user_id UUID;`,
+  `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS sender_id UUID;`,
   `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS title VARCHAR(255);`,
   `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS body TEXT;`,
   `ALTER TABLE notifications ADD COLUMN IF NOT EXISTS type VARCHAR(50);`,
@@ -501,16 +519,12 @@ END $$;`,
   `ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS value TEXT;`,
   `ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS description TEXT;`,
   `ALTER TABLE app_settings ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS ux_notifications_active_request ON notifications (sender_id, user_id) WHERE type = 'request' AND (data->>'accepted') IS NULL AND sender_id IS NOT NULL;`,
 ];
 
-// Colonnes legitimes de chaque table, telles que definies par le schema
-// actuel (database/schema/schema-complete.sql). Sert de reference pour la
-// neutralisation generique ci-dessous : toute colonne NOT NULL presente en
-// base mais ABSENTE de cette liste est consideree comme un residu d'une
-// generation anterieure du schema (l'application est passee par plusieurs
-// structures de donnees differentes avant d'etre stabilisee) et est rendue
-// nullable automatiquement, quel que soit son nom. C'est la correction
-// generale qui remplace le traitement au cas par cas colonne par colonne.
+// Colonnes legitimes de chaque table (voir migrate.ts historique pour le
+// detail du raisonnement). Neutralise toute colonne NOT NULL heritee
+// d'une generation anterieure du schema, quel que soit son nom.
 const EXPECTED_COLUMNS: Record<string, string[]> = {
   "wilayas": [
     "id",
@@ -533,6 +547,17 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
     "name_fr",
     "name_ar",
     "daira_code",
+    "latitude",
+    "longitude"
+  ],
+  "osm_health_facilities": [
+    "id",
+    "osm_id",
+    "category",
+    "name",
+    "name_ar",
+    "addr_city",
+    "wilaya_id",
     "latitude",
     "longitude"
   ],
@@ -619,6 +644,7 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
   "notifications": [
     "id",
     "user_id",
+    "sender_id",
     "title",
     "body",
     "type",
@@ -811,14 +837,6 @@ async function migrate() {
   }
   console.log(`Migration de schema terminee : ${okCount} instruction(s) appliquee(s), ${failCount} ignoree(s).`);
 
-  // ---- Neutralisation generique des colonnes obligatoires heritees ----
-  // Pour chaque table connue, on recupere la VRAIE liste de ses colonnes
-  // NOT NULL directement depuis la base (pas depuis nos hypotheses), et on
-  // rend nullable toute colonne qui n'appartient pas au schema actuel.
-  // Cette approche est volontairement dynamique et exhaustive : elle
-  // corrige aussi bien "userId" que "blood_group" ou n'importe quel autre
-  // nom herite d'une iteration anterieure du projet, sans avoir besoin de
-  // connaitre son nom a l'avance.
   let neutralized = 0;
   for (const table of Object.keys(EXPECTED_COLUMNS)) {
     try {

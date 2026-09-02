@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { GeographyModule } from './geography/geography.module';
 import { HealthFacilitiesModule } from './health-facilities/health-facilities.module';
+import { FacilitiesModule } from './facilities/facilities.module';
 import { DonorsModule } from './donors/donors.module';
 import { RequestsModule } from './requests/requests.module';
 import { MatchingModule } from './matching/matching.module';
@@ -30,6 +31,7 @@ import { AssociationsModule } from './associations/associations.module';
     AuthModule,
     GeographyModule,
     HealthFacilitiesModule,
+    FacilitiesModule,
     DonorsModule,
     RequestsModule,
     MatchingModule,

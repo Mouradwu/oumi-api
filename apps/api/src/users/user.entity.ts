@@ -29,6 +29,9 @@ export class User {
   @Column('text', { array: true, nullable: true, default: '{}' })
   roles: string[];
 
+  @Column({ default: true })
+  is_active: boolean;
+
   @OneToMany(() => Donor, donor => donor.user)
   donors: Donor[];
 
