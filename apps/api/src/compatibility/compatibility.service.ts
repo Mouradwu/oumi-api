@@ -106,9 +106,14 @@ export class CompatibilityService {
     };
   }
 
-  /** Liste les groupes donneurs compatibles pour un receveur et un produit donnes. */
+  /** Liste les groupes donneurs compatibles pour un receveur et un produit donnes ("RECEVOIR DE"). */
   getCompatibleDonorTypes(recipientType: BloodType, product: BloodProduct): BloodType[] {
     return VALID_BLOOD_TYPES.filter((donorType) => this.isCompatible(donorType, recipientType, product).compatible);
+  }
+
+  /** Liste les groupes receveurs auxquels ce groupe peut donner ("DONNER A"). */
+  getCompatibleRecipientTypes(donorType: BloodType, product: BloodProduct): BloodType[] {
+    return VALID_BLOOD_TYPES.filter((recipientType) => this.isCompatible(donorType, recipientType, product).compatible);
   }
 
   /** Le badge "donneur universel" (ou equivalent) pour un groupe et un produit donnes. */

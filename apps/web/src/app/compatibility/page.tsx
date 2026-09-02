@@ -57,6 +57,24 @@ export default function CompatibilityPage() {
   const [error, setError] = useState("");
   const [sending, setSending] = useState<string | null>(null);
 
+  const [summary, setSummary] = useState<{ can_give_to: string[]; can_receive_from: string[]; badge: string | null } | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
+  // Des que produit + groupe sont choisis, charge immediatement le resume
+  // DONNER A / RECEVOIR DE - avant meme de lancer la recherche.
+  useEffect(() => {
+    if (!product || !bloodType) {
+      setSummary(null);
+      return;
+    }
+    setSummaryLoading(true);
+    fetch(`${API_URL}/compatibility/summary?blood_type=${encodeURIComponent(bloodType)}&product=${product}`)
+      .then((res) => res.json())
+      .then((data) => setSummary(data))
+      .catch(() => setSummary(null))
+      .finally(() => setSummaryLoading(false));
+  }, [product, bloodType]);
+
   // Pre-remplit le groupe sanguin depuis le profil donneur existant de
   // l'utilisateur, sans jamais le deviner s'il n'existe pas.
   useEffect(() => {
@@ -233,6 +251,39 @@ export default function CompatibilityPage() {
               )}
             </div>
 
+            {product && bloodType && (
+              <div className="p-5 rounded-xl border border-white/10 bg-black/20">
+                {summaryLoading ? (
+                  <p className="text-sm text-white/40">Calcul de la compatibilité...</p>
+                ) : summary ? (
+                  <>
+                    <p className="text-sm mb-4">
+                      🩸 Vous êtes du groupe sanguin <span className="font-semibold">{bloodType}</span>.
+                      {summary.badge && <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded">{summary.badge}</span>}
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Donner à</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {summary.can_give_to.map((bt) => (
+                            <span key={bt} className="px-2 py-1 bg-red-600/20 text-red-300 rounded text-sm font-medium">{bt}</span>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Recevoir de</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {summary.can_receive_from.map((bt) => (
+                            <span key={bt} className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-sm font-medium">{bt}</span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            )}
+
             <button
               disabled={!product || !bloodType}
               onClick={() => { setStep(2); useNearby(); }}
@@ -248,11 +299,15 @@ export default function CompatibilityPage() {
             <button onClick={reset} className="text-sm text-white/50 hover:text-white mb-4 transition">← Modifier ma recherche</button>
 
             <div className="bg-white/5 p-5 rounded-xl border border-white/10 mb-6">
-              <p className="text-sm">
+              <p className="text-sm mb-2">
                 🩸 Vous êtes <span className="font-semibold">{bloodType}</span>
-                {" — "}Pour du {product === "SANG" ? "sang" : product === "PLASMA" ? "plasma" : "plaquettes"}, un{" "}
-                {product === "SANG" ? "donneur" : "donneur"} O{product !== "PLASMA" ? "" : ""} compatible peut vous aider.
+                {summary?.badge && <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded">{summary.badge}</span>}
               </p>
+              {summary && (
+                <p className="text-sm text-white/60">
+                  Recevoir de : {summary.can_receive_from.join(", ")}
+                </p>
+              )}
               {searched && !loading && (
                 <p className="text-sm text-white/60 mt-1">{total} donneur{total > 1 ? "s" : ""} compatible{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}</p>
               )}
