@@ -24,6 +24,9 @@ export class Facility {
   @Column({ nullable: true })
   wilaya_id: number;
 
+  @Column({ nullable: true })
+  specialty: string;
+
   @Column('decimal', { precision: 10, scale: 7 })
   latitude: number;
 

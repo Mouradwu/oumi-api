@@ -52,7 +52,8 @@ CREATE TABLE IF NOT EXISTS osm_health_facilities (
     addr_city VARCHAR(255),
     wilaya_id INTEGER,
     latitude DECIMAL(10, 7) NOT NULL,
-    longitude DECIMAL(10, 7) NOT NULL
+    longitude DECIMAL(10, 7) NOT NULL,
+    specialty VARCHAR(255) -- pour category='doctors' : cardiologie, gynecologie, generaliste...
 );
 
 -- Table des utilisateurs
