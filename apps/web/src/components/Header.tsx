@@ -16,6 +16,7 @@ export default function Header() {
         <nav className="hidden md:flex gap-6">
           <Link href="/" className="text-sm text-white/70 hover:text-white">Accueil</Link>
           <Link href="/explorer" className="text-sm text-white/70 hover:text-white">Explorer</Link>
+          <Link href="/compatibility" className="text-sm text-white/70 hover:text-white">🩸 Compatibilité</Link>
           <Link href="/facilities" className="text-sm text-white/70 hover:text-white">Établissements</Link>
           {user && (
             <>
