@@ -35,6 +35,7 @@ export default function ProfilePage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [donorProfile, setDonorProfile] = useState<any>(null);
   const [requests, setRequests] = useState<DonationRequest[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     // Vérification du token (une seule fois)
@@ -82,6 +83,12 @@ export default function ProfilePage() {
     fetchAll();
   }, [user, router]);
 
+  useEffect(() => {
+    if (user && typeof user.is_active === "boolean") {
+      setIsPaused(!user.is_active);
+    }
+  }, [user]);
+
   const toggleAvailability = async () => {
     const token = localStorage.getItem("token");
     if (!donorProfile) return;
@@ -100,6 +107,38 @@ export default function ProfilePage() {
       }
     } catch (e) {
       alert("Erreur lors de la mise à jour");
+    }
+  };
+
+  const togglePause = async () => {
+    const token = localStorage.getItem("token");
+    const newState = !isPaused;
+    try {
+      const res = await fetch(`${API_URL}/users/me/active`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ is_active: !newState }),
+      });
+      if (!res.ok) throw new Error();
+      setIsPaused(newState);
+    } catch {
+      alert("Erreur lors de la mise à jour du statut du compte");
+    }
+  };
+
+  const deleteAccount = async () => {
+    if (!confirm("Supprimer définitivement votre compte ? Toutes vos données (profil donneur, demandes, notifications) seront effacées. Cette action est irréversible.")) return;
+    if (!confirm("Dernière confirmation : êtes-vous certain de vouloir supprimer votre compte ?")) return;
+    const token = localStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/users/me`, {
+        method: "DELETE",
+        headers: { Authorization: "Bearer " + token },
+      });
+      if (!res.ok) throw new Error();
+      logout();
+    } catch {
+      alert("Erreur lors de la suppression du compte");
     }
   };
 
@@ -160,6 +199,15 @@ export default function ProfilePage() {
                   </Link>
                 </div>
               )}
+              <hr className="border-white/10 my-4" />
+              <div className="space-y-2">
+                <button onClick={togglePause} className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm transition">
+                  {isPaused ? "▶️ Réactiver mon compte" : "⏸️ Mettre en pause mon compte"}
+                </button>
+                <button onClick={deleteAccount} className="w-full px-4 py-2 bg-red-950/50 hover:bg-red-950 text-red-400 rounded-lg text-sm transition">
+                  🗑️ Supprimer mon compte
+                </button>
+              </div>
             </div>
           </div>
 

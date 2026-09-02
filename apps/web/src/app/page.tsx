@@ -58,7 +58,7 @@ export default function Home() {
       </header>
 
       <section className="relative z-10 container mx-auto px-6 py-24 md:py-32 text-center">
-        <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">{isRTL ? "المنصة الأولى في الجزائر" : "Plateforme n°1 en Algérie"}</div>
+        <div className="inline-block mb-6 px-4 py-1.5 text-xs tracking-wider uppercase border border-white/10 rounded-full text-white/60">{isRTL ? "منصة التبرع بالدم" : "Plateforme de don de sang"}</div>
         <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-[1.05]">{t.hero.title}<br /><span className="bg-gradient-to-r from-red-400 to-rose-600 bg-clip-text text-transparent">{t.hero.subtitle}</span></h1>
         <p className="text-lg text-white/60 max-w-xl mx-auto mb-10 leading-relaxed">{t.hero.description}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -85,13 +85,15 @@ export default function Home() {
       <section className="relative z-10 container mx-auto px-6 py-20">
         <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 tracking-tight">{t.features.title}</h2>
         <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-          {t.features.items.map((item, i) => (
-            <div key={i} className="group p-8 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition">
+          {t.features.items.map((item, i) => {
+            const href = item.icon === "📍" ? "/facilities" : item.icon === "⚡" ? "/requester/register" : "/donor/register";
+            return (
+            <Link key={i} href={href} className="group p-8 border border-white/5 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition block">
               <div className="text-4xl mb-4">{item.icon}</div>
               <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
               <p className="text-sm text-white/50 leading-relaxed">{item.desc}</p>
-            </div>
-          ))}
+            </Link>
+          );})}
         </div>
       </section>
 

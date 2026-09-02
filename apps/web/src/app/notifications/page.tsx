@@ -16,6 +16,7 @@ export default function NotificationsPage() {
   const [contacts, setContacts] = useState<Record<string, any>>({});
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [pendingAccept, setPendingAccept] = useState<string | null>(null);
 
   const load = async () => {
     const token = getToken();
@@ -31,13 +32,17 @@ export default function NotificationsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const accept = async (id: string) => {
+  const confirmAccept = async () => {
+    if (!pendingAccept) return;
+    const id = pendingAccept;
+    setPendingAccept(null);
     setBusy(id); setError("");
     const token = getToken();
     try {
       const res = await fetch(`${API_URL}/notifications/${id}/accept`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ consent: true }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -56,6 +61,19 @@ export default function NotificationsPage() {
     load();
   };
 
+  const deleteOne = async (id: string) => {
+    const token = getToken();
+    await fetch(`${API_URL}/notifications/${id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  const clearAll = async () => {
+    if (!confirm("Supprimer tout l'historique des notifications ? Cette action est irréversible.")) return;
+    const token = getToken();
+    await fetch(`${API_URL}/notifications/all`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    setNotifications([]);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <header className="border-b border-white/5 backdrop-blur-xl bg-black/20">
@@ -69,7 +87,14 @@ export default function NotificationsPage() {
       </header>
 
       <main className="container mx-auto px-6 py-10 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-8">Notifications</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Notifications</h1>
+          {notifications.length > 0 && (
+            <button onClick={clearAll} className="text-xs text-white/40 hover:text-red-400 transition">
+              🗑️ Tout supprimer
+            </button>
+          )}
+        </div>
         {error && <div className="mb-4 p-4 rounded-xl border border-red-500/30 bg-red-500/10 text-sm">{error}</div>}
 
         {loading ? (
@@ -79,7 +104,7 @@ export default function NotificationsPage() {
         ) : (
           <div className="space-y-4">
             {notifications.map((n) => {
-              const contact = contacts[n.id]?.contact || n.data?.request?.requester || n.data?.contact;
+              const contact = contacts[n.id]?.contact || n.data?.contact;
               const request = contacts[n.id]?.request || n.data?.request;
               return (
                 <div key={n.id} className={`p-6 rounded-2xl border ${n.is_read ? "border-white/5 bg-white/[0.02]" : "border-red-500/30 bg-red-500/5"}`}>
@@ -95,7 +120,12 @@ export default function NotificationsPage() {
                         </div>
                       )}
                     </div>
-                    <span className="text-xs text-white/40 shrink-0">{new Date(n.created_at).toLocaleDateString("fr-FR")}</span>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <span className="text-xs text-white/40">{new Date(n.created_at).toLocaleDateString("fr-FR")}</span>
+                      <button onClick={() => deleteOne(n.id)} className="text-white/30 hover:text-red-400 text-xs transition" title="Supprimer">
+                        ✕
+                      </button>
+                    </div>
                   </div>
 
                   {contact && (contact.name || contact.phone) && (
@@ -108,7 +138,7 @@ export default function NotificationsPage() {
 
                   <div className="mt-4 flex gap-3">
                     {n.type === "request" && !n.data?.accepted && (
-                      <button onClick={() => accept(n.id)} disabled={busy === n.id}
+                      <button onClick={() => setPendingAccept(n.id)} disabled={busy === n.id}
                         className="px-4 py-2 bg-white text-black text-sm rounded-full font-medium hover:bg-white/90 disabled:opacity-50">
                         {busy === n.id ? "..." : "Accepter d'aider"}
                       </button>
@@ -125,6 +155,32 @@ export default function NotificationsPage() {
           </div>
         )}
       </main>
+
+      {/* Modale de consentement bloquante - obligatoire avant toute acceptation */}
+      {pendingAccept && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-6 z-50">
+          <div className="bg-[#141419] border border-white/10 rounded-2xl p-6 max-w-md w-full">
+            <h2 className="text-lg font-semibold mb-4">⚠️ Confirmation requise</h2>
+            <p className="text-sm text-white/70 leading-relaxed mb-6">
+              En acceptant cette demande, vous autorisez le demandeur à accéder à l'ensemble de vos coordonnées (téléphone et adresse).
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPendingAccept(null)}
+                className="flex-1 px-4 py-2 border border-white/10 rounded-full text-sm hover:bg-white/5 transition"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmAccept}
+                className="flex-1 px-4 py-2 bg-white text-black rounded-full text-sm font-medium hover:bg-white/90 transition"
+              >
+                J'accepte et je partage mes coordonnées
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -8,9 +8,9 @@ export const translations = {
     },
     hero: {
       title: "Sauvez des vies.",
-      subtitle: "Partout en Algérie.",
+      subtitle: "En temps réel.",
       description:
-        "La première plateforme qui connecte les donneurs de sang avec ceux qui en ont besoin, en temps réel.",
+        "Plateforme qui connecte les donneurs de sang avec ceux qui en ont besoin, en temps réel.",
       ctaPrimary: "Devenir donneur",
       ctaSecondary: "Explorer",
     },
@@ -53,9 +53,9 @@ export const translations = {
     },
     hero: {
       title: "أنقذ حياة.",
-      subtitle: "في كل مكان في الجزائر.",
+      subtitle: "في الوقت الفعلي.",
       description:
-        "أول منصة تربط متبرعي الدم بمن يحتاجونه، في الوقت الفعلي.",
+        "منصة تربط متبرعي الدم بمن يحتاجونه، في الوقت الفعلي.",
       ctaPrimary: "كن متبرعاً",
       ctaSecondary: "استكشف",
     },

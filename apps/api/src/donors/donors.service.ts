@@ -11,6 +11,25 @@ export class DonorsService {
     private donorRepository: Repository<Donor>,
   ) {}
 
+  // Retire le telephone/email de l'utilisateur associe : ces coordonnees
+  // ne doivent apparaitre dans l'API que via le flux d'acceptation
+  // explicite (notifications.accept), jamais dans une liste/consultation
+  // publique de donneurs.
+  // Ne renvoie qu'une projection publique minimale de l'utilisateur (liste
+  // blanche, pas liste noire) : une fois l'entite User transformee en
+  // objet simple, les decorateurs @Exclude() de class-transformer ne
+  // s'appliquent plus a la serialisation finale (ils ne fonctionnent que
+  // sur de vraies instances de classe) - il ne faut donc JAMAIS construire
+  // cet objet par simple exclusion de champs (le mot de passe repasserait
+  // sinon), mais toujours en listant explicitement ce qui est autorise.
+  private sanitize(donor: Donor): Donor {
+    if (donor?.user) {
+      const u = donor.user as any;
+      donor.user = { id: u.id, first_name: u.first_name, last_name: u.last_name } as any;
+    }
+    return donor;
+  }
+
   async create(createDonorDto: CreateDonorDto): Promise<Donor> {
     const donor = this.donorRepository.create(createDonorDto);
     return this.donorRepository.save(donor);
@@ -40,21 +59,23 @@ export class DonorsService {
       query.andWhere('donor.availability_status = :availability_status', { availability_status: filters.availability_status });
     }
 
-    return query.getMany();
+    const donors = await query.getMany();
+    return donors.map((d) => this.sanitize(d));
   }
 
-  async findOne(id: string): Promise<Donor> {
+  async findOne(id: string, includeContact = false): Promise<Donor> {
     const donor = await this.donorRepository.findOne({ where: { id }, relations: ['user'] });
     if (!donor) throw new NotFoundException(`Donneur ${id} introuvable`);
-    return donor;
+    return includeContact ? donor : this.sanitize(donor);
   }
 
   async findByUserId(userId: string): Promise<Donor> {
+    // "Mon profil" - l'utilisateur voit toujours ses propres coordonnees
     return this.donorRepository.findOne({ where: { userId }, relations: ['user'] });
   }
 
   async update(id: string, updateData: Partial<CreateDonorDto>): Promise<Donor> {
     await this.donorRepository.update(id, updateData);
-    return this.findOne(id);
+    return this.findOne(id, true);
   }
 }

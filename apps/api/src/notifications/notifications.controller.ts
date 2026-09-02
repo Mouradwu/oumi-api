@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -9,7 +9,8 @@ export class NotificationsController {
   constructor(private readonly service: NotificationsService) {}
 
   @Post()
-  async create(@Body() body: any) {
+  @UseGuards(JwtAuthGuard)
+  async create(@Body() body: any, @Request() req) {
     let userId = typeof body?.userId === 'string' ? body.userId : null;
     if (!userId || !UUID_RE.test(userId)) {
       const alt = body?.data?.receiverId ?? body?.receiverId ?? body?.data?.userId;
@@ -18,12 +19,16 @@ export class NotificationsController {
     if (!userId) {
       return { success: false, error: 'Destinataire invalide (UUID requis)' };
     }
-    return this.service.create(userId, {
-      title: body?.title ?? 'Notification',
-      body: body?.body ?? body?.message ?? '',
-      type: body?.type ?? 'system',
-      data: body?.data ?? null,
-    });
+    return this.service.create(
+      userId,
+      {
+        title: body?.title ?? 'Notification',
+        body: body?.body ?? body?.message ?? '',
+        type: body?.type ?? 'system',
+        data: body?.data ?? null,
+      },
+      req.user.id,
+    );
   }
 
   @Get()
@@ -40,7 +45,19 @@ export class NotificationsController {
 
   @Post(':id/accept')
   @UseGuards(JwtAuthGuard)
-  accept(@Param('id') id: string, @Request() req) {
-    return this.service.accept(id, req.user.id);
+  accept(@Param('id') id: string, @Request() req, @Body('consent') consent: boolean) {
+    return this.service.accept(id, req.user.id, consent === true);
+  }
+
+  @Delete('all')
+  @UseGuards(JwtAuthGuard)
+  deleteAll(@Request() req) {
+    return this.service.deleteAll(req.user.id);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  deleteOne(@Param('id') id: string, @Request() req) {
+    return this.service.deleteOne(id, req.user.id);
   }
 }

@@ -12,6 +12,21 @@ export class RequestsService {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
   ) {}
 
+  // Retire le telephone/email du demandeur (relation requester) ainsi que
+  // contact_phone (colonne directe sur la demande) - ces coordonnees ne
+  // doivent apparaitre que via le flux d'acceptation explicite.
+  // Liste blanche uniquement (voir explication detaillee dans
+  // donors.service.ts : une exclusion par destructuration casserait
+  // silencieusement la protection @Exclude() du mot de passe).
+  private sanitize(req: DonationRequest): DonationRequest {
+    if (req?.requester) {
+      const u = req.requester as any;
+      req.requester = { id: u.id, first_name: u.first_name, last_name: u.last_name } as any;
+    }
+    (req as any).contact_phone = undefined;
+    return req;
+  }
+
   async create(userId: string, dto: CreateRequestDto) {
     const user = await this.userRepo.findOne({ where: { id: userId } });
     if (!user) throw new NotFoundException('Utilisateur introuvable');
@@ -36,15 +51,18 @@ export class RequestsService {
 
   async findAll(requesterId?: string) {
     if (requesterId) {
+      // L'utilisateur consulte SES PROPRES demandes : il voit ses propres
+      // coordonnees (pas de sanitisation).
       return this.repo.find({ where: { requester: { id: requesterId } }, relations: ['requester'], order: { created_at: 'DESC' } });
     }
-    return this.repo.find({ relations: ['requester'], order: { created_at: 'DESC' } });
+    const list = await this.repo.find({ relations: ['requester'], order: { created_at: 'DESC' } });
+    return list.map((r) => this.sanitize(r));
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, includeContact = false) {
     const req = await this.repo.findOne({ where: { id }, relations: ['requester'] });
     if (!req) throw new NotFoundException();
-    return req;
+    return includeContact ? req : this.sanitize(req);
   }
 
   async updateStatus(id: string, status: string) {

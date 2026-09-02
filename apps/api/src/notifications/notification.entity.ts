@@ -10,6 +10,16 @@ export class Notification {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
+  // Auteur de la notification (ex: demandeur qui contacte un donneur).
+  // Nullable : les notifications systeme (ex: "Aide acceptee" generees
+  // automatiquement) n'ont pas d'expediteur humain.
+  @Column({ name: 'sender_id', type: 'uuid', nullable: true })
+  senderId: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'sender_id' })
+  sender: User;
+
   @Column({ length: 255 })
   title: string;
 
