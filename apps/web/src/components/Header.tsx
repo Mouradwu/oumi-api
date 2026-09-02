@@ -35,7 +35,7 @@ export default function Header() {
         <div className="flex items-center gap-3">
           {user ? (
             <>
-              <span className="text-sm text-white/60">Bonjour {user.first_name}</span>
+              <Link href="/profile" className="text-sm text-white/60 hover:text-white transition">👋 Bonjour {user.first_name}</Link>
               <button onClick={logout} className="text-sm text-red-400 hover:text-red-300 transition">Déconnexion</button>
             </>
           ) : (

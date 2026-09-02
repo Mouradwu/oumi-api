@@ -12,6 +12,7 @@ interface Facility {
   name_ar: string | null;
   addr_city: string | null;
   wilaya_id: number | null;
+  specialty: string | null;
   latitude: number;
   longitude: number;
   distance_km?: number;
@@ -39,6 +40,8 @@ export default function FacilitiesPage() {
   const [category, setCategory] = useState("");
   const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [wilayaId, setWilayaId] = useState<number | "">("");
+  const [specialties, setSpecialties] = useState<string[]>([]);
+  const [specialty, setSpecialty] = useState("");
   const [facilities, setFacilities] = useState<Facility[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,6 +53,10 @@ export default function FacilitiesPage() {
       .then((res) => res.json())
       .then((data) => setWilayas(Array.isArray(data) ? data : []))
       .catch(() => setWilayas([]));
+    fetch(`${API_URL}/facilities/specialties`)
+      .then((res) => res.json())
+      .then((data) => setSpecialties(Array.isArray(data) ? data : []))
+      .catch(() => setSpecialties([]));
   }, []);
 
   const searchByWilaya = async () => {
@@ -63,6 +70,7 @@ export default function FacilitiesPage() {
     try {
       const params = new URLSearchParams({ wilaya_id: String(wilayaId) });
       if (category) params.append("category", category);
+      if (category === "doctors" && specialty) params.append("specialty", specialty);
       const res = await fetch(`${API_URL}/facilities?${params.toString()}`);
       const data = await res.json();
       setFacilities(Array.isArray(data) ? data : []);
@@ -92,6 +100,7 @@ export default function FacilitiesPage() {
             radius_km: "10",
           });
           if (category) params.append("category", category);
+          if (category === "doctors" && specialty) params.append("specialty", specialty);
           const res = await fetch(`${API_URL}/facilities/nearby?${params.toString()}`);
           const data = await res.json();
           setFacilities(Array.isArray(data) ? data : []);
@@ -146,13 +155,28 @@ export default function FacilitiesPage() {
             {CATEGORIES.map((c) => (
               <button
                 key={c.value}
-                onClick={() => setCategory(c.value)}
+                onClick={() => { setCategory(c.value); if (c.value !== "doctors") setSpecialty(""); }}
                 className={`px-3 py-1.5 rounded-full text-sm transition ${category === c.value ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
               >
                 {c.icon} {c.label}
               </button>
             ))}
           </div>
+
+          {category === "doctors" && (
+            <div className="mb-4">
+              <label className="block text-xs text-white/40 mb-1">Spécialité (optionnel)</label>
+              <select
+                value={specialty}
+                onChange={(e) => setSpecialty(e.target.value)}
+                className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+              >
+                <option value="">Toutes spécialités</option>
+                {specialties.map((s) => <option key={s} value={s}>{s}</option>)}
+              </select>
+              <p className="text-xs text-white/30 mt-1">Spécialité renseignée pour une partie des cabinets seulement.</p>
+            </div>
+          )}
 
           {mode === "wilaya" ? (
             <div className="flex gap-3">
@@ -197,6 +221,7 @@ export default function FacilitiesPage() {
                   <p className="font-semibold">{f.name || CATEGORY_LABELS[f.category] || f.category}</p>
                   <p className="text-sm text-white/50">
                     {CATEGORY_LABELS[f.category] || f.category}
+                    {f.specialty && <span className="text-blue-400"> · {f.specialty}</span>}
                     {f.addr_city ? ` · ${f.addr_city}` : ""}
                   </p>
                 </div>
@@ -205,12 +230,12 @@ export default function FacilitiesPage() {
                     <span className="text-sm text-green-400">{f.distance_km} km</span>
                   )}
                   <a
-                    href={`https://www.openstreetmap.org/?mlat=${f.latitude}&mlon=${f.longitude}#map=17/${f.latitude}/${f.longitude}`}
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${f.latitude},${f.longitude}`}
                     target="_blank"
                     rel="noreferrer"
                     className="text-xs px-3 py-1 bg-white/10 hover:bg-white/20 rounded transition"
                   >
-                    🗺️ Voir sur la carte
+                    🗺️ Itinéraire (Google Maps)
                   </a>
                 </div>
               </div>

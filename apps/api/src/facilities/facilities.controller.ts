@@ -16,6 +16,7 @@ export class FacilitiesController {
     @Query('lng') lng: string,
     @Query('radius_km') radiusKm: string,
     @Query('category') category?: string,
+    @Query('specialty') specialty?: string,
   ) {
     const latNum = parseFloat(lat);
     const lngNum = parseFloat(lng);
@@ -23,11 +24,16 @@ export class FacilitiesController {
       throw new BadRequestException('lat et lng sont obligatoires et doivent être des nombres');
     }
     const radius = radiusKm ? parseFloat(radiusKm) : 15;
-    return this.service.findNearby(latNum, lngNum, radius, category);
+    return this.service.findNearby(latNum, lngNum, radius, category, specialty);
+  }
+
+  @Get('specialties')
+  listSpecialties() {
+    return this.service.listSpecialties();
   }
 
   @Get()
-  findAll(@Query('category') category?: string, @Query('wilaya_id') wilaya_id?: string) {
-    return this.service.findAll({ category, wilaya_id });
+  findAll(@Query('category') category?: string, @Query('wilaya_id') wilaya_id?: string, @Query('specialty') specialty?: string) {
+    return this.service.findAll({ category, wilaya_id, specialty });
   }
 }

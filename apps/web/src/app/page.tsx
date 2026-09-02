@@ -5,8 +5,10 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { translations, type Lang } from "@/lib/translations";
 import { API_URL } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Home() {
+  const { user } = useAuth();
   const [lang, setLang] = useState<Lang>("fr");
   const [donorsCount, setDonorsCount] = useState(0);
   const [requestsCount, setRequestsCount] = useState(0);
@@ -48,11 +50,17 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm text-white/70 hover:text-white transition">{t.nav.home}</Link>
             <Link href="/explorer" className="text-sm text-white/70 hover:text-white transition">Explorer</Link>
-            <Link href="/auth/login" className="text-sm text-white/70 hover:text-white transition">{t.nav.login}</Link>
+            {!user && <Link href="/auth/login" className="text-sm text-white/70 hover:text-white transition">{t.nav.login}</Link>}
           </nav>
           <div className="flex items-center gap-3">
             <button onClick={() => setLang(lang === "fr" ? "ar" : "fr")} className="px-3 py-1.5 text-xs font-medium border border-white/10 rounded-full hover:bg-white/5 transition">{lang === "fr" ? "العربية" : "FR"}</button>
-            <Link href="/donor/register" className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition">Devenir donneur</Link>
+            {user ? (
+              <Link href="/profile" className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition">
+                👋 Bonjour {user.first_name}
+              </Link>
+            ) : (
+              <Link href="/donor/register" className="px-4 py-1.5 text-xs font-medium bg-white text-black rounded-full hover:bg-white/90 transition">Devenir donneur</Link>
+            )}
           </div>
         </div>
       </header>
