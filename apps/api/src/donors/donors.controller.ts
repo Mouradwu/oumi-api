@@ -80,7 +80,6 @@ export class DonorsController {
     }
     return this.donorsService.getCompatibilityForDonor(id, recipientBloodType as BloodType, product as BloodProduct);
   }
-
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.donorsService.findOne(id);

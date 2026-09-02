@@ -141,4 +141,23 @@ describe('CompatibilityService', () => {
     const donors = service.getCompatibleDonorTypes('O-', 'SANG');
     expect(donors).toEqual(['O-']);
   });
+
+  // ==========================================================================
+  // "DONNER A" / "RECEVOIR DE" - exemple exact de la demande utilisateur (A+)
+  // ==========================================================================
+
+  it('A+ (SANG) : donne a A+/AB+, recoit de A+/A-/O+/O-', () => {
+    expect(service.getCompatibleRecipientTypes('A+', 'SANG').sort()).toEqual(['A+', 'AB+'].sort());
+    expect(service.getCompatibleDonorTypes('A+', 'SANG').sort()).toEqual(['A+', 'A-', 'O+', 'O-'].sort());
+  });
+
+  it('O- (SANG) : donne a tout le monde, ne recoit que de O-', () => {
+    expect(service.getCompatibleRecipientTypes('O-', 'SANG').sort()).toEqual([...VALID_BLOOD_TYPES].sort());
+    expect(service.getCompatibleDonorTypes('O-', 'SANG')).toEqual(['O-']);
+  });
+
+  it('AB+ (SANG) : ne donne qu a AB+, recoit de tout le monde', () => {
+    expect(service.getCompatibleRecipientTypes('AB+', 'SANG')).toEqual(['AB+']);
+    expect(service.getCompatibleDonorTypes('AB+', 'SANG').sort()).toEqual([...VALID_BLOOD_TYPES].sort());
+  });
 });
