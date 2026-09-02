@@ -7,7 +7,7 @@ import Link from "next/link";
 import { API_URL } from "@/lib/api";
 
 export default function DonorRegisterPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -31,10 +31,17 @@ export default function DonorRegisterPage() {
       .catch(() => setWilayas([]));
   }, []);
 
-  if (!user) {
-    router.push("/auth/login");
-    return null;
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      router.push("/auth/login");
+    }
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>;
   }
+  if (!user) return null;
 
   const toggleDonationType = (type: string) => {
     setDonor(prev => ({

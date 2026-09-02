@@ -1,5 +1,9 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../users/user.entity';
+
+// draft -> active <-> inactive ; devient "ended" (calcule, pas stocke) des
+// que end_date est depassee.
+export type CampaignStatus = 'draft' | 'active' | 'inactive' | 'ended';
 
 @Entity('campaigns')
 export class Campaign {
@@ -23,6 +27,9 @@ export class Campaign {
   end_date: Date;
 
   @Column({ nullable: true })
+  hours_label: string;
+
+  @Column({ nullable: true })
   wilaya_id: number;
 
   @Column({ nullable: true })
@@ -40,15 +47,39 @@ export class Campaign {
   @Column({ type: 'text', array: true, nullable: true })
   donation_types: string[];
 
+  @Column({ type: 'text', array: true, nullable: true })
+  blood_types_needed: string[];
+
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ type: 'text', nullable: true })
+  practical_info: string;
+
+  @Column({ type: 'text', nullable: true })
+  image_url: string;
 
   @Column({ length: 20, nullable: true })
   contact_phone: string;
 
-  @Column({ default: 'scheduled' })
+  @Column({ length: 100, nullable: true })
+  contact_name: string;
+
+  @Column({ default: 'Prendre rendez-vous' })
+  action_label: string;
+
+  @Column({ default: 0 })
+  display_order: number;
+
+  @Column({ default: 'draft' })
   status: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  published_at: Date;
 
   @CreateDateColumn()
   created_at: Date;
+
+  @UpdateDateColumn()
+  updated_at: Date;
 }

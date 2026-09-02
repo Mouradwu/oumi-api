@@ -46,7 +46,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <Logo size={36} />
+        <Logo size={36} light />
         <h1 className="text-2xl font-bold text-center">Créer un compte</h1>
         {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
         {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg text-sm">✅ Compte créé ! Redirection vers la connexion...</div>}

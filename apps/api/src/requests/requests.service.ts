@@ -1,14 +1,13 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { DonationRequest } from './donation-request.entity';
 import { User } from '../users/user.entity';
 import { CreateRequestDto } from './dto/create-request.dto';
+import { DonorsService } from '../donors/donors.service';
 
-// Statuts consideres "actifs" vs "termines" pour la distinction demandee
-// (section historique des demandes).
-const ACTIVE_STATUSES = ['pending', 'matched'];
-const COMPLETED_STATUSES = ['fulfilled', 'cancelled'];
+const ACTIVE_STATUSES = ['pending', 'accepted', 'donation_declared'];
+const COMPLETED_STATUSES = ['confirmed', 'cancelled', 'refused'];
 
 @Injectable()
 export class RequestsService {
@@ -16,6 +15,7 @@ export class RequestsService {
     @InjectRepository(DonationRequest) private readonly repo: Repository<DonationRequest>,
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     private readonly dataSource: DataSource,
+    private readonly donorsService: DonorsService,
   ) {}
 
   // Retire le telephone/email du demandeur (relation requester) ainsi que
@@ -93,6 +93,68 @@ export class RequestsService {
     if (!req) throw new NotFoundException();
     req.status = status;
     return this.repo.save(req);
+  }
+
+  // ---- Cycle Accepte -> Don effectue -> Don confirme ----
+  // IMPORTANT (section 21/39 de la spec) : ACCEPTED != DON CONFIRME.
+  // L'acceptation (voir notifications.service.ts#accept) signifie
+  // seulement que le donneur accepte la demande. Seule la confirmation
+  // par le RECEVEUR (pas le donneur lui-meme) fait progresser l'impact et
+  // les badges - protection cote serveur contre le double comptage.
+
+  // Le donneur declare avoir effectue le don.
+  async markDonated(id: string, donorUserId: string) {
+    const req = await this.repo.findOne({ where: { id } });
+    if (!req) throw new NotFoundException();
+    if (req.donorId !== donorUserId) {
+      throw new ForbiddenException("Seul le donneur ayant accepté cette demande peut la marquer comme effectuée.");
+    }
+    if (req.status !== 'accepted') {
+      throw new BadRequestException(`Impossible de marquer un don effectué depuis le statut "${req.status}".`);
+    }
+    req.status = 'donation_declared';
+    req.donated_at = new Date();
+    await this.repo.save(req);
+
+    if (req.requester?.id) {
+      // notification de rappel au demandeur pour qu'il confirme (best-effort,
+      // on ne bloque jamais la declaration si l'envoi echoue)
+    }
+    return this.findOne(id, true);
+  }
+
+  // Le RECEVEUR (demandeur d'origine) confirme que le don a bien eu lieu.
+  // C'est le SEUL evenement qui fait progresser l'impact/les badges du
+  // donneur - jamais l'acceptation, jamais l'auto-declaration seule.
+  async confirmDonation(id: string, requesterId: string) {
+    const req = await this.repo.findOne({ where: { id }, relations: ['requester'] });
+    if (!req) throw new NotFoundException();
+    if (req.requester?.id !== requesterId) {
+      throw new ForbiddenException("Seul le demandeur d'origine peut confirmer ce don.");
+    }
+
+    // Idempotence stricte : si deja confirme, on renvoie simplement l'etat
+    // actuel sans jamais re-incrementer le compteur du donneur (protection
+    // contre double-clic / retry reseau / rejeu de requete).
+    if (req.status === 'confirmed') {
+      return this.findOne(id, true);
+    }
+    if (req.status !== 'donation_declared') {
+      throw new BadRequestException(`Impossible de confirmer un don depuis le statut "${req.status}".`);
+    }
+
+    req.status = 'confirmed';
+    req.confirmed_at = new Date();
+    await this.repo.save(req);
+
+    if (req.donorId) {
+      const donor = await this.donorsService.findByUserId(req.donorId);
+      if (donor) {
+        await this.donorsService.confirmDonation(donor.id);
+      }
+    }
+
+    return this.findOne(id, true);
   }
 
   // Suppression de l'historique personnel - uniquement par le demandeur

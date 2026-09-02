@@ -1,7 +1,7 @@
 {
-    "name": "@oumi/api",
+    "name": "@bloodz/api",
     "version": "1.0.0",
-    "description": "OUMI API",
+    "description": "BLOODZ API",
     "private": true,
     "scripts": {
         "build": "nest build",

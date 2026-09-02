@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
   const isDonor = !!dashboard?.donor;
   const isRequester = requests.some((r) => r.requester?.id === user?.id);
-  const activeRequests = requests.filter((r) => ["pending", "matched"].includes(r.status));
+  const activeRequests = requests.filter((r) => ["pending", "accepted", "donation_declared"].includes(r.status));
 
   const toggleAvailability = async () => {
     const token = getToken();
@@ -191,6 +191,14 @@ export default function ProfilePage() {
         {showSettings && (
           <div className="mb-5 p-4 rounded-2xl border border-line bg-white space-y-2">
             <p className="text-xs font-medium text-slate mb-1">Paramètres du compte</p>
+            <Link href="/profile/verification" className="block w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-ink">
+              Vérification email et téléphone
+            </Link>
+            {(user.roles || []).includes("admin") && (
+              <Link href="/admin/campaigns" className="block w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-brand-dark font-medium">
+                Administration — Campagnes
+              </Link>
+            )}
             <button onClick={togglePause} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-ink">
               {isPaused ? "Réactiver mon compte" : "Mettre en pause mon compte"}
             </button>
@@ -204,7 +212,7 @@ export default function ProfilePage() {
         )}
 
         {/* Carte hero */}
-        <div className="rounded-3xl bg-gradient-to-br from-clinical-light to-mist p-6 md:p-7 mb-5 relative overflow-hidden">
+        <div className="rounded-3xl bg-gradient-to-br from-brand-light to-mist p-6 md:p-7 mb-5 relative overflow-hidden">
           <div className="relative z-10 max-w-[60%]">
             {isDonor ? (
               <>
@@ -326,7 +334,7 @@ export default function ProfilePage() {
             { href: "/requests", label: isRequester ? "Mes demandes" : "Demander", icon: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" },
             { href: "/notifications", label: "Notifications", icon: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM13.73 21a2 2 0 0 1-3.46 0" },
           ].map((it) => (
-            <Link key={it.href} href={it.href} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white border border-line hover:border-clinical/30 transition-colors">
+            <Link key={it.href} href={it.href} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white border border-line hover:border-brand/30 transition-colors">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10151C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={it.icon} /></svg>
               <span className="text-[11px] text-ink text-center leading-tight">{it.label}</span>
             </Link>

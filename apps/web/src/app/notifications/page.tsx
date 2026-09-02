@@ -78,7 +78,7 @@ export default function NotificationsPage() {
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       <header className="border-b border-white/5 backdrop-blur-xl bg-black/20">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/"><Logo size={28} /></Link>
+          <Link href="/"><Logo size={28} light /></Link>
           <nav className="flex items-center gap-6">
             <Link href="/requests" className="text-sm text-white/70 hover:text-white">Demandes</Link>
             <Link href="/profile" className="text-sm text-white/70 hover:text-white">Profil</Link>

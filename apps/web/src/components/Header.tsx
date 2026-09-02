@@ -17,6 +17,7 @@ export default function Header() {
         <nav className="hidden md:flex items-center gap-7">
           <Link href="/" className="text-sm text-slate hover:text-ink transition-colors">Accueil</Link>
           <Link href="/explorer" className="text-sm text-slate hover:text-ink transition-colors">Explorer</Link>
+          <Link href="/campaigns" className="text-sm text-slate hover:text-ink transition-colors">Campagnes</Link>
           <Link href="/compatibility" className="text-sm text-slate hover:text-ink transition-colors">Compatibilité</Link>
           <Link href="/facilities" className="text-sm text-slate hover:text-ink transition-colors">Établissements</Link>
           {user && <Link href="/requests" className="text-sm text-slate hover:text-ink transition-colors">Mes demandes</Link>}
@@ -37,7 +38,7 @@ export default function Header() {
                 )}
               </Link>
               <Link href="/profile" className="hidden md:flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-mist transition-colors">
-                <span className="w-7 h-7 rounded-full bg-clinical-light text-clinical-dark text-xs font-semibold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-brand-light text-brand-dark text-xs font-semibold flex items-center justify-center">
                   {user.first_name?.[0]?.toUpperCase() || "?"}
                 </span>
                 <span className="text-sm text-ink font-medium">{user.first_name}</span>
@@ -49,7 +50,7 @@ export default function Header() {
           ) : (
             <>
               <Link href="/auth/login" className="hidden md:block text-sm text-slate hover:text-ink transition-colors">Connexion</Link>
-              <Link href="/auth/register" className="px-4 py-2 text-sm font-medium bg-clinical text-white rounded-full hover:bg-clinical-dark transition-colors">
+              <Link href="/auth/register" className="px-4 py-2 text-sm font-medium bg-brand text-white rounded-full hover:bg-brand-dark transition-colors">
                 S'inscrire
               </Link>
             </>

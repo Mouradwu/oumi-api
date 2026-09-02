@@ -212,7 +212,7 @@ export default function CompatibilityPage() {
                   <button
                     key={p.value}
                     onClick={() => setProduct(p.value)}
-                    className={`p-4 rounded-2xl text-sm font-medium transition-all border ${product === p.value ? "bg-clinical border-clinical text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
+                    className={`p-4 rounded-2xl text-sm font-medium transition-all border ${product === p.value ? "bg-brand border-brand text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
                   >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={product === p.value ? "white" : "#5B6472"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-2"><path d={p.icon} /></svg>
                     {p.label}
@@ -239,7 +239,7 @@ export default function CompatibilityPage() {
               </div>
               {!bloodType && (
                 <p className="text-xs text-slate mt-2.5">
-                  Votre groupe sanguin n'est pas renseigné. <a href="/donor/register" className="text-clinical hover:text-clinical-dark font-medium">Compléter mon profil</a>
+                  Votre groupe sanguin n'est pas renseigné. <a href="/donor/register" className="text-brand hover:text-brand-dark font-medium">Compléter mon profil</a>
                 </p>
               )}
             </div>
@@ -269,7 +269,7 @@ export default function CompatibilityPage() {
                         <p className="text-xs font-medium text-slate mb-2">Recevoir de</p>
                         <div className="flex flex-wrap gap-1.5">
                           {summary.can_receive_from.map((bt) => (
-                            <span key={bt} className="px-2.5 py-1 bg-clinical-light text-clinical-dark rounded-full text-sm font-semibold">{bt}</span>
+                            <span key={bt} className="px-2.5 py-1 bg-brand-light text-brand-dark rounded-full text-sm font-semibold">{bt}</span>
                           ))}
                         </div>
                       </div>
@@ -282,7 +282,7 @@ export default function CompatibilityPage() {
             <button
               disabled={!product || !bloodType}
               onClick={() => { setStep(2); useNearby(); }}
-              className="w-full px-6 py-3.5 bg-clinical text-white rounded-full font-medium hover:bg-clinical-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-soft"
+              className="w-full px-6 py-3.5 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-soft"
             >
               Rechercher des donneurs compatibles
             </button>
@@ -308,7 +308,7 @@ export default function CompatibilityPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "nearby" ? "bg-clinical border-clinical text-white" : "bg-white border-line text-ink hover:border-slate"}`}>
+              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "nearby" ? "bg-brand border-brand text-white" : "bg-white border-line text-ink hover:border-slate"}`}>
                 Autour de moi {scope === "nearby" && `(${radiusKm} km)`}
               </button>
               <select
@@ -321,7 +321,7 @@ export default function CompatibilityPage() {
               </select>
               <button
                 onClick={() => { setScope("country"); setWilayaId(""); runSearch({ scope: "country" }); }}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "country" ? "bg-clinical border-clinical text-white" : "bg-white border-line text-ink hover:border-slate"}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "country" ? "bg-brand border-brand text-white" : "bg-white border-line text-ink hover:border-slate"}`}
               >
                 Toute l'Algérie
               </button>
@@ -342,7 +342,7 @@ export default function CompatibilityPage() {
                 <p className="text-sm text-slate mb-4">Essayez d'élargir votre recherche.</p>
                 <div className="flex flex-col items-center gap-2 text-sm">
                   {scope === "nearby" && radiusKm < 50 && (
-                    <button onClick={expandRadius} className="text-clinical hover:text-clinical-dark font-medium">Élargir le rayon de recherche</button>
+                    <button onClick={expandRadius} className="text-brand hover:text-brand-dark font-medium">Élargir le rayon de recherche</button>
                   )}
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function CompatibilityPage() {
                     <button
                       onClick={() => sendRequest(d)}
                       disabled={sending === d.id}
-                      className="shrink-0 px-4 py-2 bg-clinical text-white text-sm rounded-full font-medium hover:bg-clinical-dark transition-colors disabled:opacity-50"
+                      className="shrink-0 px-4 py-2 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50"
                     >
                       {sending === d.id ? "..." : "Demander"}
                     </button>

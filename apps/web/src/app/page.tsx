@@ -20,9 +20,17 @@ export default function Home() {
   const [donorsCount, setDonorsCount] = useState(0);
   const [requestsCount, setRequestsCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [activeCampaign, setActiveCampaign] = useState<any>(null);
 
   const t = translations[lang];
   const isRTL = lang === "ar";
+
+  useEffect(() => {
+    fetch(`${API_URL}/campaigns`)
+      .then((res) => res.json())
+      .then((data) => setActiveCampaign(Array.isArray(data) && data.length > 0 ? data[0] : null))
+      .catch(() => setActiveCampaign(null));
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -61,13 +69,13 @@ export default function Home() {
             </button>
             {user ? (
               <Link href="/profile" className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full hover:bg-mist transition-colors">
-                <span className="w-7 h-7 rounded-full bg-clinical-light text-clinical-dark text-xs font-semibold flex items-center justify-center">
+                <span className="w-7 h-7 rounded-full bg-brand-light text-brand-dark text-xs font-semibold flex items-center justify-center">
                   {user.first_name?.[0]?.toUpperCase() || "?"}
                 </span>
                 <span className="text-sm text-ink font-medium hidden sm:inline">{user.first_name}</span>
               </Link>
             ) : (
-              <Link href="/donor/register" className="px-4 py-2 text-sm font-medium bg-clinical text-white rounded-full hover:bg-clinical-dark transition-colors">
+              <Link href="/donor/register" className="px-4 py-2 text-sm font-medium bg-brand text-white rounded-full hover:bg-brand-dark transition-colors">
                 Devenir donneur
               </Link>
             )}
@@ -82,11 +90,11 @@ export default function Home() {
         </div>
         <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight mb-5 leading-[1.1] text-ink">
           {t.hero.title}<br />
-          <span className="text-clinical">{t.hero.subtitle}</span>
+          <span className="text-brand">{t.hero.subtitle}</span>
         </h1>
         <p className="text-base md:text-lg text-slate max-w-lg mx-auto mb-9 leading-relaxed">{t.hero.description}</p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Link href="/donor/register" className="px-7 py-3.5 bg-clinical text-white rounded-full font-medium hover:bg-clinical-dark transition-colors shadow-soft">
+          <Link href="/donor/register" className="px-7 py-3.5 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-colors shadow-soft">
             {t.hero.ctaPrimary}
           </Link>
           <Link href="/explorer" className="px-7 py-3.5 border border-line rounded-full font-medium text-ink hover:border-slate transition-colors bg-white">
@@ -96,6 +104,16 @@ export default function Home() {
       </section>
 
       <section className="container mx-auto px-6 pb-16">
+        {activeCampaign && (
+          <a href={`/campaigns/${activeCampaign.id}`} className="block max-w-3xl mx-auto mb-10 bg-brand-light rounded-2xl p-5 md:p-6 flex items-center justify-between gap-4 hover:opacity-90 transition-opacity">
+            <div>
+              <p className="text-xs font-medium text-brand-dark mb-1">Campagne en cours</p>
+              <h3 className="font-display font-semibold text-ink">{activeCampaign.name}</h3>
+              {activeCampaign.description && <p className="text-sm text-slate mt-1 line-clamp-1">{activeCampaign.description}</p>}
+            </div>
+            <span className="shrink-0 px-4 py-2 bg-brand text-white text-sm rounded-full font-medium">Découvrir</span>
+          </a>
+        )}
         <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-3xl mx-auto">
           {[
             { value: loading ? "···" : (donorsCount + requestsCount).toString(), label: t.stats.wilayas },
@@ -118,8 +136,8 @@ export default function Home() {
             const href = item.icon === "📍" ? "/facilities" : item.icon === "⚡" ? "/requester/register" : "/donor/register";
             const path = FEATURE_ICONS[item.icon] || FEATURE_ICONS["🛡️"];
             return (
-              <Link key={i} href={href} className="p-7 rounded-2xl bg-white border border-line hover:border-clinical/30 hover:shadow-soft transition-all block">
-                <div className="w-11 h-11 rounded-xl bg-clinical-light flex items-center justify-center mb-5">
+              <Link key={i} href={href} className="p-7 rounded-2xl bg-white border border-line hover:border-brand/30 hover:shadow-soft transition-all block">
+                <div className="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center mb-5">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#123E96" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={path} /></svg>
                 </div>
                 <h3 className="font-display text-base font-semibold mb-2 text-ink">{item.title}</h3>

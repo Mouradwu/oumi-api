@@ -8,8 +8,8 @@ const sora = Sora({ subsets: ["latin"], variable: "--font-sora", weight: ["600",
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  title: "OUMI - Don de sang",
-  description: "Plateforme de don de sang en Algérie",
+  title: "BLOODZ - Don de sang",
+  description: "Application algérienne de don de sang — connecter les donneurs et les personnes qui en ont besoin, en temps réel.",
 };
 
 export default function RootLayout({

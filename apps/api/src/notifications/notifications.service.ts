@@ -135,7 +135,7 @@ export class NotificationsService {
           phone: req.requester?.phone ?? req.contact_phone,
           email: req.requester?.email,
         };
-        await this.requestRepo.update(requestId, { status: 'matched' });
+        await this.requestRepo.update(requestId, { status: 'accepted', donorId: userId });
 
         if (req.requester?.id) {
           await this.create(

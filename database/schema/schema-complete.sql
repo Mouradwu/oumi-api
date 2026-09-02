@@ -67,6 +67,13 @@ CREATE TABLE IF NOT EXISTS users (
     roles TEXT[] DEFAULT ARRAY['donor']::TEXT[],
     is_active BOOLEAN DEFAULT true,
     is_verified BOOLEAN DEFAULT false,
+    email_verified BOOLEAN DEFAULT false,
+    email_verification_token VARCHAR(255),
+    email_verification_expires TIMESTAMP,
+    phone_verified BOOLEAN DEFAULT false,
+    phone_otp_code VARCHAR(10),
+    phone_otp_expires TIMESTAMP,
+    account_status VARCHAR(30) DEFAULT 'pending_verification', -- pending_verification | active | suspended
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );
@@ -115,7 +122,11 @@ CREATE TABLE IF NOT EXISTS donation_requests (
     needed_date DATE,
     contact_phone VARCHAR(20),
     additional_info TEXT,
+    -- pending -> accepted -> donation_declared -> confirmed (ou refused / cancelled)
     status VARCHAR(20) DEFAULT 'pending',
+    donor_id UUID REFERENCES users(id),
+    donated_at TIMESTAMP,
+    confirmed_at TIMESTAMP,
     is_verified BOOLEAN DEFAULT false,
     verified_by UUID REFERENCES users(id),
     created_at TIMESTAMP DEFAULT NOW(),
@@ -251,17 +262,44 @@ CREATE TABLE IF NOT EXISTS campaigns (
     organizer_type VARCHAR(50),
     start_date TIMESTAMP NOT NULL,
     end_date TIMESTAMP,
+    hours_label VARCHAR(100),
     wilaya_id INTEGER,
     commune_id INTEGER,
     location TEXT,
     latitude DECIMAL(10, 7),
     longitude DECIMAL(10, 7),
     donation_types TEXT[],
+    blood_types_needed TEXT[],
     description TEXT,
+    practical_info TEXT,
+    image_url TEXT,
     contact_phone VARCHAR(20),
-    status VARCHAR(20) DEFAULT 'scheduled',
+    contact_name VARCHAR(100),
+    action_label VARCHAR(50) DEFAULT 'Prendre rendez-vous',
+    display_order INTEGER DEFAULT 0,
+    status VARCHAR(20) DEFAULT 'draft', -- draft | active | inactive | ended
+    published_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+
+-- Paliers de badges (configurables depuis l'administration - jamais codes
+-- en dur cote application). Seuil = nombre de dons CONFIRMES necessaires.
+CREATE TABLE IF NOT EXISTS badge_tiers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    threshold INTEGER NOT NULL UNIQUE,
+    display_order INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+INSERT INTO badge_tiers (name, threshold, display_order) VALUES
+  ('Premier don', 1, 1),
+  ('Donneur engage', 3, 2),
+  ('Donneur regulier', 5, 3),
+  ('Donneur exemplaire', 10, 4),
+  ('Ambassadeur', 20, 5)
+ON CONFLICT (threshold) DO NOTHING;
 
 -- Table des associations
 CREATE TABLE IF NOT EXISTS associations (

@@ -1,9 +1,9 @@
 {
-  "name": "oumi-monorepo",
+  "name": "bloodz-monorepo",
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "pnpm --filter @oumi/api build",
-    "start:prod": "pnpm --filter @oumi/api start:prod"
+    "build": "pnpm --filter @bloodz/api build",
+    "start:prod": "pnpm --filter @bloodz/api start:prod"
   }
 }

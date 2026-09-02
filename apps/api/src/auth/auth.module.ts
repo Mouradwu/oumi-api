@@ -11,7 +11,7 @@ import { JwtStrategy } from './jwt.strategy';
   imports: [
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'oumi_dev_secret_key_change_in_prod',
+      secret: process.env.JWT_SECRET || 'bloodz_dev_secret_key_change_in_prod',
       signOptions: { expiresIn: '15m' },
     }),
     TypeOrmModule.forFeature([User]),

@@ -6,8 +6,10 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
 
+const DRAFT_KEY = "requester_form_draft";
+
 export default function RequesterRegisterPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [form, setForm] = useState({
@@ -31,10 +33,34 @@ export default function RequesterRegisterPage() {
       .catch(() => setWilayas([]));
   }, []);
 
-  if (!user) {
-    router.push("/auth/login");
-    return null;
+  // Restaure un brouillon laisse avant une redirection vers la connexion
+  // (ex: utilisateur non connecte qui avait deja rempli le formulaire).
+  useEffect(() => {
+    const draft = sessionStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try {
+        setForm(JSON.parse(draft));
+      } catch {}
+      sessionStorage.removeItem(DRAFT_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      // Sauvegarde ce qui a deja ete saisi avant de renvoyer vers la
+      // connexion, et demande a revenir directement ici apres connexion -
+      // aucune donnee saisie n'est perdue.
+      sessionStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+      router.push("/auth/login?redirect=/requester/register");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, authLoading, router]);
+
+  if (authLoading) {
+    return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>;
   }
+  if (!user) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

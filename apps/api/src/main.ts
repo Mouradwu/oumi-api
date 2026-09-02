@@ -17,6 +17,6 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
 
-  console.log(`OUMI API démarrée sur le port ${port}`);
+  console.log(`BLOODZ API démarrée sur le port ${port}`);
 }
 bootstrap();

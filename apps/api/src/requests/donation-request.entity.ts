@@ -40,8 +40,17 @@ export class DonationRequest {
   @Column({ type: 'text', nullable: true })
   additional_info: string;
 
-  @Column({ default: 'pending' }) // pending, matched, fulfilled, cancelled
+  @Column({ default: 'pending' }) // pending, accepted, donation_declared, confirmed, refused, cancelled
   status: string;
+
+  @Column({ name: 'donor_id', type: 'uuid', nullable: true })
+  donorId: string;
+
+  @Column({ type: 'timestamp', nullable: true })
+  donated_at: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  confirmed_at: Date;
 
   @Column({ default: false })
   is_verified: boolean;
