@@ -50,6 +50,9 @@ export class Donor {
   @Column({ default: false })
   has_donated_before: boolean;
 
+  @Column({ default: 0 })
+  donation_count: number;
+
   @CreateDateColumn()
   created_at: Date;
 

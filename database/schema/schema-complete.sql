@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS donors (
     is_verified BOOLEAN DEFAULT false,
     certified BOOLEAN DEFAULT false,
     has_donated_before BOOLEAN DEFAULT false,
+    donation_count INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );

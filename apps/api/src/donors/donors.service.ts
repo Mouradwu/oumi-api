@@ -98,6 +98,70 @@ export class DonorsService {
     return this.findOne(id, true);
   }
 
+  // Confirme qu'un don a bien eu lieu : incremente le compteur, met a jour
+  // la date du dernier don et le statut "a deja donne". Alimente le badge
+  // de palier (bronze/argent/or) et la prochaine date d'eligibilite.
+  async confirmDonation(id: string): Promise<Donor> {
+    const donor = await this.findOne(id, true);
+    await this.donorRepository.update(id, {
+      donation_count: (donor.donation_count || 0) + 1,
+      has_donated_before: true,
+      last_donation_date: new Date() as any,
+    });
+    this.searchCache.clear();
+    return this.findOne(id, true);
+  }
+
+  // Tableau de bord donneur : palier, prochaine eligibilite, impact reel
+  // (nombre de demandes d'aide auxquelles ce donneur a repondu positivement).
+  // Aucune donnee n'est inventee : tout est calcule a partir de colonnes
+  // reelles (donation_count, last_donation_date) ou de requetes reelles sur
+  // les notifications.
+  async getDashboard(userId: string) {
+    const donor = await this.findByUserId(userId);
+
+    const TIERS = [
+      { name: 'Or', threshold: 5 },
+      { name: 'Argent', threshold: 3 },
+      { name: 'Bronze', threshold: 1 },
+    ];
+    const count = donor?.donation_count || 0;
+    const currentTier = TIERS.find((t) => count >= t.threshold) || null;
+    const nextTier = [...TIERS].reverse().find((t) => count < t.threshold) || null;
+
+    // Intervalle indicatif de 90 jours entre deux dons de sang total - a
+    // faire valider par un professionnel de sante / le protocole local
+    // avant toute utilisation clinique reelle.
+    let nextEligibleDate: string | null = null;
+    let eligibleNow = true;
+    if (donor?.last_donation_date) {
+      const last = new Date(donor.last_donation_date);
+      const next = new Date(last.getTime() + 90 * 24 * 60 * 60 * 1000);
+      nextEligibleDate = next.toISOString().slice(0, 10);
+      eligibleNow = next.getTime() <= Date.now();
+    }
+
+    let impactCount = 0;
+    if (donor) {
+      const rows = await this.donorRepository.query(
+        `SELECT COUNT(*)::int AS cnt FROM notifications
+         WHERE user_id = $1 AND type = 'request' AND (data->>'accepted') = 'true'`,
+        [userId],
+      );
+      impactCount = rows?.[0]?.cnt ?? 0;
+    }
+
+    return {
+      donor: donor ? this.sanitize(donor) : null,
+      donation_count: count,
+      current_tier: currentTier?.name ?? null,
+      next_tier: nextTier ? { name: nextTier.name, remaining: nextTier.threshold - count, threshold: nextTier.threshold } : null,
+      next_eligible_date: nextEligibleDate,
+      eligible_now: eligibleNow,
+      impact_count: impactCount,
+    };
+  }
+
   // Badge de compatibilite pour la fiche publique d'un donneur (section 15
   // de la spec) - le calcul passe systematiquement par CompatibilityService,
   // jamais duplique cote frontend.
