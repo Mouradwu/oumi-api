@@ -8,6 +8,7 @@ import { BloodDrop } from "@/components/BloodDrop";
 import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/context/AuthContext";
 import { useNotifications } from "@/context/NotificationContext";
+import { useTheme } from "@/context/ThemeContext";
 import { API_URL } from "@/lib/api";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -43,6 +44,7 @@ function getToken() {
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
@@ -189,8 +191,24 @@ export default function ProfilePage() {
 
       <main className="container mx-auto px-5 md:px-6 max-w-2xl">
         {showSettings && (
-          <div className="mb-5 p-4 rounded-2xl border border-line bg-white space-y-2">
-            <p className="text-xs font-medium text-slate mb-1">Paramètres du compte</p>
+          <div className="mb-5 p-4 rounded-2xl border border-line bg-surface space-y-2">
+            <p className="text-xs font-medium text-slate mb-1">Apparence</p>
+            <div className="flex gap-1.5 mb-3">
+              {([
+                { value: "light" as const, label: "Clair" },
+                { value: "dark" as const, label: "Sombre" },
+                { value: "system" as const, label: "Système" },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setTheme(opt.value)}
+                  className={`flex-1 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${theme === opt.value ? "bg-brand text-white" : "bg-mist text-slate hover:text-ink"}`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs font-medium text-slate mb-1 pt-1">Paramètres du compte</p>
             <Link href="/profile/verification" className="block w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-ink">
               Vérification email et téléphone
             </Link>
@@ -249,7 +267,7 @@ export default function ProfilePage() {
           <>
             {/* Stats : eligibilite + impact */}
             <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white rounded-2xl border border-line p-4">
+              <div className="bg-surface rounded-2xl border border-line p-4">
                 <p className="text-[11px] font-medium text-slate mb-3 tracking-wide">Prochaine éligibilité</p>
                 <div className="flex items-center gap-2.5">
                   <span className="w-9 h-9 rounded-full bg-vital-light flex items-center justify-center shrink-0">
@@ -266,7 +284,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-2xl border border-line p-4">
+              <div className="bg-surface rounded-2xl border border-line p-4">
                 <p className="text-[11px] font-medium text-slate mb-3 tracking-wide">Mon impact</p>
                 <div className="flex items-center gap-2.5">
                   <span className="w-9 h-9 rounded-full bg-vital-light flex items-center justify-center shrink-0">
@@ -281,7 +299,7 @@ export default function ProfilePage() {
             </div>
 
             {/* Parcours / palier */}
-            <div className="bg-white rounded-2xl border border-line p-4 md:p-5 mb-5">
+            <div className="bg-surface rounded-2xl border border-line p-4 md:p-5 mb-5">
               <p className="text-[11px] font-medium text-slate mb-3 tracking-wide">Votre parcours</p>
               <div className="flex items-center gap-4">
                 <div className="relative w-14 h-14 shrink-0">
@@ -334,7 +352,7 @@ export default function ProfilePage() {
             { href: "/requests", label: isRequester ? "Mes demandes" : "Demander", icon: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" },
             { href: "/notifications", label: "Notifications", icon: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM13.73 21a2 2 0 0 1-3.46 0" },
           ].map((it) => (
-            <Link key={it.href} href={it.href} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white border border-line hover:border-brand/30 transition-colors">
+            <Link key={it.href} href={it.href} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-surface border border-line hover:border-brand/30 transition-colors">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10151C" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d={it.icon} /></svg>
               <span className="text-[11px] text-ink text-center leading-tight">{it.label}</span>
             </Link>
@@ -342,7 +360,7 @@ export default function ProfilePage() {
         </div>
 
         {activeRequests.length > 0 && (
-          <div className="bg-white rounded-2xl border border-line p-4 md:p-5 mb-6">
+          <div className="bg-surface rounded-2xl border border-line p-4 md:p-5 mb-6">
             <p className="text-[11px] font-medium text-slate mb-3 tracking-wide">Mes demandes actives</p>
             <div className="space-y-2">
               {activeRequests.slice(0, 3).map((req) => (

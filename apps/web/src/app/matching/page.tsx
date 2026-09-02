@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Header from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { API_URL } from "@/lib/api";
 import { toArray } from "@/lib/safe";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -57,7 +59,6 @@ export default function MatchingPage() {
     setLoading(true);
     setError("");
     setMatches([]);
-
     try {
       const token = localStorage.getItem("token");
       const res = await fetch(`${API_URL}/matching/find/${selectedRequest}`, {
@@ -74,56 +75,44 @@ export default function MatchingPage() {
     }
   };
 
-  if (loadingRequests) {
-    return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement des demandes...</div>;
-  }
-
   const urgencyStyle = (level: string) => {
-    if (level === 'critical') return 'bg-red-600 text-white';
-    if (level === 'urgent') return 'bg-orange-600 text-white';
-    if (level === 'important') return 'bg-yellow-600 text-white';
-    return 'bg-green-600 text-white';
+    if (level === 'critical') return 'bg-vital-light text-vital-dark';
+    if (level === 'urgent' || level === 'important') return 'bg-amber-light text-amber';
+    return 'bg-recovery-light text-recovery-dark';
   };
+
+  if (loadingRequests) {
+    return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>;
+  }
 
   return (
     <ErrorBoundary fallbackTitle="Erreur d'affichage du matching">
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
-      <div className="max-w-4xl mx-auto">
-        <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">🤝 Matching automatique</h1>
-        <p className="text-white/50 mt-2">Trouvez des donneurs compatibles en quelques secondes</p>
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
+      <Header />
+      <main className="container mx-auto px-5 md:px-6 py-8 max-w-3xl">
+        <h1 className="font-display text-2xl font-bold text-ink">Matching automatique</h1>
+        <p className="text-slate mt-1 text-sm">Trouvez des donneurs compatibles à partir de vos demandes.</p>
 
         {viewMode === "list" ? (
           <>
-            <div className="mt-6 space-y-4">
-              <h2 className="text-xl font-semibold">Demandes en cours</h2>
-
+            <div className="mt-6 space-y-3">
+              <h2 className="text-sm font-semibold text-ink">Demandes en cours</h2>
               {requests.length === 0 ? (
-                <div className="bg-yellow-500/20 text-yellow-400 p-4 rounded-lg">
-                  Aucune demande active. Créez-en une !
-                </div>
+                <div className="bg-amber-light text-amber p-4 rounded-xl text-sm">Aucune demande active. Créez-en une !</div>
               ) : (
                 requests.map((req: any) => (
                   <div
                     key={req.id}
                     onClick={() => setSelectedRequest(req.id)}
-                    className={`p-4 border rounded-xl cursor-pointer transition ${
-                      selectedRequest === req.id
-                        ? "border-red-500 bg-red-500/10"
-                        : "border-white/10 hover:border-white/30"
-                    }`}
+                    className={`p-4 border rounded-2xl cursor-pointer transition-colors ${selectedRequest === req.id ? "border-vital bg-vital-light" : "border-line bg-surface hover:border-slate"}`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <h3 className="font-semibold">🩸 {req.blood_type} - {req.donation_type}</h3>
-                        <p className="text-sm text-white/60">🏥 {req.hospital_name || "Établissement non précisé"}</p>
-                        <p className="text-sm text-white/40">📍 {wilayaName(req.wilaya_id)}</p>
+                        <h3 className="font-semibold text-ink text-sm">{req.blood_type} · {req.donation_type}</h3>
+                        <p className="text-sm text-slate mt-0.5">{req.hospital_name || "Établissement non précisé"}</p>
+                        <p className="text-xs text-slate mt-0.5">{wilayaName(req.wilaya_id)}</p>
                       </div>
-                      <div className="text-right">
-                        <span className={`text-sm px-2 py-1 rounded ${urgencyStyle(req.urgency_level)}`}>
-                          {req.urgency_level}
-                        </span>
-                      </div>
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${urgencyStyle(req.urgency_level)}`}>{req.urgency_level}</span>
                     </div>
                   </div>
                 ))
@@ -131,83 +120,47 @@ export default function MatchingPage() {
             </div>
 
             {requests.length > 0 && (
-              <button
-                onClick={handleFindMatches}
-                disabled={!selectedRequest || loading}
-                className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50"
-              >
-                {loading ? "Recherche en cours..." : "🔍 Trouver des donneurs compatibles"}
+              <button onClick={handleFindMatches} disabled={!selectedRequest || loading} className="mt-6 w-full bg-vital hover:bg-vital-dark text-white font-semibold py-3.5 rounded-full transition-colors disabled:opacity-50">
+                {loading ? "Recherche en cours..." : "Trouver des donneurs compatibles"}
               </button>
             )}
           </>
         ) : (
           <>
-            <button
-              onClick={() => setViewMode("list")}
-              className="mt-4 text-sm text-white/60 hover:text-white transition"
-            >
-              ← Retour à la liste des demandes
-            </button>
-
-            {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
+            <button onClick={() => setViewMode("list")} className="mt-4 text-sm text-slate hover:text-ink transition-colors">&larr; Retour à la liste des demandes</button>
+            {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl mt-4 text-sm">{error}</div>}
 
             {matches.length === 0 ? (
-              <div className="bg-yellow-500/20 text-yellow-400 p-6 rounded-lg mt-6">
-                <p className="font-semibold">😔 Aucun donneur compatible trouvé</p>
-                <p className="text-sm mt-2">Élargissez votre rayon de recherche ou modifiez les critères</p>
+              <div className="bg-amber-light text-amber p-6 rounded-2xl mt-6">
+                <p className="font-semibold">Aucun donneur compatible trouvé</p>
+                <p className="text-sm mt-1">Élargissez votre rayon de recherche ou modifiez les critères.</p>
               </div>
             ) : (
-              <div className="mt-6 space-y-4">
-                <h2 className="text-xl font-semibold">
-                  {matches.length} donneur(s) compatible(s)
-                </h2>
-
+              <div className="mt-6 space-y-3">
+                <h2 className="text-sm font-semibold text-ink">{matches.length} donneur(s) compatible(s)</h2>
                 {matches.map((match) => (
-                  <div key={match.id} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                  <div key={match.id} className="bg-surface p-4 rounded-2xl border border-line">
                     <div className="flex justify-between items-start">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">
-                            {match.donor.user?.first_name} {match.donor.user?.last_name}
-                          </h3>
-                          {match.donor.certified && (
-                            <span className="text-xs bg-blue-600/20 text-blue-400 px-2 py-0.5 rounded">✅ Certifié</span>
-                          )}
-                          {match.donor.availability_status !== 'green' && (
-                            <span className="text-xs bg-yellow-600/20 text-yellow-400 px-2 py-0.5 rounded">⏳ Indisponible</span>
-                          )}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-semibold text-ink text-sm">{match.donor.user?.first_name} {match.donor.user?.last_name}</h3>
+                          {match.donor.certified && <span className="text-xs bg-brand-light text-brand-dark px-2 py-0.5 rounded-full font-medium">Certifié</span>}
+                          {match.donor.availability_status !== 'green' && <span className="text-xs bg-amber-light text-amber px-2 py-0.5 rounded-full font-medium">Indisponible</span>}
                         </div>
-                        <p className="text-sm text-white/60">
-                          🩸 {match.donor.blood_type} · {toArray(match.donor.donation_types).join(", ") || "Aucun type"}
-                        </p>
-                        <p className="text-sm text-white/40">
-                          📍 {wilayaName(match.donor.wilaya_id)} · {match.donor.distance?.toFixed(1)} km
-                        </p>
+                        <p className="text-sm text-slate mt-0.5">{match.donor.blood_type} · {toArray(match.donor.donation_types).join(", ") || "Aucun type"}</p>
+                        <p className="text-xs text-slate mt-0.5">{wilayaName(match.donor.wilaya_id)} · {match.donor.distance?.toFixed(1)} km</p>
                         {match.donor.has_donated_before && (
-                          <p className="text-xs text-green-400 mt-1">
-                            ✅ Don régulier · Dernier don: {match.donor.last_donation_date || "Non précisé"}
-                          </p>
+                          <p className="text-xs text-recovery-dark mt-1">Don régulier · Dernier don : {match.donor.last_donation_date || "Non précisé"}</p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <span className="text-green-400 font-bold">{match.score}%</span>
-                        <p className="text-xs text-white/40">Compatibilité</p>
-                        <span className={`text-xs px-2 py-0.5 rounded ${
-                          match.score >= 80 ? "bg-green-600/20 text-green-400" :
-                          match.score >= 50 ? "bg-yellow-600/20 text-yellow-400" :
-                          "bg-red-600/20 text-red-400"
-                        }`}>
-                          {match.compatibility || "Compatible"}
-                        </span>
+                      <div className="text-right shrink-0">
+                        <span className="text-vital font-bold">{match.score}%</span>
+                        <p className="text-xs text-slate">Compatibilité</p>
                       </div>
                     </div>
                     <div className="mt-3 flex gap-2">
-                      <button className="px-3 py-1 bg-white/10 text-white text-sm rounded hover:bg-white/20 transition">
-                        💬 Contacter
-                      </button>
-                      <button className="px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded hover:bg-red-600/30 transition">
-                        📋 Voir le profil
-                      </button>
+                      <button className="px-3 py-1.5 bg-mist text-ink text-xs rounded-full hover:bg-line transition-colors">Contacter</button>
+                      <button className="px-3 py-1.5 bg-vital-light text-vital-dark text-xs rounded-full hover:opacity-80 transition-opacity">Voir le profil</button>
                     </div>
                   </div>
                 ))}
@@ -215,7 +168,8 @@ export default function MatchingPage() {
             )}
           </>
         )}
-      </div>
+      </main>
+      <BottomNav />
     </div>
     </ErrorBoundary>
   );

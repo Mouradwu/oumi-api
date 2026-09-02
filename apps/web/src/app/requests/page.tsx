@@ -145,7 +145,7 @@ export default function RequestsPage() {
         </div>
 
         {filtered.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-line text-center">
+          <div className="bg-surface p-8 rounded-2xl border border-line text-center">
             <p className="text-slate text-sm">
               {tab === "active" ? "Aucune demande active." : tab === "completed" ? "Aucune demande terminée." : "Aucune demande pour le moment."}
             </p>
@@ -156,7 +156,7 @@ export default function RequestsPage() {
               const status = STATUS_LABELS[req.status] || STATUS_LABELS.pending;
               const canConfirm = req.status === "donation_declared";
               return (
-                <div key={req.id} className="bg-white p-4 rounded-2xl border border-line">
+                <div key={req.id} className="bg-surface p-4 rounded-2xl border border-line">
                   <div className="flex justify-between items-start gap-3">
                     <div>
                       <h3 className="font-semibold text-ink text-sm">{req.blood_type} · {req.donation_type}</h3>

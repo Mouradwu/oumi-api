@@ -212,7 +212,7 @@ export default function CompatibilityPage() {
                   <button
                     key={p.value}
                     onClick={() => setProduct(p.value)}
-                    className={`p-4 rounded-2xl text-sm font-medium transition-all border ${product === p.value ? "bg-brand border-brand text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
+                    className={`p-4 rounded-2xl text-sm font-medium transition-all border ${product === p.value ? "bg-brand border-brand text-white shadow-soft" : "bg-surface border-line text-ink hover:border-slate"}`}
                   >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={product === p.value ? "white" : "#5B6472"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-2"><path d={p.icon} /></svg>
                     {p.label}
@@ -231,7 +231,7 @@ export default function CompatibilityPage() {
                   <button
                     key={bt}
                     onClick={() => { setBloodType(bt); setAutoFilled(false); }}
-                    className={`py-3 rounded-xl text-sm font-semibold transition-all border ${bloodType === bt ? "bg-vital border-vital text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
+                    className={`py-3 rounded-xl text-sm font-semibold transition-all border ${bloodType === bt ? "bg-vital border-vital text-white shadow-soft" : "bg-surface border-line text-ink hover:border-slate"}`}
                   >
                     {bt}
                   </button>
@@ -245,7 +245,7 @@ export default function CompatibilityPage() {
             </div>
 
             {product && bloodType && (
-              <div className="p-5 rounded-2xl border border-line bg-white">
+              <div className="p-5 rounded-2xl border border-line bg-surface">
                 {summaryLoading ? (
                   <p className="text-sm text-slate">Calcul de la compatibilité...</p>
                 ) : summary ? (
@@ -296,7 +296,7 @@ export default function CompatibilityPage() {
               Modifier ma recherche
             </button>
 
-            <div className="p-5 rounded-2xl border border-line bg-white mb-6">
+            <div className="p-5 rounded-2xl border border-line bg-surface mb-6">
               <div className="flex items-center gap-2 mb-1.5">
                 <p className="text-sm text-ink">Vous êtes <span className="font-semibold">{bloodType}</span></p>
                 {summary?.badge && <span className="text-xs px-2.5 py-1 bg-amber-light text-amber rounded-full font-medium">{summary.badge}</span>}
@@ -308,20 +308,20 @@ export default function CompatibilityPage() {
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "nearby" ? "bg-brand border-brand text-white" : "bg-white border-line text-ink hover:border-slate"}`}>
+              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "nearby" ? "bg-brand border-brand text-white" : "bg-surface border-line text-ink hover:border-slate"}`}>
                 Autour de moi {scope === "nearby" && `(${radiusKm} km)`}
               </button>
               <select
                 value={wilayaId}
                 onChange={(e) => { const v = e.target.value ? Number(e.target.value) : ""; setWilayaId(v); setScope("wilaya"); if (v) runSearch({ scope: "wilaya" }); }}
-                className="px-3.5 py-2 bg-white border border-line rounded-full text-sm text-ink"
+                className="px-3.5 py-2 bg-surface border border-line rounded-full text-sm text-ink"
               >
                 <option value="">Ma wilaya</option>
                 {wilayas.map((w) => <option key={w.id} value={w.id}>{w.name_fr}</option>)}
               </select>
               <button
                 onClick={() => { setScope("country"); setWilayaId(""); runSearch({ scope: "country" }); }}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "country" ? "bg-brand border-brand text-white" : "bg-white border-line text-ink hover:border-slate"}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "country" ? "bg-brand border-brand text-white" : "bg-surface border-line text-ink hover:border-slate"}`}
               >
                 Toute l'Algérie
               </button>
@@ -337,7 +337,7 @@ export default function CompatibilityPage() {
             {loading && <div className="text-center py-12 text-slate text-sm">Recherche en cours...</div>}
 
             {!loading && searched && results.length === 0 && (
-              <div className="text-center py-10 px-6 bg-white rounded-2xl border border-line">
+              <div className="text-center py-10 px-6 bg-surface rounded-2xl border border-line">
                 <p className="text-ink font-medium mb-1">Aucun donneur compatible trouvé à proximité</p>
                 <p className="text-sm text-slate mb-4">Essayez d'élargir votre recherche.</p>
                 <div className="flex flex-col items-center gap-2 text-sm">
@@ -351,7 +351,7 @@ export default function CompatibilityPage() {
             {!loading && results.length > 0 && (
               <div className="space-y-2.5">
                 {results.map((d) => (
-                  <div key={d.id} className="bg-white p-4 rounded-2xl border border-line flex justify-between items-center gap-4">
+                  <div key={d.id} className="bg-surface p-4 rounded-2xl border border-line flex justify-between items-center gap-4">
                     <div className="flex items-center gap-3 min-w-0">
                       <span className="w-10 h-10 rounded-full bg-mist text-slate text-sm font-semibold flex items-center justify-center shrink-0">
                         {d.first_name?.[0]?.toUpperCase() || "?"}

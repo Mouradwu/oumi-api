@@ -143,7 +143,7 @@ export default function AdminCampaignsPage() {
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-2xl border border-line p-5 mb-6 space-y-3">
+          <div className="bg-surface rounded-2xl border border-line p-5 mb-6 space-y-3">
             <h2 className="font-semibold text-ink mb-2">{editingId ? "Modifier la campagne" : "Nouvelle campagne"}</h2>
             {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl text-sm">{error}</div>}
             <input placeholder="Titre *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-2.5 border border-line rounded-lg text-sm" />
@@ -198,7 +198,7 @@ export default function AdminCampaignsPage() {
           {campaigns.map((c) => {
             const s = STATUS_LABEL[c.status] || STATUS_LABEL.draft;
             return (
-              <div key={c.id} className="bg-white rounded-2xl border border-line p-4">
+              <div key={c.id} className="bg-surface rounded-2xl border border-line p-4">
                 <div className="flex justify-between items-start gap-3">
                   <div>
                     <h3 className="font-semibold text-ink text-sm">{c.name}</h3>

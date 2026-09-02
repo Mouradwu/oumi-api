@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
+import Header from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { API_URL } from "@/lib/api";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function DonorRegisterPage() {
   const { user, loading: authLoading } = useAuth();
@@ -33,9 +36,7 @@ export default function DonorRegisterPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      router.push("/auth/login");
-    }
+    if (!user) router.push("/auth/login?redirect=/donor/register");
   }, [user, authLoading, router]);
 
   if (authLoading) {
@@ -86,7 +87,7 @@ export default function DonorRegisterPage() {
       try { data = JSON.parse(text); } catch { throw new Error("Erreur serveur"); }
       if (!res.ok) throw new Error(data.message || "Erreur d'enregistrement");
       setSuccess(true);
-      setTimeout(() => router.push("/"), 2000);
+      setTimeout(() => router.push("/profile"), 1500);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -95,65 +96,70 @@ export default function DonorRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">🩸 Devenir donneur</h1>
-        <p className="text-white/50 mt-2">Renseignez vos informations pour sauver des vies</p>
-        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ Profil enregistré !</div>}
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+    <ErrorBoundary fallbackTitle="Erreur d'affichage du formulaire donneur">
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
+      <Header />
+      <main className="container mx-auto px-5 md:px-6 py-8 max-w-2xl">
+        <Link href="/profile" className="text-sm text-slate hover:text-ink transition-colors">&larr; Retour</Link>
+        <h1 className="font-display text-2xl font-bold mt-4 text-ink">Devenir donneur</h1>
+        <p className="text-slate mt-1 text-sm mb-6">Renseignez vos informations pour rejoindre les donneurs BLOODZ.</p>
+        {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl mb-4 text-sm">{error}</div>}
+        {success && <div className="bg-recovery-light text-recovery-dark p-3 rounded-xl mb-4 text-sm">Profil enregistré !</div>}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select value={donor.blood_type} onChange={(e) => setDonor({ ...donor, blood_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <label className="block text-sm font-medium text-ink mb-2">Groupe sanguin *</label>
+            <select value={donor.blood_type} onChange={(e) => setDonor({ ...donor, blood_type: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink" required>
               <option value="">Sélectionnez</option>
               <option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="AB+">AB+</option><option value="AB-">AB-</option><option value="O+">O+</option><option value="O-">O-</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Types de don *</label>
-            <div className="flex flex-wrap gap-3">
+            <label className="block text-sm font-medium text-ink mb-2">Types de don *</label>
+            <div className="flex flex-wrap gap-2">
               {["SANG","PLASMA","PLAQUETTES"].map(type => (
-                <button key={type} type="button" onClick={() => toggleDonationType(type)} className={`px-4 py-2 rounded-full text-sm font-medium transition ${donor.donation_types.includes(type) ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}>
-                  {type === "SANG" && "🩸 Sang"}{type === "PLASMA" && "💧 Plasma"}{type === "PLAQUETTES" && "🧬 Plaquettes"}
+                <button key={type} type="button" onClick={() => toggleDonationType(type)} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${donor.donation_types.includes(type) ? "bg-vital border-vital text-white" : "bg-surface border-line text-ink hover:border-slate"}`}>
+                  {type === "SANG" && "Sang"}{type === "PLASMA" && "Plasma"}{type === "PLAQUETTES" && "Plaquettes"}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
-            <select value={donor.wilaya_id} onChange={(e) => setDonor({ ...donor, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <label className="block text-sm font-medium text-ink mb-2">Wilaya *</label>
+            <select value={donor.wilaya_id} onChange={(e) => setDonor({ ...donor, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink" required>
               <option value="">Sélectionnez une wilaya</option>
               {wilayas.map((w) => (
                 <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
               ))}
             </select>
           </div>
-          <div className="space-y-3 border border-white/10 p-4 rounded-lg">
-            <h3 className="text-sm font-semibold">📋 Statut</h3>
+          <div className="space-y-3 bg-surface border border-line p-4 rounded-2xl">
+            <h3 className="text-sm font-semibold text-ink">Statut</h3>
             <div className="flex items-center gap-3">
-              <input type="checkbox" checked={donor.has_donated_before} onChange={(e) => setDonor({ ...donor, has_donated_before: e.target.checked })} className="w-4 h-4 accent-red-600" />
-              <label className="text-sm text-white/60">J'ai déjà donné</label>
+              <input type="checkbox" checked={donor.has_donated_before} onChange={(e) => setDonor({ ...donor, has_donated_before: e.target.checked })} className="w-4 h-4 accent-brand" />
+              <label className="text-sm text-slate">J'ai déjà donné</label>
             </div>
             {donor.has_donated_before && (
               <div>
-                <label className="block text-sm text-white/60 mb-1">Date du dernier don</label>
-                <input type="date" value={donor.last_donation_date} onChange={(e) => setDonor({ ...donor, last_donation_date: e.target.value })} className="w-full p-2 bg-white/5 border border-white/10 rounded-lg text-white" />
+                <label className="block text-sm text-slate mb-1">Date du dernier don</label>
+                <input type="date" value={donor.last_donation_date} onChange={(e) => setDonor({ ...donor, last_donation_date: e.target.value })} className="w-full p-2.5 bg-paper border border-line rounded-lg text-ink" />
               </div>
             )}
             <div className="flex items-center gap-3">
-              <input type="checkbox" checked={donor.certified} onChange={(e) => setDonor({ ...donor, certified: e.target.checked })} className="w-4 h-4 accent-green-600" />
-              <label className="text-sm text-white/60">✅ Certifié médicalement</label>
+              <input type="checkbox" checked={donor.certified} onChange={(e) => setDonor({ ...donor, certified: e.target.checked })} className="w-4 h-4 accent-brand" />
+              <label className="text-sm text-slate">Certifié médicalement</label>
             </div>
             <div className="flex items-center gap-3">
-              <input type="checkbox" checked={donor.availability_status === "green"} onChange={(e) => setDonor({ ...donor, availability_status: e.target.checked ? "green" : "red" })} className="w-4 h-4 accent-red-600" />
-              <label className="text-sm text-white/60">Disponible pour donner</label>
+              <input type="checkbox" checked={donor.availability_status === "green"} onChange={(e) => setDonor({ ...donor, availability_status: e.target.checked ? "green" : "red" })} className="w-4 h-4 accent-brand" />
+              <label className="text-sm text-slate">Disponible pour donner</label>
             </div>
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50">{loading ? "Enregistrement..." : "💾 Enregistrer"}</button>
+          <button type="submit" disabled={loading} className="w-full bg-vital hover:bg-vital-dark text-white font-semibold py-3.5 rounded-full transition-colors disabled:opacity-50">
+            {loading ? "Enregistrement..." : "Enregistrer"}
+          </button>
         </form>
-      </div>
+      </main>
+      <BottomNav />
     </div>
+    </ErrorBoundary>
   );
 }
-
