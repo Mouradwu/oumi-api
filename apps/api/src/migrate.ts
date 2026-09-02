@@ -1,12 +1,5 @@
 import { Client } from 'pg';
 
-// Migration embarquee (generee a partir de database/schema/schema-complete.sql)
-// pour etre garantie disponible au demarrage sur Railway, ou seul le
-// dossier apps/api est deploye (rootDirectory = apps/api).
-//
-// IMPORTANT : chaque instruction s'execute INDEPENDAMMENT (pas de gros
-// BEGIN/COMMIT global). Si une instruction echoue, seule CETTE instruction
-// est ignoree - toutes les autres s'appliquent quand meme.
 const MIGRATION_STATEMENTS: string[] = [
   `CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`,
   `CREATE TABLE IF NOT EXISTS wilayas (
@@ -42,7 +35,8 @@ const MIGRATION_STATEMENTS: string[] = [
     addr_city VARCHAR(255),
     wilaya_id INTEGER,
     latitude DECIMAL(10, 7) NOT NULL,
-    longitude DECIMAL(10, 7) NOT NULL
+    longitude DECIMAL(10, 7) NOT NULL,
+    specialty VARCHAR(255) -- pour category='doctors' : cardiologie, gynecologie, generaliste...
 );`,
   `CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -72,6 +66,7 @@ const MIGRATION_STATEMENTS: string[] = [
     is_verified BOOLEAN DEFAULT false,
     certified BOOLEAN DEFAULT false,
     has_donated_before BOOLEAN DEFAULT false,
+    donation_count INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW()
 );`,
@@ -337,6 +332,7 @@ END $$;`,
   `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS wilaya_id INTEGER;`,
   `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS latitude DECIMAL(10, 7);`,
   `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS longitude DECIMAL(10, 7);`,
+  `ALTER TABLE osm_health_facilities ADD COLUMN IF NOT EXISTS specialty VARCHAR(255) -- pour category='doctors' : cardiologie, gynecologie, generaliste...;`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(255);`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS password VARCHAR(255);`,
   `ALTER TABLE users ADD COLUMN IF NOT EXISTS first_name VARCHAR(50);`,
@@ -360,6 +356,7 @@ END $$;`,
   `ALTER TABLE donors ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT false;`,
   `ALTER TABLE donors ADD COLUMN IF NOT EXISTS certified BOOLEAN DEFAULT false;`,
   `ALTER TABLE donors ADD COLUMN IF NOT EXISTS has_donated_before BOOLEAN DEFAULT false;`,
+  `ALTER TABLE donors ADD COLUMN IF NOT EXISTS donation_count INTEGER DEFAULT 0;`,
   `ALTER TABLE donors ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT NOW();`,
   `ALTER TABLE donors ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`,
   `ALTER TABLE recipients ADD COLUMN IF NOT EXISTS user_id UUID;`,
@@ -522,9 +519,6 @@ END $$;`,
   `CREATE UNIQUE INDEX IF NOT EXISTS ux_notifications_active_request ON notifications (sender_id, user_id) WHERE type = 'request' AND (data->>'accepted') IS NULL AND sender_id IS NOT NULL;`,
 ];
 
-// Colonnes legitimes de chaque table (voir migrate.ts historique pour le
-// detail du raisonnement). Neutralise toute colonne NOT NULL heritee
-// d'une generation anterieure du schema, quel que soit son nom.
 const EXPECTED_COLUMNS: Record<string, string[]> = {
   "wilayas": [
     "id",
@@ -559,7 +553,8 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
     "addr_city",
     "wilaya_id",
     "latitude",
-    "longitude"
+    "longitude",
+    "specialty"
   ],
   "users": [
     "id",
@@ -589,6 +584,7 @@ const EXPECTED_COLUMNS: Record<string, string[]> = {
     "is_verified",
     "certified",
     "has_donated_before",
+    "donation_count",
     "created_at",
     "updated_at"
   ],

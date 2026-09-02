@@ -68,6 +68,17 @@ export class DonorsController {
     return this.donorsService.findByUserId(userId);
   }
 
+  @Get('dashboard')
+  getDashboard(@Query('userId') userId: string) {
+    if (!userId) throw new BadRequestException('userId requis');
+    return this.donorsService.getDashboard(userId);
+  }
+
+  @Post(':id/confirm-donation')
+  confirmDonation(@Param('id') id: string) {
+    return this.donorsService.confirmDonation(id);
+  }
+
   // Badge de compatibilite pour la fiche publique d'un donneur (section 15).
   @Get(':id/compatibility')
   getCompatibility(
