@@ -32,6 +32,31 @@ export class User {
   @Column({ default: true })
   is_active: boolean;
 
+  @Column({ default: false })
+  email_verified: boolean;
+
+  @Exclude()
+  @Column({ nullable: true })
+  email_verification_token: string;
+
+  @Exclude()
+  @Column({ type: 'timestamp', nullable: true })
+  email_verification_expires: Date;
+
+  @Column({ default: false })
+  phone_verified: boolean;
+
+  @Exclude()
+  @Column({ nullable: true })
+  phone_otp_code: string;
+
+  @Exclude()
+  @Column({ type: 'timestamp', nullable: true })
+  phone_otp_expires: Date;
+
+  @Column({ default: 'pending_verification' })
+  account_status: string;
+
   @OneToMany(() => Donor, donor => donor.user)
   donors: Donor[];
 

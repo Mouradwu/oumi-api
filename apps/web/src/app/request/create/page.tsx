@@ -116,7 +116,7 @@ export default function CreateRequestPage() {
       <div className="relative z-10 w-full max-w-2xl mx-auto">
         <div className="text-center mb-8">
           <Link href="/" className="inline-block mb-6">
-            <Logo size={40} />
+            <Logo size={40} light />
           </Link>
           <h1 className="text-3xl font-bold mb-2">Demander de l'aide</h1>
           <p className="text-white/60">Votre demande sera envoyée aux donneurs compatibles</p>

@@ -1,36 +1,35 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   OUMI - Charte graphique : medical premium, epure, mobile-first.
-   Tokens definis ici (Tailwind v4 lit @theme directement depuis le CSS ;
-   tailwind.config.js n'est plus la source de verite en v4).
+   BLOODZ - Charte graphique : medical premium, algerien, epure, mobile-first.
+   Tokens definis ici (Tailwind v4 lit @theme directement depuis le CSS).
    ============================================================================ */
 
 :root {
-  /* Couleurs de marque */
-  --color-paper: #FAFBFD;        /* fond principal - blanc casse tres lumineux */
-  --color-mist: #EEF2F7;         /* surfaces secondaires */
-  --color-ink: #10151C;          /* texte principal */
+  /* Couleurs de marque BLOODZ */
+  --color-paper: #FFFFFF;        /* blanc pur */
+  --color-mist: #F2F5F3;         /* surfaces secondaires (leger tint vert) */
+  --color-ink: #14171A;          /* noir profond - texte principal */
   --color-slate: #5B6472;        /* texte secondaire */
-  --color-line: #E3E8F0;         /* bordures / hairlines */
+  --color-line: #E4E8E6;         /* bordures / hairlines */
 
-  --color-clinical: #1554D6;     /* bleu medical - couleur principale */
-  --color-clinical-dark: #123E96;
-  --color-clinical-light: #E9F1FD;
+  --color-brand: #006233;        /* vert algerien - couleur principale */
+  --color-brand-dark: #00431F;
+  --color-brand-light: #E2F0E9;
 
-  --color-vital: #E13341;        /* rouge sang - accent, tres parcimonieux */
-  --color-vital-dark: #A31F2C;
-  --color-vital-light: #FCE9EB;
+  --color-vital: #E31E24;        /* rouge sang - accent, tres parcimonieux */
+  --color-vital-dark: #A5151A;
+  --color-vital-light: #FBE6E7;
 
-  --color-recovery: #1FAF72;     /* vert confirmation / compatibilite */
-  --color-recovery-dark: #12744A;
-  --color-recovery-light: #E5F6ED;
+  --color-recovery: #006233;     /* confirmations / compatibilite = vert de marque */
+  --color-recovery-dark: #00431F;
+  --color-recovery-light: #E2F0E9;
 
-  --color-amber: #C97A0E;        /* urgence moderee (orange sobre, pas neon) */
+  --color-amber: #B7791E;        /* urgence moderee (sobre, hors palette stricte) */
   --color-amber-light: #FBF0DF;
 
-  --shadow-soft: 0 1px 2px rgba(16, 21, 28, 0.04), 0 8px 24px rgba(16, 21, 28, 0.05);
-  --shadow-card: 0 1px 3px rgba(16, 21, 28, 0.06);
+  --shadow-soft: 0 1px 2px rgba(20, 23, 26, 0.05), 0 8px 24px rgba(20, 23, 26, 0.06);
+  --shadow-card: 0 1px 3px rgba(20, 23, 26, 0.06);
 }
 
 @theme inline {
@@ -39,9 +38,9 @@
   --color-ink: var(--color-ink);
   --color-slate: var(--color-slate);
   --color-line: var(--color-line);
-  --color-clinical: var(--color-clinical);
-  --color-clinical-dark: var(--color-clinical-dark);
-  --color-clinical-light: var(--color-clinical-light);
+  --color-brand: var(--color-brand);
+  --color-brand-dark: var(--color-brand-dark);
+  --color-brand-light: var(--color-brand-light);
   --color-vital: var(--color-vital);
   --color-vital-dark: var(--color-vital-dark);
   --color-vital-light: var(--color-vital-light);
@@ -62,7 +61,6 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Espace reserve en bas sur mobile pour la barre de navigation fixe */
 .pb-safe-nav {
   padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
 }

@@ -41,7 +41,7 @@ export const translations = {
     },
     footer: {
       tagline: "Ensemble, chaque goutte compte.",
-      rights: "© 2026 Oumi. Tous droits réservés.",
+      rights: "© 2026 Bloodz. Tous droits réservés.",
     },
   },
   ar: {

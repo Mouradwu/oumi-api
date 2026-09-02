@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Header from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { API_URL } from "@/lib/api";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
@@ -15,12 +16,23 @@ interface Request {
   hospital_name: string | null;
   urgency_level: string;
   status: string;
+  donor_id: string | null;
   created_at: string;
   response_count: number;
 }
 
-const ACTIVE_STATUSES = ["pending", "matched"];
-const COMPLETED_STATUSES = ["fulfilled", "cancelled"];
+// pending -> accepted -> donation_declared -> confirmed (ou refused / cancelled)
+const ACTIVE_STATUSES = ["pending", "accepted", "donation_declared"];
+const COMPLETED_STATUSES = ["confirmed", "cancelled", "refused"];
+
+const STATUS_LABELS: Record<string, { color: string; label: string }> = {
+  pending: { color: "bg-amber-light text-amber", label: "En attente" },
+  accepted: { color: "bg-brand-light text-brand-dark", label: "Donneur trouvé" },
+  donation_declared: { color: "bg-brand-light text-brand-dark", label: "Don déclaré — à confirmer" },
+  confirmed: { color: "bg-recovery-light text-recovery-dark", label: "Don confirmé" },
+  cancelled: { color: "bg-mist text-slate", label: "Annulée" },
+  refused: { color: "bg-vital-light text-vital-dark", label: "Refusée" },
+};
 
 function getToken() {
   if (typeof window === "undefined") return null;
@@ -34,7 +46,7 @@ export default function RequestsPage() {
   const [wilayas, setWilayas] = useState<{ id: number; code: string; name_fr: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"active" | "completed" | "all">("active");
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [busyId, setBusyId] = useState<string | null>(null);
 
   const wilayaName = (id: number) => wilayas.find((w) => w.id === id)?.name_fr || `#${id}`;
 
@@ -69,7 +81,7 @@ export default function RequestsPage() {
 
   const deleteRequest = async (id: string) => {
     if (!confirm("Supprimer définitivement cette demande de votre historique ?")) return;
-    setDeletingId(id);
+    setBusyId(id);
     try {
       const token = getToken();
       const res = await fetch(`${API_URL}/requests/${id}`, { method: "DELETE", headers: { Authorization: "Bearer " + token } });
@@ -78,91 +90,112 @@ export default function RequestsPage() {
     } catch {
       alert("Erreur lors de la suppression");
     } finally {
-      setDeletingId(null);
+      setBusyId(null);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const map: Record<string, { color: string; label: string }> = {
-      pending: { color: "bg-yellow-600/20 text-yellow-400", label: "⏳ En attente" },
-      matched: { color: "bg-blue-600/20 text-blue-400", label: "🔵 Donneur trouvé" },
-      fulfilled: { color: "bg-green-600/20 text-green-400", label: "✅ Vie sauvée" },
-      cancelled: { color: "bg-gray-600/20 text-gray-400", label: "✖️ Annulée" },
-    };
-    return map[status] || map.pending;
+  // Le demandeur confirme que le don a bien eu lieu - seule action qui fait
+  // progresser l'impact et les badges du donneur cote serveur.
+  const confirmDonation = async (id: string) => {
+    if (!confirm("Confirmer que ce don a bien été effectué ? Cette action met à jour l'impact du donneur.")) return;
+    setBusyId(id);
+    try {
+      const token = getToken();
+      const res = await fetch(`${API_URL}/requests/${id}/confirm-donation`, { method: "POST", headers: { Authorization: "Bearer " + token } });
+      if (!res.ok) throw new Error();
+      await load();
+    } catch {
+      alert("Erreur lors de la confirmation");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const filtered = requests.filter((r) => {
     if (tab === "active") return ACTIVE_STATUSES.includes(r.status);
     if (tab === "completed") return COMPLETED_STATUSES.includes(r.status);
-    return true; // "all" = historique complet
+    return true;
   });
 
   const activeCount = requests.filter((r) => ACTIVE_STATUSES.includes(r.status)).length;
   const completedCount = requests.filter((r) => COMPLETED_STATUSES.includes(r.status)).length;
 
   if (authLoading || loading) {
-    return <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">Chargement...</div>;
+    return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>;
   }
 
   return (
     <ErrorBoundary fallbackTitle="Erreur d'affichage de vos demandes">
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
       <Header />
-      <main className="container mx-auto px-6 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-2">📋 Mes demandes</h1>
-        <p className="text-white/50 mb-6 text-sm">Historique de vos demandes de don, avec leur statut et les réponses reçues.</p>
+      <main className="container mx-auto px-5 md:px-6 py-10 max-w-2xl">
+        <h1 className="font-display text-2xl font-bold mb-1 text-ink">Mes demandes</h1>
+        <p className="text-slate mb-6 text-sm">Historique de vos demandes, avec leur statut et les réponses reçues.</p>
 
-        <div className="flex gap-2 mb-6 border-b border-white/10">
-          <button onClick={() => setTab("active")} className={`px-4 py-2 text-sm border-b-2 transition ${tab === "active" ? "border-red-500 text-white" : "border-transparent text-white/50 hover:text-white"}`}>
+        <div className="flex gap-1 mb-6 border-b border-line">
+          <button onClick={() => setTab("active")} className={`px-4 py-2.5 text-sm border-b-2 transition-colors font-medium ${tab === "active" ? "border-vital text-ink" : "border-transparent text-slate hover:text-ink"}`}>
             Actives {activeCount > 0 && `(${activeCount})`}
           </button>
-          <button onClick={() => setTab("completed")} className={`px-4 py-2 text-sm border-b-2 transition ${tab === "completed" ? "border-red-500 text-white" : "border-transparent text-white/50 hover:text-white"}`}>
+          <button onClick={() => setTab("completed")} className={`px-4 py-2.5 text-sm border-b-2 transition-colors font-medium ${tab === "completed" ? "border-vital text-ink" : "border-transparent text-slate hover:text-ink"}`}>
             Terminées {completedCount > 0 && `(${completedCount})`}
           </button>
-          <button onClick={() => setTab("all")} className={`px-4 py-2 text-sm border-b-2 transition ${tab === "all" ? "border-red-500 text-white" : "border-transparent text-white/50 hover:text-white"}`}>
-            Historique complet ({requests.length})
+          <button onClick={() => setTab("all")} className={`px-4 py-2.5 text-sm border-b-2 transition-colors font-medium ${tab === "all" ? "border-vital text-ink" : "border-transparent text-slate hover:text-ink"}`}>
+            Historique ({requests.length})
           </button>
         </div>
 
         {filtered.length === 0 ? (
-          <div className="bg-white/5 p-8 rounded-xl text-center">
-            <p className="text-white/50">
+          <div className="bg-white p-8 rounded-2xl border border-line text-center">
+            <p className="text-slate text-sm">
               {tab === "active" ? "Aucune demande active." : tab === "completed" ? "Aucune demande terminée." : "Aucune demande pour le moment."}
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {filtered.map((req) => {
-              const status = getStatusBadge(req.status);
+              const status = STATUS_LABELS[req.status] || STATUS_LABELS.pending;
+              const canConfirm = req.status === "donation_declared";
               return (
-                <div key={req.id} className="bg-white/5 p-4 rounded-xl border border-white/10">
+                <div key={req.id} className="bg-white p-4 rounded-2xl border border-line">
                   <div className="flex justify-between items-start gap-3">
                     <div>
-                      <h3 className="font-semibold">🩸 {req.blood_type} · {req.donation_type}</h3>
-                      <p className="text-sm text-white/60">🏥 {req.hospital_name || "Établissement non précisé"}</p>
-                      <p className="text-sm text-white/40">📍 {wilayaName(req.wilaya_id)} · {new Date(req.created_at).toLocaleDateString("fr-FR")}</p>
+                      <h3 className="font-semibold text-ink text-sm">{req.blood_type} · {req.donation_type}</h3>
+                      <p className="text-sm text-slate mt-0.5">{req.hospital_name || "Établissement non précisé"}</p>
+                      <p className="text-xs text-slate mt-0.5">{wilayaName(req.wilaya_id)} · {new Date(req.created_at).toLocaleDateString("fr-FR")}</p>
                       {req.response_count > 0 && (
-                        <p className="text-sm text-green-400 mt-1">
-                          💬 {req.response_count} réponse{req.response_count > 1 ? "s" : ""} reçue{req.response_count > 1 ? "s" : ""}
+                        <p className="text-xs text-brand-dark font-medium mt-1.5">
+                          {req.response_count} réponse{req.response_count > 1 ? "s" : ""} reçue{req.response_count > 1 ? "s" : ""}
                         </p>
                       )}
                     </div>
                     <div className="text-right shrink-0 flex flex-col items-end gap-2">
-                      <span className={`text-xs px-2 py-1 rounded ${status.color}`}>{status.label}</span>
+                      <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${status.color}`}>{status.label}</span>
                       <button
                         onClick={() => deleteRequest(req.id)}
-                        disabled={deletingId === req.id}
-                        className="text-xs text-white/30 hover:text-red-400 transition disabled:opacity-50"
+                        disabled={busyId === req.id}
+                        className="text-xs text-slate hover:text-vital transition-colors disabled:opacity-50"
                       >
-                        {deletingId === req.id ? "..." : "🗑️ Supprimer"}
+                        Supprimer
                       </button>
                     </div>
                   </div>
-                  {ACTIVE_STATUSES.includes(req.status) && (
-                    <div className="mt-3">
-                      <a href="/matching" className="px-3 py-1 bg-red-600/20 text-red-400 text-sm rounded hover:bg-red-600/30 transition inline-block">
-                        🤝 Trouver un donneur
+
+                  {canConfirm && (
+                    <div className="mt-3 pt-3 border-t border-line">
+                      <p className="text-xs text-slate mb-2">Le donneur a indiqué avoir effectué ce don. Confirmez-vous l'avoir reçu ?</p>
+                      <button
+                        onClick={() => confirmDonation(req.id)}
+                        disabled={busyId === req.id}
+                        className="px-4 py-2 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50"
+                      >
+                        {busyId === req.id ? "..." : "Confirmer le don"}
+                      </button>
+                    </div>
+                  )}
+                  {req.status === "pending" && (
+                    <div className="mt-3 pt-3 border-t border-line">
+                      <a href="/matching" className="px-3 py-1.5 bg-vital-light text-vital-dark text-sm rounded-full font-medium hover:bg-vital-light/70 transition-colors inline-block">
+                        Trouver un donneur
                       </a>
                     </div>
                   )}
@@ -173,11 +206,12 @@ export default function RequestsPage() {
         )}
 
         <div className="mt-8">
-          <a href="/requester/register" className="inline-block bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition">
-            📢 Créer une nouvelle demande
+          <a href="/requester/register" className="inline-block bg-vital hover:bg-vital-dark text-white font-medium py-3 px-6 rounded-full transition-colors">
+            Créer une nouvelle demande
           </a>
         </div>
       </main>
+      <BottomNav />
     </div>
     </ErrorBoundary>
   );

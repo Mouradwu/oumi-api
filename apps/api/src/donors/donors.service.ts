@@ -113,21 +113,21 @@ export class DonorsService {
   }
 
   // Tableau de bord donneur : palier, prochaine eligibilite, impact reel
-  // (nombre de demandes d'aide auxquelles ce donneur a repondu positivement).
-  // Aucune donnee n'est inventee : tout est calcule a partir de colonnes
-  // reelles (donation_count, last_donation_date) ou de requetes reelles sur
-  // les notifications.
+  // (dons reellement CONFIRMES par un receveur - jamais une simple
+  // acceptation). Aucune donnee n'est inventee. Les paliers de badges sont
+  // lus depuis la table badge_tiers (configurable admin), jamais codes en
+  // dur cote application.
   async getDashboard(userId: string) {
     const donor = await this.findByUserId(userId);
 
-    const TIERS = [
-      { name: 'Or', threshold: 5 },
-      { name: 'Argent', threshold: 3 },
-      { name: 'Bronze', threshold: 1 },
-    ];
+    const tierRows = await this.donorRepository.query(
+      `SELECT name, threshold FROM badge_tiers ORDER BY threshold ASC`,
+    );
+    const TIERS = tierRows.map((r: any) => ({ name: r.name, threshold: r.threshold }));
+
     const count = donor?.donation_count || 0;
-    const currentTier = TIERS.find((t) => count >= t.threshold) || null;
-    const nextTier = [...TIERS].reverse().find((t) => count < t.threshold) || null;
+    const currentTier = [...TIERS].reverse().find((t) => count >= t.threshold) || null;
+    const nextTier = TIERS.find((t) => count < t.threshold) || null;
 
     // Intervalle indicatif de 90 jours entre deux dons de sang total - a
     // faire valider par un professionnel de sante / le protocole local
@@ -143,9 +143,12 @@ export class DonorsService {
 
     let impactCount = 0;
     if (donor) {
+      // IMPORTANT : ne compte que les demandes reellement CONFIRMEES par le
+      // receveur (jamais une simple acceptation - voir requests.service.ts,
+      // section "Accepte != Don confirme").
       const rows = await this.donorRepository.query(
-        `SELECT COUNT(*)::int AS cnt FROM notifications
-         WHERE user_id = $1 AND type = 'request' AND (data->>'accepted') = 'true'`,
+        `SELECT COUNT(*)::int AS cnt FROM donation_requests
+         WHERE donor_id = $1 AND status = 'confirmed'`,
         [userId],
       );
       impactCount = rows?.[0]?.cnt ?? 0;

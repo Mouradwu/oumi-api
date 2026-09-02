@@ -1,11 +1,14 @@
-﻿"use client";
+"use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { API_URL } from "@/lib/api";
 
-export default function LoginPage() {
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,7 +30,6 @@ export default function LoginPage() {
       const token = data.access_token;
       localStorage.setItem("token", token);
 
-      // Vérifier que le token est valide
       const verifyRes = await fetch(`${API_URL}/auth/me`, {
         headers: { Authorization: "Bearer " + token },
       });
@@ -36,8 +38,11 @@ export default function LoginPage() {
         throw new Error("Token invalide, veuillez réessayer.");
       }
 
-      // Redirection
-      window.location.href = "/profile";
+      // Redirige vers la page d'origine si l'utilisateur y a ete envoye
+      // depuis un formulaire (ex: "faire une demande" sans etre connecte) -
+      // sinon, destination par defaut.
+      const redirect = searchParams.get("redirect");
+      window.location.href = redirect || "/profile";
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -46,18 +51,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white flex flex-col items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-8">
-        <Logo size={36} />
-        <h1 className="text-2xl font-bold text-center">Se connecter</h1>
-        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg text-sm">{error}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="min-h-screen bg-paper text-ink flex flex-col items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-7">
+        <div className="flex justify-center"><Logo size={40} /></div>
+        <h1 className="font-display text-2xl font-bold text-center text-ink">Se connecter</h1>
+        {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl text-sm">{error}</div>}
+        <form onSubmit={handleSubmit} className="space-y-3.5">
           <input
             type="email"
             placeholder="Email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            className="w-full p-3.5 bg-white border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
             required
           />
           <input
@@ -65,21 +70,29 @@ export default function LoginPage() {
             placeholder="Mot de passe"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40"
+            className="w-full p-3.5 bg-white border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
             required
           />
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black font-bold py-3 rounded-lg hover:bg-white/90 disabled:opacity-50 transition"
+            className="w-full bg-brand text-white font-semibold py-3.5 rounded-full hover:bg-brand-dark disabled:opacity-50 transition-colors"
           >
             {loading ? "Connexion..." : "Se connecter"}
           </button>
         </form>
-        <p className="text-center text-white/50 text-sm">
-          Pas encore de compte ? <Link href="/auth/register" className="text-red-400 hover:underline">S'inscrire</Link>
+        <p className="text-center text-slate text-sm">
+          Pas encore de compte ? <Link href="/auth/register" className="text-brand hover:text-brand-dark font-medium">S'inscrire</Link>
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }

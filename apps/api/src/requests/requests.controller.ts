@@ -29,6 +29,23 @@ export class RequestsController {
     return this.requestsService.updateStatus(id, status);
   }
 
+  // Le donneur declare avoir effectue le don (etape intermediaire,
+  // n'incremente PAS encore l'impact).
+  @Post(':id/mark-donated')
+  @UseGuards(JwtAuthGuard)
+  markDonated(@Param('id') id: string, @Request() req) {
+    return this.requestsService.markDonated(id, req.user.id);
+  }
+
+  // Le demandeur d'origine confirme : SEUL evenement qui incremente
+  // reellement l'impact/les badges du donneur (protege cote serveur
+  // contre le double comptage).
+  @Post(':id/confirm-donation')
+  @UseGuards(JwtAuthGuard)
+  confirmDonation(@Param('id') id: string, @Request() req) {
+    return this.requestsService.confirmDonation(id, req.user.id);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   remove(@Param('id') id: string, @Request() req) {

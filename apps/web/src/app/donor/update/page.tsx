@@ -8,7 +8,7 @@ import { API_URL } from "@/lib/api";
 import { toArray } from "@/lib/safe";
 
 export default function UpdateDonorPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -34,6 +34,7 @@ export default function UpdateDonorPage() {
   }, []);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push("/auth/login");
       return;
@@ -65,7 +66,7 @@ export default function UpdateDonorPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const toggleDonationType = (type: string) => {
     setForm(prev => ({

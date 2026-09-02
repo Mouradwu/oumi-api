@@ -50,7 +50,7 @@ export default function WilayasPage() {
       </div>
       <header className="relative z-10 border-b border-white/5 backdrop-blur-xl bg-black/20">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <Link href="/"><Logo size={28} /></Link>
+          <Link href="/"><Logo size={28} light /></Link>
           <nav className="hidden md:flex items-center gap-8">
             <Link href="/" className="text-sm text-white/70 hover:text-white transition">Accueil</Link>
             <Link href="/wilayas" className="text-sm text-white/70 hover:text-white transition">Wilayas</Link>
@@ -86,8 +86,8 @@ export default function WilayasPage() {
       </main>
       <footer className="relative z-10 border-t border-white/5 py-8 mt-12">
         <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <Logo size={20} />
-          <div className="text-xs text-white/40">{t?.footer?.tagline || "OUMI - Don de sang"}</div>
+          <Logo size={20} light />
+          <div className="text-xs text-white/40">{t?.footer?.tagline || "BLOODZ - Don de sang"}</div>
           <div className="text-xs text-white/30">{t?.footer?.rights || "© 2026 Tous droits réservés"}</div>
         </div>
       </footer>
