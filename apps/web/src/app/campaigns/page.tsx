@@ -55,13 +55,13 @@ export default function CampaignsPage() {
         {loading ? (
           <div className="text-center py-12 text-slate text-sm">Chargement...</div>
         ) : campaigns.length === 0 ? (
-          <div className="bg-white p-8 rounded-2xl border border-line text-center">
+          <div className="bg-surface p-8 rounded-2xl border border-line text-center">
             <p className="text-slate text-sm">Aucune campagne active pour le moment.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {campaigns.map((c) => (
-              <Link key={c.id} href={`/campaigns/${c.id}`} className="block bg-white rounded-2xl border border-line overflow-hidden hover:border-brand/30 transition-colors">
+              <Link key={c.id} href={`/campaigns/${c.id}`} className="block bg-surface rounded-2xl border border-line overflow-hidden hover:border-brand/30 transition-colors">
                 {c.image_url && (
                   <img src={c.image_url} alt={c.name} className="w-full h-36 object-cover" />
                 )}

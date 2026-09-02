@@ -1,39 +1,76 @@
 @import "tailwindcss";
 
+/* Active le variant Tailwind "dark:" pilote par une classe .dark sur <html>
+   (Tailwind v4 : plus de darkMode:'class' dans un config JS, ca se declare
+   directement en CSS). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* ============================================================================
    BLOODZ - Charte graphique : medical premium, algerien, epure, mobile-first.
-   Tokens definis ici (Tailwind v4 lit @theme directement depuis le CSS).
+   Deux themes reflechis (pas une simple inversion) : les valeurs "light" de
+   chaque couleur d'accent (vital-light, brand-light...) sont des teintes
+   pastel qui fonctionnent sur fond blanc ; en mode sombre elles deviennent
+   des voiles semi-transparents de la meme couleur, qui fonctionnent sur fond
+   sombre sans jamais paraitre criards.
    ============================================================================ */
 
 :root {
-  /* Couleurs de marque BLOODZ */
-  --color-paper: #FFFFFF;        /* blanc pur */
-  --color-mist: #F2F5F3;         /* surfaces secondaires (leger tint vert) */
-  --color-ink: #14171A;          /* noir profond - texte principal */
+  --color-paper: #FFFFFF;        /* fond de page */
+  --color-surface: #FFFFFF;      /* fond des cartes/elements eleves */
+  --color-mist: #F2F5F3;         /* surfaces secondaires discretes */
+  --color-ink: #14171A;          /* texte principal */
   --color-slate: #5B6472;        /* texte secondaire */
   --color-line: #E4E8E6;         /* bordures / hairlines */
 
-  --color-brand: #006233;        /* vert algerien - couleur principale */
+  --color-brand: #006233;
   --color-brand-dark: #00431F;
   --color-brand-light: #E2F0E9;
 
-  --color-vital: #E31E24;        /* rouge sang - accent, tres parcimonieux */
+  --color-vital: #E31E24;
   --color-vital-dark: #A5151A;
   --color-vital-light: #FBE6E7;
 
-  --color-recovery: #006233;     /* confirmations / compatibilite = vert de marque */
+  --color-recovery: #006233;
   --color-recovery-dark: #00431F;
   --color-recovery-light: #E2F0E9;
 
-  --color-amber: #B7791E;        /* urgence moderee (sobre, hors palette stricte) */
+  --color-amber: #B7791E;
   --color-amber-light: #FBF0DF;
 
   --shadow-soft: 0 1px 2px rgba(20, 23, 26, 0.05), 0 8px 24px rgba(20, 23, 26, 0.06);
   --shadow-card: 0 1px 3px rgba(20, 23, 26, 0.06);
 }
 
+.dark {
+  --color-paper: #14171A;        /* noir profond officiel BLOODZ */
+  --color-surface: #1E2226;      /* cartes legerement plus claires que le fond */
+  --color-mist: #24282D;
+  --color-ink: #FFFFFF;
+  --color-slate: #9AA3AC;
+  --color-line: #2E3338;
+
+  --color-brand: #1DA562;        /* vert eclairci pour rester lisible sur fond sombre */
+  --color-brand-dark: #17864F;
+  --color-brand-light: rgba(29, 165, 98, 0.16);
+
+  --color-vital: #FF5257;        /* rouge eclairci pour rester lisible sur fond sombre */
+  --color-vital-dark: #E31E24;
+  --color-vital-light: rgba(255, 82, 87, 0.16);
+
+  --color-recovery: #1DA562;
+  --color-recovery-dark: #17864F;
+  --color-recovery-light: rgba(29, 165, 98, 0.16);
+
+  --color-amber: #E0A94A;
+  --color-amber-light: rgba(224, 169, 74, 0.16);
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 @theme inline {
   --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
   --color-mist: var(--color-mist);
   --color-ink: var(--color-ink);
   --color-slate: var(--color-slate);
@@ -54,11 +91,19 @@
   --font-sans: var(--font-inter);
 }
 
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-inter), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .pb-safe-nav {

@@ -39,10 +39,16 @@ function LoginForm() {
       }
 
       // Redirige vers la page d'origine si l'utilisateur y a ete envoye
-      // depuis un formulaire (ex: "faire une demande" sans etre connecte) -
-      // sinon, destination par defaut.
+      // depuis un formulaire (ex: "faire une demande" sans etre connecte).
+      // Si le compte n'est pas encore verifie, priorite a l'ecran de
+      // verification (la verification doit demarrer des la connexion,
+      // pas rester cachee dans les parametres).
       const redirect = searchParams.get("redirect");
-      window.location.href = redirect || "/profile";
+      if (data.user?.account_status !== "active") {
+        window.location.href = "/profile/verification";
+      } else {
+        window.location.href = redirect || "/profile";
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -62,7 +68,7 @@ function LoginForm() {
             placeholder="Email"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="w-full p-3.5 bg-white border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
+            className="w-full p-3.5 bg-surface border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
             required
           />
           <input
@@ -70,7 +76,7 @@ function LoginForm() {
             placeholder="Mot de passe"
             value={form.password}
             onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="w-full p-3.5 bg-white border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
+            className="w-full p-3.5 bg-surface border border-line rounded-xl text-ink placeholder-slate focus:outline-none focus:border-brand"
             required
           />
           <button

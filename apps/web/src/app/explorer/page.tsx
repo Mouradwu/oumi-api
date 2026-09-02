@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/lib/api";
 import { toArray } from "@/lib/safe";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { BottomNav } from "@/components/BottomNav";
 
 interface Donor {
   id: string;
@@ -132,67 +133,67 @@ export default function ExplorerPage() {
   }) : [];
 
   const urgencyStyle = (level: string) => {
-    if (level === 'critical') return 'bg-red-600/20 text-red-400';
-    if (level === 'urgent') return 'bg-orange-600/20 text-orange-400';
-    if (level === 'important') return 'bg-yellow-600/20 text-yellow-400';
-    return 'bg-green-600/20 text-green-400';
+    if (level === 'critical') return 'bg-vital-light text-vital-dark';
+    if (level === 'urgent') return 'bg-amber-light text-amber';
+    if (level === 'important') return 'bg-amber-light text-amber';
+    return 'bg-recovery-light text-recovery-dark';
   };
 
   return (
     <ErrorBoundary fallbackTitle="Erreur d'affichage de l'explorateur">
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
       <Header />
-      <main className="container mx-auto px-6 py-12">
-        <h1 className="text-3xl font-bold mb-6">🔍 Explorer</h1>
-        <div className="flex gap-4 mb-6">
-          <button onClick={() => setTab('donors')} className={`px-6 py-2 rounded-lg transition ${tab === 'donors' ? 'bg-red-600' : 'bg-white/10'}`}>❤️ Donneurs</button>
-          <button onClick={() => setTab('requests')} className={`px-6 py-2 rounded-lg transition ${tab === 'requests' ? 'bg-red-600' : 'bg-white/10'}`}>🚨 Demandes</button>
+      <main className="container mx-auto px-5 md:px-6 py-8 max-w-4xl">
+        <h1 className="font-display text-2xl font-bold mb-6 text-ink">Explorer</h1>
+        <div className="flex gap-2 mb-6">
+          <button onClick={() => setTab('donors')} className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${tab === 'donors' ? 'bg-vital border-vital text-white' : 'bg-surface border-line text-ink hover:border-slate'}`}>Donneurs</button>
+          <button onClick={() => setTab('requests')} className={`px-5 py-2 rounded-full text-sm font-medium transition-colors border ${tab === 'requests' ? 'bg-vital border-vital text-white' : 'bg-surface border-line text-ink hover:border-slate'}`}>Demandes</button>
         </div>
 
-        <div className="bg-white/5 p-4 rounded-xl border border-white/10 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <select value={filters.blood_type} onChange={(e) => setFilters({ ...filters, blood_type: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white">
+        <div className="bg-surface p-4 rounded-2xl border border-line mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <select value={filters.blood_type} onChange={(e) => setFilters({ ...filters, blood_type: e.target.value })} className="p-2.5 bg-paper border border-line rounded-lg text-ink text-sm">
               <option value="">Tous groupes</option>
               <option value="A+">A+</option><option value="A-">A-</option>
               <option value="B+">B+</option><option value="B-">B-</option>
               <option value="AB+">AB+</option><option value="AB-">AB-</option>
               <option value="O+">O+</option><option value="O-">O-</option>
             </select>
-            <select value={filters.donation_type} onChange={(e) => setFilters({ ...filters, donation_type: e.target.value })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white">
+            <select value={filters.donation_type} onChange={(e) => setFilters({ ...filters, donation_type: e.target.value })} className="p-2.5 bg-paper border border-line rounded-lg text-ink text-sm">
               <option value="">Tous types</option>
-              <option value="SANG">🩸 Sang</option>
-              <option value="PLASMA">💧 Plasma</option>
-              <option value="PLAQUETTES">🧬 Plaquettes</option>
+              <option value="SANG">Sang</option>
+              <option value="PLASMA">Plasma</option>
+              <option value="PLAQUETTES">Plaquettes</option>
             </select>
-            <select value={filters.wilaya_id} onChange={(e) => setFilters({ ...filters, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="p-2 bg-white/5 border border-white/10 rounded-lg text-white">
+            <select value={filters.wilaya_id} onChange={(e) => setFilters({ ...filters, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="p-2.5 bg-paper border border-line rounded-lg text-ink text-sm">
               <option value="">Toutes wilayas</option>
               {wilayas.map((w) => (
                 <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
               ))}
             </select>
           </div>
-          <button onClick={handleSearch} className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition">🔍 Rechercher</button>
+          <button onClick={handleSearch} className="mt-4 px-6 py-2.5 bg-brand hover:bg-brand-dark text-white text-sm font-medium rounded-full transition-colors">Rechercher</button>
         </div>
 
-        {loading && <div className="text-center py-12 text-white/50">Chargement...</div>}
+        {loading && <div className="text-center py-12 text-slate text-sm">Chargement...</div>}
 
         {tab === 'donors' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredDonors.length === 0 && searchTriggered ? (
-              <div className="col-span-full text-center py-12 text-white/50">Aucun donneur trouvé.</div>
+              <div className="col-span-full text-center py-12 text-slate text-sm">Aucun donneur trouvé.</div>
             ) : (
               filteredDonors.map((donor) => (
-                <div key={donor.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
+                <div key={donor.id} className="bg-surface p-4 rounded-2xl border border-line hover:border-brand/30 transition-colors">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="font-semibold">{donor.user?.first_name} {donor.user?.last_name}</h3>
-                      <p className="text-sm text-white/60">🩸 {donor.blood_type} - {toArray(donor.donation_types).join(", ")}</p>
-                      <p className="text-sm text-white/40">📍 {wilayaName(donor.wilaya_id)}</p>
-                      {donor.availability_status === 'green' && <span className="text-green-400 text-sm">🟢 Disponible</span>}
+                      <h3 className="font-semibold text-ink text-sm">{donor.user?.first_name} {donor.user?.last_name}</h3>
+                      <p className="text-sm text-slate mt-0.5">{donor.blood_type} · {toArray(donor.donation_types).join(", ")}</p>
+                      <p className="text-xs text-slate mt-0.5">{wilayaName(donor.wilaya_id)}</p>
+                      {donor.availability_status === 'green' && <span className="inline-block mt-1.5 text-xs px-2 py-0.5 bg-recovery-light text-recovery-dark rounded-full font-medium">Disponible</span>}
                     </div>
                   </div>
-                  <button onClick={() => handleRequestHelp(donor.userId, donor.user.first_name)} disabled={actionLoading === donor.userId} className="mt-3 w-full px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm transition disabled:opacity-50">
-                    {actionLoading === donor.userId ? "..." : "🤝 Demander de l'aide"}
+                  <button onClick={() => handleRequestHelp(donor.userId, donor.user.first_name)} disabled={actionLoading === donor.userId} className="mt-3 w-full px-4 py-2 bg-vital hover:bg-vital-dark text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50">
+                    {actionLoading === donor.userId ? "..." : "Demander de l'aide"}
                   </button>
                 </div>
               ))
@@ -201,23 +202,23 @@ export default function ExplorerPage() {
         )}
 
         {tab === 'requests' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredRequests.length === 0 && searchTriggered ? (
-              <div className="col-span-full text-center py-12 text-white/50">Aucune demande trouvée.</div>
+              <div className="col-span-full text-center py-12 text-slate text-sm">Aucune demande trouvée.</div>
             ) : (
               filteredRequests.map((request) => (
-                <div key={request.id} className="bg-white/5 p-4 rounded-xl border border-white/10 hover:border-red-500/30 transition">
+                <div key={request.id} className="bg-surface p-4 rounded-2xl border border-line hover:border-brand/30 transition-colors">
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="font-semibold">{request.donation_type} - {request.blood_type}</p>
-                      <p className="text-sm text-white/60">🏥 {request.hospital_name || "Établissement non précisé"}</p>
-                      <p className="text-sm text-white/40">📍 {wilayaName(request.wilaya_id)}</p>
-                      <span className={`text-xs px-2 py-1 rounded ${urgencyStyle(request.urgency_level)}`}>{request.urgency_level}</span>
+                      <p className="font-semibold text-ink text-sm">{request.donation_type} · {request.blood_type}</p>
+                      <p className="text-sm text-slate mt-0.5">{request.hospital_name || "Établissement non précisé"}</p>
+                      <p className="text-xs text-slate mt-0.5">{wilayaName(request.wilaya_id)}</p>
+                      <span className={`inline-block mt-1.5 text-xs px-2 py-0.5 rounded-full font-medium ${urgencyStyle(request.urgency_level)}`}>{request.urgency_level}</span>
                     </div>
                   </div>
                   {user && user.id !== request.requester?.id && (
-                    <button onClick={() => handleOfferHelp(request.id, request.requester.id)} disabled={actionLoading === request.id} className="mt-3 w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm transition disabled:opacity-50">
-                      {actionLoading === request.id ? "..." : "💪 Je peux aider"}
+                    <button onClick={() => handleOfferHelp(request.id, request.requester.id)} disabled={actionLoading === request.id} className="mt-3 w-full px-4 py-2 bg-brand hover:bg-brand-dark text-white rounded-full text-sm font-medium transition-colors disabled:opacity-50">
+                      {actionLoading === request.id ? "..." : "Je peux aider"}
                     </button>
                   )}
                 </div>
@@ -226,6 +227,7 @@ export default function ExplorerPage() {
           </div>
         )}
       </main>
+      <BottomNav />
     </div>
     </ErrorBoundary>
   );

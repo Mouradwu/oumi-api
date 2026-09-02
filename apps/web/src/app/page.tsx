@@ -84,7 +84,7 @@ export default function Home() {
       </header>
 
       <section className="container mx-auto px-6 pt-16 pb-14 md:pt-24 md:pb-20 text-center">
-        <div className="inline-flex items-center gap-1.5 mb-7 px-3.5 py-1.5 text-xs font-medium border border-line rounded-full text-slate bg-white">
+        <div className="inline-flex items-center gap-1.5 mb-7 px-3.5 py-1.5 text-xs font-medium border border-line rounded-full text-slate bg-surface">
           <span className="w-1.5 h-1.5 rounded-full bg-recovery" />
           {isRTL ? "منصة التبرع بالدم" : "Plateforme de don de sang"}
         </div>
@@ -97,7 +97,7 @@ export default function Home() {
           <Link href="/donor/register" className="px-7 py-3.5 bg-brand text-white rounded-full font-medium hover:bg-brand-dark transition-colors shadow-soft">
             {t.hero.ctaPrimary}
           </Link>
-          <Link href="/explorer" className="px-7 py-3.5 border border-line rounded-full font-medium text-ink hover:border-slate transition-colors bg-white">
+          <Link href="/explorer" className="px-7 py-3.5 border border-line rounded-full font-medium text-ink hover:border-slate transition-colors bg-surface">
             {t.hero.ctaSecondary}
           </Link>
         </div>
@@ -120,7 +120,7 @@ export default function Home() {
             { value: loading ? "···" : donorsCount.toString(), label: t.stats.donors },
             { value: loading ? "···" : requestsCount.toString(), label: t.stats.lives },
           ].map((stat, i) => (
-            <div key={i} className="text-center p-5 md:p-6 rounded-2xl bg-white border border-line">
+            <div key={i} className="text-center p-5 md:p-6 rounded-2xl bg-surface border border-line">
               <div className="font-display text-2xl md:text-4xl font-bold text-ink">{stat.value}</div>
               <div className="text-xs text-slate mt-2">{stat.label}</div>
             </div>
@@ -136,7 +136,7 @@ export default function Home() {
             const href = item.icon === "📍" ? "/facilities" : item.icon === "⚡" ? "/requester/register" : "/donor/register";
             const path = FEATURE_ICONS[item.icon] || FEATURE_ICONS["🛡️"];
             return (
-              <Link key={i} href={href} className="p-7 rounded-2xl bg-white border border-line hover:border-brand/30 hover:shadow-soft transition-all block">
+              <Link key={i} href={href} className="p-7 rounded-2xl bg-surface border border-line hover:border-brand/30 hover:shadow-soft transition-all block">
                 <div className="w-11 h-11 rounded-xl bg-brand-light flex items-center justify-center mb-5">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#123E96" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={path} /></svg>
                 </div>

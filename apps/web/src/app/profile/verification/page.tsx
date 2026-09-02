@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
@@ -13,9 +13,11 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
-export default function VerificationPage() {
+function VerificationForm() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const welcome = searchParams.get("welcome") === "true";
   const [me, setMe] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [otp, setOtp] = useState("");
@@ -100,6 +102,11 @@ export default function VerificationPage() {
       <main className="container mx-auto px-5 md:px-6 py-8 max-w-md">
         <Link href="/profile" className="text-sm text-slate hover:text-ink transition-colors">&larr; Profil</Link>
         <h1 className="font-display text-2xl font-bold mt-4 mb-1 text-ink">Vérification du compte</h1>
+        {welcome && (
+          <div className="bg-brand-light text-brand-dark p-3 rounded-xl text-sm mb-4">
+            Bienvenue sur BLOODZ ! Vérifiez votre email et votre téléphone pour activer pleinement votre compte.
+          </div>
+        )}
         <p className="text-slate text-sm mb-6">
           Statut : <span className={`font-medium ${me.account_status === "active" ? "text-recovery-dark" : "text-amber"}`}>
             {me.account_status === "active" ? "Compte actif" : "En attente de vérification"}
@@ -109,7 +116,7 @@ export default function VerificationPage() {
         {message && <div className="bg-recovery-light text-recovery-dark p-3 rounded-xl text-sm mb-4">{message}</div>}
         {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl text-sm mb-4">{error}</div>}
 
-        <div className="bg-white rounded-2xl border border-line p-5 mb-4">
+        <div className="bg-surface rounded-2xl border border-line p-5 mb-4">
           <div className="flex justify-between items-center">
             <div>
               <p className="font-medium text-ink text-sm">Email</p>
@@ -128,7 +135,7 @@ export default function VerificationPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-line p-5">
+        <div className="bg-surface rounded-2xl border border-line p-5">
           <div className="flex justify-between items-center">
             <div>
               <p className="font-medium text-ink text-sm">Téléphone</p>
@@ -170,5 +177,13 @@ export default function VerificationPage() {
       </main>
     </div>
     </ErrorBoundary>
+  );
+}
+
+export default function VerificationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>}>
+      <VerificationForm />
+    </Suspense>
   );
 }

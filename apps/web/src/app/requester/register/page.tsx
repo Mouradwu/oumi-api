@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { API_URL } from "@/lib/api";
+import Header from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const DRAFT_KEY = "requester_form_draft";
 
@@ -130,25 +133,27 @@ export default function RequesterRegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-6">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/profile" className="text-white/60 hover:text-white transition">&larr; Retour</Link>
-        <h1 className="text-3xl font-bold mt-6">🩸 Devenir demandeur</h1>
-        <p className="text-white/50 mt-2">Créez une demande de sang, plasma ou plaquettes</p>
-        {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mt-4">{error}</div>}
-        {success && <div className="bg-green-500/20 text-green-400 p-3 rounded-lg mt-4">✅ {resultMessage || "Demande créée !"}</div>}
-        <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+    <ErrorBoundary fallbackTitle="Erreur d'affichage du formulaire">
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
+      <Header />
+      <main className="container mx-auto px-5 md:px-6 py-8 max-w-2xl">
+        <Link href="/profile" className="text-sm text-slate hover:text-ink transition-colors">&larr; Retour</Link>
+        <h1 className="font-display text-2xl font-bold mt-4 text-ink">Devenir demandeur</h1>
+        <p className="text-slate mt-1 text-sm mb-6">Créez une demande de sang, plasma ou plaquettes.</p>
+        {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl mb-4 text-sm">{error}</div>}
+        {success && <div className="bg-recovery-light text-recovery-dark p-3 rounded-xl mb-4 text-sm">{resultMessage || "Demande créée !"}</div>}
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm text-white/60 mb-1">Type de besoin *</label>
-            <select value={form.donation_type} onChange={(e) => setForm({ ...form, donation_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white">
-              <option value="SANG">🩸 Sang</option>
-              <option value="PLASMA">💧 Plasma</option>
-              <option value="PLAQUETTES">🧬 Plaquettes</option>
+            <label className="block text-sm font-medium text-ink mb-2">Type de besoin *</label>
+            <select value={form.donation_type} onChange={(e) => setForm({ ...form, donation_type: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink">
+              <option value="SANG">Sang</option>
+              <option value="PLASMA">Plasma</option>
+              <option value="PLAQUETTES">Plaquettes</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Groupe sanguin *</label>
-            <select value={form.blood_type} onChange={(e) => setForm({ ...form, blood_type: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <label className="block text-sm font-medium text-ink mb-2">Groupe sanguin *</label>
+            <select value={form.blood_type} onChange={(e) => setForm({ ...form, blood_type: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink" required>
               <option value="">Sélectionnez</option>
               <option value="A+">A+</option><option value="A-">A-</option>
               <option value="B+">B+</option><option value="B-">B-</option>
@@ -157,8 +162,8 @@ export default function RequesterRegisterPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Wilaya *</label>
-            <select value={form.wilaya_id} onChange={(e) => setForm({ ...form, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white" required>
+            <label className="block text-sm font-medium text-ink mb-2">Wilaya *</label>
+            <select value={form.wilaya_id} onChange={(e) => setForm({ ...form, wilaya_id: e.target.value ? Number(e.target.value) : "" })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink" required>
               <option value="">Sélectionnez une wilaya</option>
               {wilayas.map((w) => (
                 <option key={w.id} value={w.id}>{w.code} - {w.name_fr}</option>
@@ -166,31 +171,33 @@ export default function RequesterRegisterPage() {
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Hôpital / Association</label>
-            <input type="text" placeholder="Nom de l'établissement" value={form.hospital_name} onChange={(e) => setForm({ ...form, hospital_name: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" />
+            <label className="block text-sm font-medium text-ink mb-2">Hôpital / Association</label>
+            <input type="text" placeholder="Nom de l'établissement" value={form.hospital_name} onChange={(e) => setForm({ ...form, hospital_name: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink placeholder-slate" />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Téléphone de contact *</label>
-            <input type="tel" placeholder="06/07XXXXXXXX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40" required />
+            <label className="block text-sm font-medium text-ink mb-2">Téléphone de contact *</label>
+            <input type="tel" placeholder="06/07XXXXXXXX" value={form.contact_phone} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink placeholder-slate" required />
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Urgence</label>
-            <select value={form.urgency_level} onChange={(e) => setForm({ ...form, urgency_level: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white">
-              <option value="normal">🟢 Normal</option>
-              <option value="important">🟡 Important</option>
-              <option value="urgent">🟠 Urgent</option>
-              <option value="critical">🔴 Critique</option>
+            <label className="block text-sm font-medium text-ink mb-2">Urgence</label>
+            <select value={form.urgency_level} onChange={(e) => setForm({ ...form, urgency_level: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink">
+              <option value="normal">Normal</option>
+              <option value="important">Important</option>
+              <option value="urgent">Urgent</option>
+              <option value="critical">Critique</option>
             </select>
           </div>
           <div>
-            <label className="block text-sm text-white/60 mb-1">Informations complémentaires</label>
-            <textarea rows={3} placeholder="Service, contexte..." value={form.additional_info} onChange={(e) => setForm({ ...form, additional_info: e.target.value })} className="w-full p-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 resize-none" />
+            <label className="block text-sm font-medium text-ink mb-2">Informations complémentaires</label>
+            <textarea rows={3} placeholder="Service, contexte..." value={form.additional_info} onChange={(e) => setForm({ ...form, additional_info: e.target.value })} className="w-full p-3 bg-surface border border-line rounded-xl text-ink placeholder-slate resize-none" />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 rounded-lg transition disabled:opacity-50">
-            {loading ? "Création..." : "📢 Créer la demande"}
+          <button type="submit" disabled={loading} className="w-full bg-vital hover:bg-vital-dark text-white font-semibold py-3.5 rounded-full transition-colors disabled:opacity-50">
+            {loading ? "Création..." : "Créer la demande"}
           </button>
         </form>
-      </div>
+      </main>
+      <BottomNav />
     </div>
+    </ErrorBoundary>
   );
 }
