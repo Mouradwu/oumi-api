@@ -1,26 +1,74 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   OUMI - Charte graphique : medical premium, epure, mobile-first.
+   Tokens definis ici (Tailwind v4 lit @theme directement depuis le CSS ;
+   tailwind.config.js n'est plus la source de verite en v4).
+   ============================================================================ */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Couleurs de marque */
+  --color-paper: #FAFBFD;        /* fond principal - blanc casse tres lumineux */
+  --color-mist: #EEF2F7;         /* surfaces secondaires */
+  --color-ink: #10151C;          /* texte principal */
+  --color-slate: #5B6472;        /* texte secondaire */
+  --color-line: #E3E8F0;         /* bordures / hairlines */
+
+  --color-clinical: #1554D6;     /* bleu medical - couleur principale */
+  --color-clinical-dark: #123E96;
+  --color-clinical-light: #E9F1FD;
+
+  --color-vital: #E13341;        /* rouge sang - accent, tres parcimonieux */
+  --color-vital-dark: #A31F2C;
+  --color-vital-light: #FCE9EB;
+
+  --color-recovery: #1FAF72;     /* vert confirmation / compatibilite */
+  --color-recovery-dark: #12744A;
+  --color-recovery-light: #E5F6ED;
+
+  --color-amber: #C97A0E;        /* urgence moderee (orange sobre, pas neon) */
+  --color-amber-light: #FBF0DF;
+
+  --shadow-soft: 0 1px 2px rgba(16, 21, 28, 0.04), 0 8px 24px rgba(16, 21, 28, 0.05);
+  --shadow-card: 0 1px 3px rgba(16, 21, 28, 0.06);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-paper: var(--color-paper);
+  --color-mist: var(--color-mist);
+  --color-ink: var(--color-ink);
+  --color-slate: var(--color-slate);
+  --color-line: var(--color-line);
+  --color-clinical: var(--color-clinical);
+  --color-clinical-dark: var(--color-clinical-dark);
+  --color-clinical-light: var(--color-clinical-light);
+  --color-vital: var(--color-vital);
+  --color-vital-dark: var(--color-vital-dark);
+  --color-vital-light: var(--color-vital-light);
+  --color-recovery: var(--color-recovery);
+  --color-recovery-dark: var(--color-recovery-dark);
+  --color-recovery-light: var(--color-recovery-light);
+  --color-amber: var(--color-amber);
+  --color-amber-light: var(--color-amber-light);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: var(--font-sora);
+  --font-sans: var(--font-inter);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Espace reserve en bas sur mobile pour la barre de navigation fixe */
+.pb-safe-nav {
+  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .pb-safe-nav {
+    padding-bottom: 0;
+  }
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Header from "@/components/Header";
+import { BottomNav } from "@/components/BottomNav";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/lib/api";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -9,9 +10,9 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const PRODUCTS: { value: string; label: string; icon: string }[] = [
-  { value: "SANG", label: "Sang", icon: "🩸" },
-  { value: "PLASMA", label: "Plasma", icon: "💧" },
-  { value: "PLAQUETTES", label: "Plaquettes", icon: "🩸" },
+  { value: "SANG", label: "Sang", icon: "M12 3s7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 7-12 7-12Z" },
+  { value: "PLASMA", label: "Plasma", icon: "M12 3s6 6.5 6 10.5a6 6 0 1 1-12 0C6 9.5 12 3 12 3Z" },
+  { value: "PLAQUETTES", label: "Plaquettes", icon: "M12 2v20M2 12h20" },
 ];
 
 const RADIUS_STEPS = [10, 25, 50];
@@ -60,23 +61,6 @@ export default function CompatibilityPage() {
   const [summary, setSummary] = useState<{ can_give_to: string[]; can_receive_from: string[]; badge: string | null } | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
-  // Des que produit + groupe sont choisis, charge immediatement le resume
-  // DONNER A / RECEVOIR DE - avant meme de lancer la recherche.
-  useEffect(() => {
-    if (!product || !bloodType) {
-      setSummary(null);
-      return;
-    }
-    setSummaryLoading(true);
-    fetch(`${API_URL}/compatibility/summary?blood_type=${encodeURIComponent(bloodType)}&product=${product}`)
-      .then((res) => res.json())
-      .then((data) => setSummary(data))
-      .catch(() => setSummary(null))
-      .finally(() => setSummaryLoading(false));
-  }, [product, bloodType]);
-
-  // Pre-remplit le groupe sanguin depuis le profil donneur existant de
-  // l'utilisateur, sans jamais le deviner s'il n'existe pas.
   useEffect(() => {
     if (!user) return;
     const token = getToken();
@@ -98,6 +82,19 @@ export default function CompatibilityPage() {
       .catch(() => setWilayas([]));
   }, []);
 
+  useEffect(() => {
+    if (!product || !bloodType) {
+      setSummary(null);
+      return;
+    }
+    setSummaryLoading(true);
+    fetch(`${API_URL}/compatibility/summary?blood_type=${encodeURIComponent(bloodType)}&product=${product}`)
+      .then((res) => res.json())
+      .then((data) => setSummary(data))
+      .catch(() => setSummary(null))
+      .finally(() => setSummaryLoading(false));
+  }, [product, bloodType]);
+
   const runSearch = async (overrides?: { radiusKm?: number; scope?: "nearby" | "wilaya" | "country" }) => {
     const effectiveScope = overrides?.scope ?? scope;
     const effectiveRadius = overrides?.radiusKm ?? radiusKm;
@@ -113,7 +110,6 @@ export default function CompatibilityPage() {
       } else if (effectiveScope === "wilaya" && wilayaId) {
         params.append("wilaya_id", String(wilayaId));
       }
-      // "country" (Toute l'Algérie) : aucun filtre géographique
       const res = await fetch(`${API_URL}/donors/compatible?${params.toString()}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de recherche");
@@ -184,7 +180,7 @@ export default function CompatibilityPage() {
       } else if (!res.ok) {
         throw new Error(data.message || "Erreur");
       } else {
-        alert("✅ Demande envoyée !");
+        alert("Demande envoyée.");
       }
     } catch (e: any) {
       alert("Erreur : " + (e.message || "inconnue"));
@@ -201,26 +197,24 @@ export default function CompatibilityPage() {
 
   return (
     <ErrorBoundary fallbackTitle="Erreur d'affichage de la compatibilité">
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-paper text-ink pb-safe-nav">
       <Header />
-      <main className="container mx-auto px-6 py-12 max-w-3xl">
-        <h1 className="text-3xl font-bold mb-2">🩸 Compatibilité sanguine</h1>
-        <p className="text-white/50 mb-8 text-sm">
-          Trouvez des donneurs compatibles inscrits sur la plateforme, à proximité de vous.
-        </p>
+      <main className="container mx-auto px-5 md:px-6 py-10 md:py-12 max-w-2xl">
+        <h1 className="font-display text-2xl md:text-3xl font-bold mb-1.5 text-ink">Compatibilité sanguine</h1>
+        <p className="text-slate mb-8 text-sm">Trouvez des donneurs compatibles inscrits sur la plateforme, à proximité de vous.</p>
 
         {step === 1 && (
-          <div className="bg-white/5 p-6 rounded-xl border border-white/10 space-y-6">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm text-white/60 mb-3">De quel produit avez-vous besoin ?</label>
-              <div className="grid grid-cols-3 gap-3">
+              <label className="block text-sm font-medium text-ink mb-3">De quel produit avez-vous besoin ?</label>
+              <div className="grid grid-cols-3 gap-2.5">
                 {PRODUCTS.map((p) => (
                   <button
                     key={p.value}
                     onClick={() => setProduct(p.value)}
-                    className={`p-4 rounded-xl text-sm font-medium transition ${product === p.value ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
+                    className={`p-4 rounded-2xl text-sm font-medium transition-all border ${product === p.value ? "bg-clinical border-clinical text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
                   >
-                    <div className="text-2xl mb-1">{p.icon}</div>
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={product === p.value ? "white" : "#5B6472"} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mx-auto mb-2"><path d={p.icon} /></svg>
                     {p.label}
                   </button>
                 ))}
@@ -228,53 +222,54 @@ export default function CompatibilityPage() {
             </div>
 
             <div>
-              <label className="block text-sm text-white/60 mb-3">
+              <label className="block text-sm font-medium text-ink mb-3">
                 Votre groupe sanguin
-                {autoFilled && <span className="text-green-400 ml-2 text-xs">(pré-rempli depuis votre profil)</span>}
+                {autoFilled && <span className="text-recovery-dark ml-2 text-xs font-normal">Pré-rempli depuis votre profil</span>}
               </label>
               <div className="grid grid-cols-4 gap-2">
                 {BLOOD_TYPES.map((bt) => (
                   <button
                     key={bt}
                     onClick={() => { setBloodType(bt); setAutoFilled(false); }}
-                    className={`py-3 rounded-lg text-sm font-semibold transition ${bloodType === bt ? "bg-red-600 text-white" : "bg-white/10 text-white/60 hover:bg-white/20"}`}
+                    className={`py-3 rounded-xl text-sm font-semibold transition-all border ${bloodType === bt ? "bg-vital border-vital text-white shadow-soft" : "bg-white border-line text-ink hover:border-slate"}`}
                   >
                     {bt}
                   </button>
                 ))}
               </div>
               {!bloodType && (
-                <p className="text-xs text-white/30 mt-2">
-                  🩸 Votre groupe sanguin n'est pas renseigné.{" "}
-                  <a href="/donor/register" className="underline hover:text-white/60">Compléter mon profil</a>
+                <p className="text-xs text-slate mt-2.5">
+                  Votre groupe sanguin n'est pas renseigné. <a href="/donor/register" className="text-clinical hover:text-clinical-dark font-medium">Compléter mon profil</a>
                 </p>
               )}
             </div>
 
             {product && bloodType && (
-              <div className="p-5 rounded-xl border border-white/10 bg-black/20">
+              <div className="p-5 rounded-2xl border border-line bg-white">
                 {summaryLoading ? (
-                  <p className="text-sm text-white/40">Calcul de la compatibilité...</p>
+                  <p className="text-sm text-slate">Calcul de la compatibilité...</p>
                 ) : summary ? (
                   <>
-                    <p className="text-sm mb-4">
-                      🩸 Vous êtes du groupe sanguin <span className="font-semibold">{bloodType}</span>.
-                      {summary.badge && <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded">{summary.badge}</span>}
-                    </p>
+                    <div className="flex items-center gap-2 mb-4">
+                      <p className="text-sm text-ink">
+                        Vous êtes du groupe sanguin <span className="font-semibold">{bloodType}</span>
+                      </p>
+                      {summary.badge && <span className="text-xs px-2.5 py-1 bg-amber-light text-amber rounded-full font-medium">{summary.badge}</span>}
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Donner à</p>
+                        <p className="text-xs font-medium text-slate mb-2">Donner à</p>
                         <div className="flex flex-wrap gap-1.5">
                           {summary.can_give_to.map((bt) => (
-                            <span key={bt} className="px-2 py-1 bg-red-600/20 text-red-300 rounded text-sm font-medium">{bt}</span>
+                            <span key={bt} className="px-2.5 py-1 bg-vital-light text-vital-dark rounded-full text-sm font-semibold">{bt}</span>
                           ))}
                         </div>
                       </div>
                       <div>
-                        <p className="text-xs uppercase tracking-wider text-white/40 mb-2">Recevoir de</p>
+                        <p className="text-xs font-medium text-slate mb-2">Recevoir de</p>
                         <div className="flex flex-wrap gap-1.5">
                           {summary.can_receive_from.map((bt) => (
-                            <span key={bt} className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded text-sm font-medium">{bt}</span>
+                            <span key={bt} className="px-2.5 py-1 bg-clinical-light text-clinical-dark rounded-full text-sm font-semibold">{bt}</span>
                           ))}
                         </div>
                       </div>
@@ -287,111 +282,114 @@ export default function CompatibilityPage() {
             <button
               disabled={!product || !bloodType}
               onClick={() => { setStep(2); useNearby(); }}
-              className="w-full px-6 py-3 bg-white text-black rounded-full font-medium hover:bg-white/90 transition disabled:opacity-30"
+              className="w-full px-6 py-3.5 bg-clinical text-white rounded-full font-medium hover:bg-clinical-dark transition-colors disabled:opacity-30 disabled:cursor-not-allowed shadow-soft"
             >
-              🔎 Rechercher des donneurs compatibles
+              Rechercher des donneurs compatibles
             </button>
           </div>
         )}
 
         {step === 2 && (
           <>
-            <button onClick={reset} className="text-sm text-white/50 hover:text-white mb-4 transition">← Modifier ma recherche</button>
+            <button onClick={reset} className="text-sm text-slate hover:text-ink mb-5 transition-colors flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+              Modifier ma recherche
+            </button>
 
-            <div className="bg-white/5 p-5 rounded-xl border border-white/10 mb-6">
-              <p className="text-sm mb-2">
-                🩸 Vous êtes <span className="font-semibold">{bloodType}</span>
-                {summary?.badge && <span className="ml-2 text-xs px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded">{summary.badge}</span>}
-              </p>
-              {summary && (
-                <p className="text-sm text-white/60">
-                  Recevoir de : {summary.can_receive_from.join(", ")}
-                </p>
-              )}
+            <div className="p-5 rounded-2xl border border-line bg-white mb-6">
+              <div className="flex items-center gap-2 mb-1.5">
+                <p className="text-sm text-ink">Vous êtes <span className="font-semibold">{bloodType}</span></p>
+                {summary?.badge && <span className="text-xs px-2.5 py-1 bg-amber-light text-amber rounded-full font-medium">{summary.badge}</span>}
+              </div>
+              {summary && <p className="text-sm text-slate">Recevoir de : {summary.can_receive_from.join(", ")}</p>}
               {searched && !loading && (
-                <p className="text-sm text-white/60 mt-1">{total} donneur{total > 1 ? "s" : ""} compatible{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}</p>
+                <p className="text-sm text-slate mt-2 font-medium">{total} donneur{total > 1 ? "s" : ""} compatible{total > 1 ? "s" : ""} trouvé{total > 1 ? "s" : ""}</p>
               )}
             </div>
 
             <div className="flex flex-wrap gap-2 mb-6">
-              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm transition ${scope === "nearby" ? "bg-red-600" : "bg-white/10 hover:bg-white/20"}`}>
-                📍 Autour de moi {scope === "nearby" && `(${radiusKm} km)`}
+              <button onClick={useNearby} className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "nearby" ? "bg-clinical border-clinical text-white" : "bg-white border-line text-ink hover:border-slate"}`}>
+                Autour de moi {scope === "nearby" && `(${radiusKm} km)`}
               </button>
               <select
                 value={wilayaId}
                 onChange={(e) => { const v = e.target.value ? Number(e.target.value) : ""; setWilayaId(v); setScope("wilaya"); if (v) runSearch({ scope: "wilaya" }); }}
-                className="px-3 py-2 bg-white/10 rounded-full text-sm border-none"
+                className="px-3.5 py-2 bg-white border border-line rounded-full text-sm text-ink"
               >
-                <option value="">🏛️ Ma wilaya</option>
+                <option value="">Ma wilaya</option>
                 {wilayas.map((w) => <option key={w.id} value={w.id}>{w.name_fr}</option>)}
               </select>
               <button
                 onClick={() => { setScope("country"); setWilayaId(""); runSearch({ scope: "country" }); }}
-                className={`px-4 py-2 rounded-full text-sm transition ${scope === "country" ? "bg-red-600" : "bg-white/10 hover:bg-white/20"}`}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${scope === "country" ? "bg-clinical border-clinical text-white" : "bg-white border-line text-ink hover:border-slate"}`}
               >
-                🇩🇿 Toute l'Algérie
+                Toute l'Algérie
               </button>
             </div>
 
             {geoDenied && scope !== "nearby" && (
-              <div className="bg-yellow-500/10 text-yellow-400 text-xs p-3 rounded-lg mb-4">
+              <div className="bg-amber-light text-amber text-xs p-3 rounded-xl mb-4">
                 Localisation indisponible — utilisez la recherche par wilaya ou pays.
               </div>
             )}
-            {error && <div className="bg-red-500/20 text-red-400 p-3 rounded-lg mb-4 text-sm">{error}</div>}
+            {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl mb-4 text-sm">{error}</div>}
 
-            {loading && <div className="text-center py-12 text-white/50">Recherche en cours...</div>}
+            {loading && <div className="text-center py-12 text-slate text-sm">Recherche en cours...</div>}
 
             {!loading && searched && results.length === 0 && (
-              <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
-                <p className="text-2xl mb-3">😔</p>
-                <p className="text-white/60 mb-4">Aucun donneur compatible trouvé à proximité.</p>
-                <div className="text-sm text-white/40 space-y-1">
+              <div className="text-center py-10 px-6 bg-white rounded-2xl border border-line">
+                <p className="text-ink font-medium mb-1">Aucun donneur compatible trouvé à proximité</p>
+                <p className="text-sm text-slate mb-4">Essayez d'élargir votre recherche.</p>
+                <div className="flex flex-col items-center gap-2 text-sm">
                   {scope === "nearby" && radiusKm < 50 && (
-                    <p>✓ <button onClick={expandRadius} className="underline hover:text-white/70">Essayez d'élargir votre rayon</button></p>
+                    <button onClick={expandRadius} className="text-clinical hover:text-clinical-dark font-medium">Élargir le rayon de recherche</button>
                   )}
-                  <p>✓ Recherchez dans toute la wilaya ou le pays</p>
                 </div>
               </div>
             )}
 
             {!loading && results.length > 0 && (
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {results.map((d) => (
-                  <div key={d.id} className="bg-white/5 p-4 rounded-xl border border-white/10 flex justify-between items-center gap-4">
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-semibold">{d.first_name} {d.last_name || ""}</span>
-                        <span className="text-xs px-2 py-0.5 bg-red-600/20 text-red-400 rounded">{d.blood_type}</span>
-                        {d.badge && <span className="text-xs px-2 py-0.5 bg-yellow-600/20 text-yellow-400 rounded">{d.badge}</span>}
+                  <div key={d.id} className="bg-white p-4 rounded-2xl border border-line flex justify-between items-center gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span className="w-10 h-10 rounded-full bg-mist text-slate text-sm font-semibold flex items-center justify-center shrink-0">
+                        {d.first_name?.[0]?.toUpperCase() || "?"}
+                      </span>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-medium text-ink text-sm">{d.first_name} {d.last_name || ""}</span>
+                          <span className="text-xs px-2 py-0.5 bg-vital-light text-vital-dark rounded-full font-semibold">{d.blood_type}</span>
+                          {d.badge && <span className="text-xs px-2 py-0.5 bg-amber-light text-amber rounded-full font-medium">{d.badge}</span>}
+                        </div>
+                        <p className="text-xs text-slate mt-0.5">
+                          {d.wilaya_name || "Wilaya non précisée"}
+                          {typeof d.distance_km === "number" && <> · {d.distance_km} km</>}
+                        </p>
+                        <p className="text-xs mt-0.5">
+                          {d.availability_status === "green" ? <span className="text-recovery-dark">Disponible</span> : <span className="text-slate">Indisponible</span>}
+                        </p>
                       </div>
-                      <p className="text-sm text-white/50 mt-1">
-                        📍 {d.wilaya_name || "Wilaya non précisée"}
-                        {typeof d.distance_km === "number" && <> · 📏 {d.distance_km} km</>}
-                      </p>
-                      <p className="text-xs mt-1">
-                        {d.availability_status === "green" ? <span className="text-green-400">🟢 Disponible</span> : <span className="text-white/30">⚪ Indisponible</span>}
-                        <span className="text-green-400 ml-2">✅ Compatible</span>
-                      </p>
                     </div>
                     <button
                       onClick={() => sendRequest(d)}
                       disabled={sending === d.id}
-                      className="shrink-0 px-4 py-2 bg-white text-black text-sm rounded-full font-medium hover:bg-white/90 transition disabled:opacity-50"
+                      className="shrink-0 px-4 py-2 bg-clinical text-white text-sm rounded-full font-medium hover:bg-clinical-dark transition-colors disabled:opacity-50"
                     >
-                      {sending === d.id ? "..." : "Envoyer une demande"}
+                      {sending === d.id ? "..." : "Demander"}
                     </button>
                   </div>
                 ))}
               </div>
             )}
 
-            <p className="text-xs text-white/30 mt-8 text-center">
-              ⚠️ La compatibilité affichée est indicative et ne remplace jamais la validation d'un professionnel de santé ou d'un service de transfusion.
+            <p className="text-xs text-slate mt-8 text-center leading-relaxed">
+              La compatibilité affichée est indicative et ne remplace jamais la validation d'un professionnel de santé ou d'un service de transfusion.
             </p>
           </>
         )}
       </main>
+      <BottomNav />
     </div>
     </ErrorBoundary>
   );
