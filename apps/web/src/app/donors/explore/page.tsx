@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Cette page faisait doublon avec l'onglet "Donneurs" de /explorer (memes
 // filtres, memes donnees, actions moins abouties) et n'etait plus liee
@@ -12,5 +13,5 @@ export default function ExploreDonorsRedirect() {
   useEffect(() => {
     router.replace("/explorer");
   }, [router]);
-  return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Redirection...</div>;
+  return <ErrorBoundary><div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Redirection...</div></ErrorBoundary>;
 }

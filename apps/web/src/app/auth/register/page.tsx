@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { BrandWatermark } from "@/components/BrandWatermark";
 import { API_URL } from "@/lib/api";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -56,6 +57,7 @@ export default function RegisterPage() {
   };
 
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage de l'inscription">
     <div className="min-h-screen bg-paper text-ink flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <BrandWatermark className="w-[500px] h-[575px] -top-20 -right-32" />
       <div className="w-full max-w-md space-y-7 relative z-10">
@@ -108,5 +110,6 @@ export default function RegisterPage() {
         </p>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
