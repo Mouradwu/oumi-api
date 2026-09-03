@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Doublon orphelin de /requester/register (memes objectif, formulaire
 // moins abouti, et un bug reel : donation_type utilisait "Sang"/"Plasma"
@@ -14,5 +15,5 @@ export default function CreateRequestRedirect() {
   useEffect(() => {
     router.replace("/requester/register");
   }, [router]);
-  return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Redirection...</div>;
+  return <ErrorBoundary><div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Redirection...</div></ErrorBoundary>;
 }

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Logo } from "@/components/Logo";
 import { API_URL } from "@/lib/api";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 function LoginForm() {
   const router = useRouter();
@@ -97,8 +98,10 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage de la connexion">
     <Suspense fallback={<div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>}>
       <LoginForm />
     </Suspense>
+    </ErrorBoundary>
   );
 }

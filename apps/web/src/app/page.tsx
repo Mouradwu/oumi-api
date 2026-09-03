@@ -7,6 +7,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { translations, type Lang } from "@/lib/translations";
 import { API_URL } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const FEATURE_ICONS: Record<string, string> = {
   "⚡": "M13 2 3 14h7l-1 8 10-12h-7l1-8Z",
@@ -53,6 +54,7 @@ export default function Home() {
   }, []);
 
   return (
+    <ErrorBoundary fallbackTitle="Erreur d'affichage de la page d'accueil">
     <div dir={isRTL ? "rtl" : "ltr"} className="min-h-screen bg-paper text-ink pb-safe-nav">
       <header className="sticky top-0 z-30 bg-paper/90 backdrop-blur-md border-b border-line">
         <div className="container mx-auto px-5 md:px-6 h-16 flex justify-between items-center">
@@ -158,5 +160,6 @@ export default function Home() {
 
       <BottomNav />
     </div>
+    </ErrorBoundary>
   );
 }

@@ -86,7 +86,7 @@ export const translations = {
     },
     footer: {
       tagline: "معاً، كل قطرة تهم.",
-      rights: "© 2026 أومي. جميع الحقوق محفوظة.",
+      rights: "© 2026 بلودز. جميع الحقوق محفوظة.",
     },
   },
 };
