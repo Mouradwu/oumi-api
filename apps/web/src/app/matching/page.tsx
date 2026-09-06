@@ -16,7 +16,7 @@ interface Match {
     blood_type: string;
     donation_types: string[];
     wilaya_id: number;
-    distance: number;
+    distance: number | null;
     availability_status: string;
     certified: boolean;
     has_donated_before: boolean;
@@ -24,7 +24,15 @@ interface Match {
     user: { first_name: string; last_name: string };
   };
   score: number;
-  compatibility: string;
+  breakdown: {
+    compatibility: number;
+    distance: number;
+    availability: number;
+    eligibility: number;
+    verification: number;
+    responseHistory: number;
+  };
+  eligible_now: boolean;
 }
 
 export default function MatchingPage() {
@@ -66,7 +74,7 @@ export default function MatchingPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Erreur de matching");
-      setMatches(data);
+      setMatches(data.data || []);
       setViewMode("matches");
     } catch (err: any) {
       setError(err.message);
@@ -137,7 +145,7 @@ export default function MatchingPage() {
               </div>
             ) : (
               <div className="mt-6 space-y-3">
-                <h2 className="text-sm font-semibold text-ink">{matches.length} donneur(s) compatible(s)</h2>
+                <h2 className="text-sm font-semibold text-ink">{matches.length} donneur(s) compatible(s), classés par pertinence</h2>
                 {matches.map((match) => (
                   <div key={match.id} className="bg-surface p-4 rounded-2xl border border-line">
                     <div className="flex justify-between items-start">
@@ -146,24 +154,44 @@ export default function MatchingPage() {
                           <h3 className="font-semibold text-ink text-sm">{match.donor.user?.first_name} {match.donor.user?.last_name}</h3>
                           {match.donor.certified && <span className="text-xs bg-brand-light text-brand-dark px-2 py-0.5 rounded-full font-medium">Certifié</span>}
                           {match.donor.availability_status !== 'green' && <span className="text-xs bg-amber-light text-amber px-2 py-0.5 rounded-full font-medium">Indisponible</span>}
+                          {!match.eligible_now && <span className="text-xs bg-amber-light text-amber px-2 py-0.5 rounded-full font-medium">Pas encore éligible</span>}
                         </div>
                         <p className="text-sm text-slate mt-0.5">{match.donor.blood_type} · {toArray(match.donor.donation_types).join(", ") || "Aucun type"}</p>
-                        <p className="text-xs text-slate mt-0.5">{wilayaName(match.donor.wilaya_id)} · {match.donor.distance?.toFixed(1)} km</p>
+                        <p className="text-xs text-slate mt-0.5">
+                          {wilayaName(match.donor.wilaya_id)}
+                          {typeof match.donor.distance === "number" ? ` · ~${match.donor.distance} km` : " · distance inconnue"}
+                        </p>
                         {match.donor.has_donated_before && (
                           <p className="text-xs text-recovery-dark mt-1">Don régulier · Dernier don : {match.donor.last_donation_date || "Non précisé"}</p>
                         )}
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-vital font-bold">{match.score}%</span>
-                        <p className="text-xs text-slate">Compatibilité</p>
+                        <span className="text-vital font-bold">{match.score}/100</span>
+                        <p className="text-xs text-slate">Score de pertinence</p>
                       </div>
                     </div>
+
+                    <details className="mt-3">
+                      <summary className="text-xs text-slate cursor-pointer hover:text-ink">Détail du score</summary>
+                      <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs text-slate">
+                        <div>Compatibilité : <span className="text-ink font-medium">{match.breakdown.compatibility}/40</span></div>
+                        <div>Distance : <span className="text-ink font-medium">{match.breakdown.distance}/25</span></div>
+                        <div>Disponibilité : <span className="text-ink font-medium">{match.breakdown.availability}/15</span></div>
+                        <div>Éligibilité : <span className="text-ink font-medium">{match.breakdown.eligibility}/10</span></div>
+                        <div>Vérification : <span className="text-ink font-medium">{match.breakdown.verification}/5</span></div>
+                        <div>Historique : <span className="text-ink font-medium">{match.breakdown.responseHistory}/5</span></div>
+                      </div>
+                    </details>
+
                     <div className="mt-3 flex gap-2">
                       <button className="px-3 py-1.5 bg-mist text-ink text-xs rounded-full hover:bg-line transition-colors">Contacter</button>
                       <button className="px-3 py-1.5 bg-vital-light text-vital-dark text-xs rounded-full hover:opacity-80 transition-opacity">Voir le profil</button>
                     </div>
                   </div>
                 ))}
+                <p className="text-xs text-slate text-center pt-3 leading-relaxed">
+                  La compatibilité proposée est une aide à la mise en relation. La validation finale relève du personnel médical et de l'établissement de santé.
+                </p>
               </div>
             )}
           </>

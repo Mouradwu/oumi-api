@@ -27,23 +27,33 @@ export class DonorsService {
     private compatibilityService: CompatibilityService,
   ) {}
 
-  // Retire le telephone/email de l'utilisateur associe : ces coordonnees
-  // ne doivent apparaitre dans l'API que via le flux d'acceptation
-  // explicite (notifications.accept), jamais dans une liste/consultation
-  // publique de donneurs.
-  // Ne renvoie qu'une projection publique minimale de l'utilisateur (liste
-  // blanche, pas liste noire) : une fois l'entite User transformee en
-  // objet simple, les decorateurs @Exclude() de class-transformer ne
-  // s'appliquent plus a la serialisation finale (ils ne fonctionnent que
-  // sur de vraies instances de classe) - il ne faut donc JAMAIS construire
-  // cet objet par simple exclusion de champs (le mot de passe repasserait
-  // sinon), mais toujours en listant explicitement ce qui est autorise.
+  // Ne renvoie qu'une projection publique minimale (liste blanche stricte
+  // sur l'INTEGRALITE de l'objet, pas seulement l'utilisateur imbrique) :
+  // latitude/longitude exactes ne doivent jamais transiter par cette
+  // methode, meme si le commentaire precedent ne le disait que pour le
+  // telephone/email - c'etait une lacune reelle, corrigee ici (le donneur
+  // conservait ses coordonnees GPS exactes sur GET /donors, endpoint
+  // public sans authentification).
   private sanitize(donor: Donor): Donor {
-    if (donor?.user) {
-      const u = donor.user as any;
-      donor.user = { id: u.id, first_name: u.first_name, last_name: u.last_name } as any;
-    }
-    return donor;
+    if (!donor) return donor;
+    const d = donor as any;
+    const u = d.user;
+    return {
+      id: d.id,
+      blood_type: d.blood_type,
+      donation_types: d.donation_types,
+      wilaya_id: d.wilaya_id,
+      daira_id: d.daira_id,
+      commune_id: d.commune_id,
+      availability_status: d.availability_status,
+      last_donation_date: d.last_donation_date,
+      is_verified: d.is_verified,
+      certified: d.certified,
+      has_donated_before: d.has_donated_before,
+      donation_count: d.donation_count,
+      created_at: d.created_at,
+      user: u ? { id: u.id, first_name: u.first_name, last_name: u.last_name } : undefined,
+    } as Donor;
   }
 
   async create(createDonorDto: CreateDonorDto): Promise<Donor> {
