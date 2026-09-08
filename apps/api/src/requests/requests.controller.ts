@@ -18,6 +18,14 @@ export class RequestsController {
     return this.requestsService.findAll(userId);
   }
 
+  // IMPORTANT : declaree AVANT ':id' (routes matchees dans l'ordre de
+  // declaration - sinon "as-donor" serait intercepte comme un id).
+  @Get('as-donor')
+  @UseGuards(JwtAuthGuard)
+  findAsDonor(@Request() req) {
+    return this.requestsService.findAsDonor(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.requestsService.findOne(id);

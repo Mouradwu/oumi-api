@@ -82,6 +82,13 @@ export class RequestsService {
     return list.map((r) => this.sanitize(r));
   }
 
+  // Demandes ou l'utilisateur est le DONNEUR assigne (pas le demandeur) -
+  // permet au profil d'offrir "J'ai donne" uniquement pour une demande
+  // formelle reellement acceptee, jamais en auto-declaration libre.
+  async findAsDonor(donorUserId: string) {
+    return this.repo.find({ where: { donorId: donorUserId }, order: { created_at: 'DESC' } });
+  }
+
   async findOne(id: string, includeContact = false) {
     const req = await this.repo.findOne({ where: { id }, relations: ['requester'] });
     if (!req) throw new NotFoundException();

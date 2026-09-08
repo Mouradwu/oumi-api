@@ -49,6 +49,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [requests, setRequests] = useState<DonationRequest[]>([]);
+  const [donorRequests, setDonorRequests] = useState<DonationRequest[]>([]);
   const [isPaused, setIsPaused] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -57,14 +58,19 @@ export default function ProfilePage() {
     if (!user) return;
     const token = getToken();
     try {
-      const [dashRes, rRes] = await Promise.all([
+      const [dashRes, rRes, drRes] = await Promise.all([
         fetch(`${API_URL}/donors/dashboard?userId=${user.id}`),
         fetch(`${API_URL}/requests?userId=${user.id}`, { headers: { Authorization: "Bearer " + token } }),
+        fetch(`${API_URL}/requests/as-donor`, { headers: { Authorization: "Bearer " + token } }),
       ]);
       if (dashRes.ok) setDashboard(await dashRes.json());
       if (rRes.ok) {
         const rData = await rRes.json();
         setRequests(Array.isArray(rData) ? rData : []);
+      }
+      if (drRes.ok) {
+        const drData = await drRes.json();
+        setDonorRequests(Array.isArray(drData) ? drData : []);
       }
     } catch (e) {
       console.error(e);
@@ -108,19 +114,35 @@ export default function ProfilePage() {
     }
   };
 
+  // "J'ai donne" ne s'auto-incremente JAMAIS : il ne fait que declarer le
+  // don effectue sur une demande formelle deja acceptee par ce donneur -
+  // c'est ensuite UNIQUEMENT le demandeur (receveur) qui, en confirmant,
+  // fait progresser le compteur reel (voir requests/page.tsx). Sans
+  // demande acceptee en attente, il n'y a rien de verifiable a declarer.
+  const acceptedAsDonor = donorRequests.find((r) => r.status === "accepted");
+
   const confirmDonation = async () => {
     if (!dashboard?.donor) {
       router.push("/donor/register");
       return;
     }
-    if (!confirm("Confirmer que vous venez d'effectuer un don ? Cela met à jour votre historique et votre palier.")) return;
+    if (!acceptedAsDonor) {
+      alert("Aucune demande acceptée en attente. Le don ne peut être déclaré que pour une demande que vous avez acceptée - il sera ensuite compté après confirmation du receveur.");
+      return;
+    }
+    if (!confirm("Confirmer que vous avez effectué ce don ? Le demandeur devra ensuite confirmer sa réception pour que ce don compte dans votre historique.")) return;
     setConfirming(true);
     try {
-      const res = await fetch(`${API_URL}/donors/${dashboard.donor.id}/confirm-donation`, { method: "POST" });
+      const token = getToken();
+      const res = await fetch(`${API_URL}/requests/${acceptedAsDonor.id}/mark-donated`, {
+        method: "POST",
+        headers: { Authorization: "Bearer " + token },
+      });
       if (!res.ok) throw new Error();
+      alert("Don déclaré. Il sera comptabilisé dès que le demandeur confirme l'avoir reçu.");
       await load();
     } catch {
-      alert("Erreur lors de la confirmation");
+      alert("Erreur lors de la déclaration du don");
     } finally {
       setConfirming(false);
     }
@@ -238,13 +260,19 @@ export default function ProfilePage() {
                   Groupe <span className="text-vital">{dashboard!.donor.blood_type}</span>
                 </h2>
                 <p className="text-sm text-slate mb-5">Merci de faire partie des donneurs qui font la différence.</p>
-                <button
-                  onClick={confirmDonation}
-                  disabled={confirming}
-                  className="px-5 py-3 bg-vital text-white rounded-full text-sm font-semibold hover:bg-vital-dark transition-colors disabled:opacity-50"
-                >
-                  {confirming ? "..." : "J'ai donné"}
-                </button>
+                {acceptedAsDonor ? (
+                  <button
+                    onClick={confirmDonation}
+                    disabled={confirming}
+                    className="px-5 py-3 bg-vital text-white rounded-full text-sm font-semibold hover:bg-vital-dark transition-colors disabled:opacity-50"
+                  >
+                    {confirming ? "..." : "J'ai donné pour cette demande"}
+                  </button>
+                ) : (
+                  <p className="text-xs text-slate/80 italic">
+                    Aucune demande acceptée en attente — acceptez une demande pour pouvoir déclarer un don.
+                  </p>
+                )}
               </>
             ) : (
               <>
@@ -348,7 +376,7 @@ export default function ProfilePage() {
         <div className="grid grid-cols-4 gap-2.5 mb-6">
           {[
             { href: "/compatibility", label: "Compatibilité", icon: "M12 3s7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 7-12 7-12Z" },
-            { href: "/facilities", label: "Lieux de don", icon: "M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
+            { href: "/facilities", label: "Établissements médicaux", icon: "M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Zm0-8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" },
             { href: "/requests", label: isRequester ? "Mes demandes" : "Demander", icon: "M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" },
             { href: "/notifications", label: "Notifications", icon: "M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9ZM13.73 21a2 2 0 0 1-3.46 0" },
           ].map((it) => (

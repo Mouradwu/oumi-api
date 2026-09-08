@@ -108,9 +108,15 @@ export class DonorsService {
     return this.findOne(id, true);
   }
 
-  // Confirme qu'un don a bien eu lieu : incremente le compteur, met a jour
-  // la date du dernier don et le statut "a deja donne". Alimente le badge
-  // de palier (bronze/argent/or) et la prochaine date d'eligibilite.
+  // Incremente le compteur de dons, met a jour la date du dernier don.
+  // IMPORTANT : cette methode ne doit JAMAIS etre appelee directement en
+  // reponse a une action du donneur lui-meme (aucune route HTTP publique
+  // ne l'expose - voir donors.controller.ts). Elle n'est appelee que par
+  // RequestsService.confirmDonation(), c'est-a-dire uniquement apres que
+  // le RECEVEUR (pas le donneur) a confirme que le don a reellement eu
+  // lieu. Le badge de palier et la prochaine date d'eligibilite en
+  // dependent : les laisser progresser sur une simple auto-declaration
+  // du donneur permettrait un compteur invente / non verifie.
   async confirmDonation(id: string): Promise<Donor> {
     const donor = await this.findOne(id, true);
     await this.donorRepository.update(id, {

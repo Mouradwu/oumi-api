@@ -28,6 +28,9 @@ export function BottomNav() {
     ? { href: "/profile", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", label: "Profil" }
     : { href: "/auth/login", icon: "M20 21a8 8 0 1 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z", label: "Profil" };
 
+  // Ce bouton ne declare/confirme plus jamais rien lui-meme (voir
+  // profile/page.tsx pour l'explication complete) : il redirige simplement
+  // vers l'endroit ou l'action reelle et verifiee peut avoir lieu.
   const handleCenterAction = async () => {
     if (!user) {
       router.push("/auth/login");
@@ -40,9 +43,6 @@ export function BottomNav() {
         router.push("/donor/register");
         return;
       }
-      const donor = await res.json();
-      if (!confirm("Confirmer que vous venez d'effectuer un don ?")) return;
-      await fetch(`${API_URL}/donors/${donor.id}/confirm-donation`, { method: "POST" });
       router.push("/profile");
     } catch {
       router.push("/donor/register");
