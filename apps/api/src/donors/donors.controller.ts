@@ -74,10 +74,12 @@ export class DonorsController {
     return this.donorsService.getDashboard(userId);
   }
 
-  @Post(':id/confirm-donation')
-  confirmDonation(@Param('id') id: string) {
-    return this.donorsService.confirmDonation(id);
-  }
+  // PAS de route publique "confirm-donation" ici, deliberement : le
+  // compteur de dons ne doit jamais pouvoir etre incremente par une action
+  // du donneur seul. Le seul chemin legitime est POST
+  // /requests/:id/confirm-donation, reserve au demandeur d'origine (voir
+  // requests.controller.ts) - c'est cette route qui appelle en interne
+  // donorsService.confirmDonation() une fois la confirmation recue.
 
   // Badge de compatibilite pour la fiche publique d'un donneur (section 15).
   @Get(':id/compatibility')
