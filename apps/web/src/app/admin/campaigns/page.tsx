@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import { useAuth } from "@/context/AuthContext";
 import { API_URL } from "@/lib/api";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AdminNav } from "@/components/AdminNav";
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
@@ -135,8 +136,9 @@ export default function AdminCampaignsPage() {
     <div className="min-h-screen bg-paper text-ink">
       <Header />
       <main className="container mx-auto px-5 md:px-6 py-8 max-w-3xl">
+        <AdminNav />
         <div className="flex justify-between items-center mb-6">
-          <h1 className="font-display text-2xl font-bold text-ink">Administration — Campagnes</h1>
+          <h1 className="font-display text-2xl font-bold text-ink">Campagnes</h1>
           <button onClick={openCreate} className="px-4 py-2 bg-vital text-white text-sm rounded-full font-medium hover:bg-vital-dark transition-colors">
             + Nouvelle campagne
           </button>

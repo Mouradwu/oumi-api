@@ -31,6 +31,19 @@ export class UsersService {
     return this.usersRepository.save(user);
   }
 
+  // Changer de numero remet toujours la verification a zero : un nouveau
+  // numero n'a jamais ete verifie, on ne doit jamais laisser un badge
+  // "verifie" survivre a un changement de numero.
+  async updatePhone(userId: string, phone: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Utilisateur non trouvé');
+    user.phone = phone || null;
+    user.phone_verified = false;
+    (user as any).phone_otp_code = null;
+    (user as any).phone_otp_expires = null;
+    return this.usersRepository.save(user);
+  }
+
   // Suppression manuelle des enregistrements lies plutot que de compter
   // sur des contraintes ON DELETE CASCADE en base (certaines colonnes
   // ajoutees a posteriori via la migration de reconciliation n'ont pas
