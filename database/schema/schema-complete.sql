@@ -410,5 +410,36 @@ CREATE INDEX IF NOT EXISTS idx_matches_request ON matches(request_id);
 CREATE INDEX IF NOT EXISTS idx_matches_donor ON matches(donor_id);
 
 -- ==========================================
+-- NETTOYAGE DE DONNEES HISTORIQUES
+-- ==========================================
+-- Normalise les valeurs de type de don vers la forme canonique
+-- SANG/PLASMA/PLAQUETTES. Necessaire car une ancienne page du frontend
+-- (aujourd'hui supprimee) ecrivait "Sang"/"Plasma" au lieu de la forme
+-- majuscule standard, rendant ces enregistrements invisibles a toute
+-- recherche par filtre. Idempotent - sans effet si deja normalise.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'donation_requests') THEN
+    UPDATE donation_requests SET donation_type = 'SANG' WHERE UPPER(TRIM(donation_type)) IN ('SANG', 'BLOOD', 'GLOBULES ROUGES');
+    UPDATE donation_requests SET donation_type = 'PLASMA' WHERE UPPER(TRIM(donation_type)) = 'PLASMA';
+    UPDATE donation_requests SET donation_type = 'PLAQUETTES' WHERE UPPER(TRIM(donation_type)) IN ('PLAQUETTES', 'PLATELETS', 'PLATELET');
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'donors') THEN
+    UPDATE donors SET donation_types = (
+      SELECT array_agg(DISTINCT
+        CASE
+          WHEN UPPER(TRIM(elem)) IN ('SANG', 'BLOOD', 'GLOBULES ROUGES') THEN 'SANG'
+          WHEN UPPER(TRIM(elem)) = 'PLASMA' THEN 'PLASMA'
+          WHEN UPPER(TRIM(elem)) IN ('PLAQUETTES', 'PLATELETS', 'PLATELET') THEN 'PLAQUETTES'
+          ELSE UPPER(TRIM(elem))
+        END
+      )
+      FROM unnest(donors.donation_types) AS elem
+    )
+    WHERE donation_types IS NOT NULL AND array_length(donation_types, 1) > 0;
+  END IF;
+END $$;
+
+-- ==========================================
 -- SCHÉMA OUMI CRÉÉ AVEC SUCCÈS
 -- ==========================================

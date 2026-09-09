@@ -583,6 +583,21 @@ END $$;`,
   ('Donneur exemplaire', 10, 4),
   ('Ambassadeur', 20, 5)
 ON CONFLICT (threshold) DO NOTHING;`,
+  `UPDATE donation_requests SET donation_type = 'SANG' WHERE UPPER(TRIM(donation_type)) IN ('SANG', 'BLOOD', 'GLOBULES ROUGES');`,
+  `UPDATE donation_requests SET donation_type = 'PLASMA' WHERE UPPER(TRIM(donation_type)) = 'PLASMA';`,
+  `UPDATE donation_requests SET donation_type = 'PLAQUETTES' WHERE UPPER(TRIM(donation_type)) IN ('PLAQUETTES', 'PLATELETS', 'PLATELET');`,
+  `UPDATE donors SET donation_types = (
+  SELECT array_agg(DISTINCT
+    CASE
+      WHEN UPPER(TRIM(elem)) IN ('SANG', 'BLOOD', 'GLOBULES ROUGES') THEN 'SANG'
+      WHEN UPPER(TRIM(elem)) = 'PLASMA' THEN 'PLASMA'
+      WHEN UPPER(TRIM(elem)) IN ('PLAQUETTES', 'PLATELETS', 'PLATELET') THEN 'PLAQUETTES'
+      ELSE UPPER(TRIM(elem))
+    END
+  )
+  FROM unnest(donors.donation_types) AS elem
+)
+WHERE donation_types IS NOT NULL AND array_length(donation_types, 1) > 0;`,
 ];
 
 const EXPECTED_COLUMNS: Record<string, string[]> = {

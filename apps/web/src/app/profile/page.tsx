@@ -50,6 +50,7 @@ export default function ProfilePage() {
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [requests, setRequests] = useState<DonationRequest[]>([]);
   const [donorRequests, setDonorRequests] = useState<DonationRequest[]>([]);
+  const [verification, setVerification] = useState<{ email_verified: boolean; phone_verified: boolean } | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -58,10 +59,11 @@ export default function ProfilePage() {
     if (!user) return;
     const token = getToken();
     try {
-      const [dashRes, rRes, drRes] = await Promise.all([
+      const [dashRes, rRes, drRes, meRes] = await Promise.all([
         fetch(`${API_URL}/donors/dashboard?userId=${user.id}`),
         fetch(`${API_URL}/requests?userId=${user.id}`, { headers: { Authorization: "Bearer " + token } }),
         fetch(`${API_URL}/requests/as-donor`, { headers: { Authorization: "Bearer " + token } }),
+        fetch(`${API_URL}/auth/me`, { headers: { Authorization: "Bearer " + token } }),
       ]);
       if (dashRes.ok) setDashboard(await dashRes.json());
       if (rRes.ok) {
@@ -71,6 +73,10 @@ export default function ProfilePage() {
       if (drRes.ok) {
         const drData = await drRes.json();
         setDonorRequests(Array.isArray(drData) ? drData : []);
+      }
+      if (meRes.ok) {
+        const meData = await meRes.json();
+        setVerification({ email_verified: !!meData.email_verified, phone_verified: !!meData.phone_verified });
       }
     } catch (e) {
       console.error(e);
@@ -190,7 +196,20 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-paper text-ink pb-safe-nav">
       <div className="container mx-auto px-5 md:px-6 pt-6 pb-4 flex justify-between items-center max-w-2xl">
         <div>
-          <h1 className="font-display text-2xl font-bold text-ink">Bonjour, {user.first_name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="font-display text-2xl font-bold text-ink">Bonjour, {user.first_name}</h1>
+            {verification && (
+              verification.email_verified || verification.phone_verified ? (
+                <Link href="/profile/verification" className="text-[10px] px-2 py-0.5 bg-recovery-light text-recovery-dark rounded-full font-medium">
+                  ✓ Vérifié
+                </Link>
+              ) : (
+                <Link href="/profile/verification" className="text-[10px] px-2 py-0.5 bg-mist text-slate rounded-full font-medium hover:text-ink transition-colors">
+                  Non vérifié
+                </Link>
+              )
+            )}
+          </div>
           <p className="text-sm text-slate mt-0.5">
             {isDonor ? <>Votre don peut sauver <span className="text-vital font-semibold">plusieurs vies</span></> : "Complétez votre profil pour commencer"}
           </p>
@@ -235,8 +254,8 @@ export default function ProfilePage() {
               Vérification email et téléphone
             </Link>
             {(user.roles || []).includes("admin") && (
-              <Link href="/admin/campaigns" className="block w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-brand-dark font-medium">
-                Administration — Campagnes
+              <Link href="/admin" className="block w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-brand-dark font-medium">
+                Administration
               </Link>
             )}
             <button onClick={togglePause} className="w-full text-left px-3 py-2.5 rounded-xl hover:bg-mist transition-colors text-sm text-ink">

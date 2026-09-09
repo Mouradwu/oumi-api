@@ -118,17 +118,24 @@ export default function ExplorerPage() {
     }
   };
 
+  // Comparaison normalisee (insensible a la casse/espaces) : certaines
+  // donnees historiques (creees avant la standardisation du format) ont pu
+  // etre enregistrees avec une casse differente ("Sang" au lieu de
+  // "SANG") - ne jamais faire dependre l'affichage d'une correspondance
+  // exacte de chaine.
+  const norm = (v: unknown) => String(v ?? "").trim().toUpperCase();
+
   const filteredDonors = searchTriggered ? donors.filter(d => {
-    if (filters.blood_type && d.blood_type !== filters.blood_type) return false;
-    if (filters.donation_type && !toArray(d.donation_types).includes(filters.donation_type)) return false;
-    if (filters.wilaya_id && d.wilaya_id !== filters.wilaya_id) return false;
+    if (filters.blood_type && norm(d.blood_type) !== norm(filters.blood_type)) return false;
+    if (filters.donation_type && !toArray(d.donation_types).some(t => norm(t) === norm(filters.donation_type))) return false;
+    if (filters.wilaya_id && Number(d.wilaya_id) !== Number(filters.wilaya_id)) return false;
     return true;
   }) : [];
 
   const filteredRequests = searchTriggered ? requests.filter(r => {
-    if (filters.blood_type && r.blood_type !== filters.blood_type) return false;
-    if (filters.donation_type && r.donation_type !== filters.donation_type) return false;
-    if (filters.wilaya_id && r.wilaya_id !== filters.wilaya_id) return false;
+    if (filters.blood_type && norm(r.blood_type) !== norm(filters.blood_type)) return false;
+    if (filters.donation_type && norm(r.donation_type) !== norm(filters.donation_type)) return false;
+    if (filters.wilaya_id && Number(r.wilaya_id) !== Number(filters.wilaya_id)) return false;
     return true;
   }) : [];
 

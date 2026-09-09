@@ -63,6 +63,22 @@ export class DonorsService {
     return saved;
   }
 
+  // Normalise un type de don vers la forme canonique SANG/PLASMA/PLAQUETTES,
+  // insensible a la casse/aux espaces, et tolerante aux synonymes anglais
+  // qui ont pu etre saisis par d'anciennes versions de l'application avant
+  // que le format soit standardise (ex: l'ancienne page /request/create,
+  // aujourd'hui supprimee, ecrivait "Sang"/"Plasma" au lieu de la forme
+  // canonique).
+  private normalizeDonationType(value: string): string {
+    const v = (value || '').trim().toUpperCase();
+    const synonyms: Record<string, string> = {
+      SANG: 'SANG', BLOOD: 'SANG', 'GLOBULES ROUGES': 'SANG', RBC: 'SANG',
+      PLASMA: 'PLASMA', PLASMASANG: 'PLASMA',
+      PLAQUETTES: 'PLAQUETTES', PLATELETS: 'PLAQUETTES', PLATELET: 'PLAQUETTES',
+    };
+    return synonyms[v] || v;
+  }
+
   async findAll(filters: {
     blood_type?: string;
     donation_type?: string;
@@ -74,17 +90,24 @@ export class DonorsService {
       .leftJoinAndSelect('donor.user', 'user')
       .where('1=1');
 
+    // Comparaisons insensibles a la casse/aux espaces des deux cotes : ne
+    // depend jamais de ce qui a ete effectivement stocke historiquement,
+    // seulement de la forme normalisee.
     if (filters.blood_type) {
-      query.andWhere('donor.blood_type = :blood_type', { blood_type: filters.blood_type });
+      query.andWhere('UPPER(TRIM(donor.blood_type)) = :blood_type', { blood_type: filters.blood_type.trim().toUpperCase() });
     }
     if (filters.donation_type) {
-      query.andWhere(':donation_type = ANY(donor.donation_types)', { donation_type: filters.donation_type });
+      const normalized = this.normalizeDonationType(filters.donation_type);
+      query.andWhere(
+        `:donation_type = ANY(SELECT UPPER(TRIM(elem)) FROM unnest(donor.donation_types) AS elem)`,
+        { donation_type: normalized },
+      );
     }
     if (filters.wilaya_id) {
       query.andWhere('donor.wilaya_id = :wilaya_id', { wilaya_id: filters.wilaya_id });
     }
     if (filters.availability_status) {
-      query.andWhere('donor.availability_status = :availability_status', { availability_status: filters.availability_status });
+      query.andWhere('UPPER(donor.availability_status) = :availability_status', { availability_status: filters.availability_status.trim().toUpperCase() });
     }
 
     const donors = await query.getMany();
