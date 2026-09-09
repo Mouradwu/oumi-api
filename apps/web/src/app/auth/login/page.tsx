@@ -60,7 +60,7 @@ function LoginForm() {
   return (
     <div className="min-h-screen bg-paper text-ink flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md space-y-7">
-        <div className="flex justify-center"><Logo size={40} /></div>
+        <div className="flex justify-center"><Logo size={40} showSignature /></div>
         <h1 className="font-display text-2xl font-bold text-center text-ink">Se connecter</h1>
         {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl text-sm">{error}</div>}
         <form onSubmit={handleSubmit} className="space-y-3.5">

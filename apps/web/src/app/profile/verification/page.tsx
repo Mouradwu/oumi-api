@@ -25,6 +25,8 @@ function VerificationForm() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [newPhone, setNewPhone] = useState("");
 
   const load = async () => {
     const token = getToken();
@@ -91,6 +93,29 @@ function VerificationForm() {
     }
   };
 
+  const updatePhone = async () => {
+    if (!newPhone.trim()) { setError("Numéro invalide"); return; }
+    setBusy(true); setError(""); setMessage("");
+    const token = getToken();
+    try {
+      const res = await fetch(`${API_URL}/users/me/phone`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+        body: JSON.stringify({ phone: newPhone.trim() }),
+      });
+      if (!res.ok) throw new Error("Erreur lors de la mise à jour");
+      setMessage("Numéro mis à jour. Vous devez le vérifier à nouveau.");
+      setEditingPhone(false);
+      setOtpSent(false);
+      setOtp("");
+      await load();
+    } catch (e: any) {
+      setError(e.message || "Erreur");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   if (authLoading || loading || !me) {
     return <div className="min-h-screen bg-paper flex items-center justify-center text-slate text-sm">Chargement...</div>;
   }
@@ -142,38 +167,72 @@ function VerificationForm() {
               <p className="text-xs text-slate mt-0.5">{me.phone || "Non renseigné"}</p>
             </div>
             {me.phone_verified ? (
-              <span className="text-xs px-2.5 py-1 bg-recovery-light text-recovery-dark rounded-full font-medium">Vérifié</span>
+              <span className="text-xs px-2.5 py-1 bg-recovery-light text-recovery-dark rounded-full font-medium">✓ Vérifié</span>
             ) : (
               <span className="text-xs px-2.5 py-1 bg-amber-light text-amber rounded-full font-medium">Non vérifié</span>
             )}
           </div>
-          {!me.phone_verified && me.phone && (
+
+          {editingPhone ? (
             <div className="mt-3 space-y-2">
-              {!otpSent ? (
-                <button onClick={sendOtp} disabled={busy} className="w-full px-4 py-2.5 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50">
-                  Recevoir un code par SMS
+              <input
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                placeholder="Nouveau numéro (ex: 0555123456)"
+                className="w-full p-2.5 border border-line rounded-lg text-sm"
+              />
+              <div className="flex gap-2">
+                <button onClick={updatePhone} disabled={busy} className="flex-1 px-4 py-2.5 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50">
+                  Enregistrer
                 </button>
-              ) : (
-                <>
-                  <input
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value)}
-                    placeholder="Code à 6 chiffres"
-                    maxLength={6}
-                    className="w-full p-2.5 border border-line rounded-lg text-sm text-center tracking-widest"
-                  />
-                  <button onClick={verifyOtp} disabled={busy || otp.length !== 6} className="w-full px-4 py-2.5 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50">
-                    Valider le code
-                  </button>
-                  <button onClick={sendOtp} disabled={busy} className="w-full text-xs text-slate hover:text-ink transition-colors">
-                    Renvoyer un code
-                  </button>
-                </>
-              )}
+                <button onClick={() => { setEditingPhone(false); setNewPhone(""); }} className="px-4 py-2.5 border border-line text-ink text-sm rounded-full">
+                  Annuler
+                </button>
+              </div>
             </div>
+          ) : (
+            <>
+              {!me.phone_verified && me.phone && (
+                <div className="mt-3 space-y-2">
+                  {!otpSent ? (
+                    <button onClick={sendOtp} disabled={busy} className="w-full px-4 py-2.5 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50">
+                      Recevoir un code par SMS
+                    </button>
+                  ) : (
+                    <>
+                      <input
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        placeholder="Code à 6 chiffres"
+                        maxLength={6}
+                        className="w-full p-2.5 border border-line rounded-lg text-sm text-center tracking-widest"
+                      />
+                      <button onClick={verifyOtp} disabled={busy || otp.length !== 6} className="w-full px-4 py-2.5 bg-brand text-white text-sm rounded-full font-medium hover:bg-brand-dark transition-colors disabled:opacity-50">
+                        Valider le code
+                      </button>
+                      <button onClick={sendOtp} disabled={busy} className="w-full text-xs text-slate hover:text-ink transition-colors">
+                        Renvoyer un code
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+              {!me.phone && (
+                <p className="text-xs text-slate mt-2">Ajoutez un numéro de téléphone pour le vérifier.</p>
+              )}
+              <button
+                onClick={() => { setEditingPhone(true); setNewPhone(me.phone || ""); }}
+                className="mt-2 text-xs text-slate hover:text-ink transition-colors underline"
+              >
+                {me.phone ? "Modifier mon numéro" : "Ajouter un numéro"}
+              </button>
+            </>
           )}
-          {!me.phone && <p className="text-xs text-slate mt-2">Ajoutez un numéro de téléphone à votre profil pour le vérifier.</p>}
         </div>
+
+        <p className="text-xs text-slate/70 mt-5 leading-relaxed">
+          La vérification est entièrement facultative : vous pouvez continuer à utiliser BLOODZ sans vérifier votre email ou votre téléphone. Un compte vérifié affiche simplement un badge de confiance auprès des autres utilisateurs.
+        </p>
       </main>
     </div>
     </ErrorBoundary>

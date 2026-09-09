@@ -61,7 +61,7 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-paper text-ink flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <BrandWatermark className="w-[500px] h-[575px] -top-20 -right-32" />
       <div className="w-full max-w-md space-y-7 relative z-10">
-        <div className="flex justify-center"><Logo size={40} /></div>
+        <div className="flex justify-center"><Logo size={40} showSignature /></div>
         <h1 className="font-display text-2xl font-bold text-center text-ink">Créer un compte</h1>
         <p className="text-center text-slate text-sm -mt-4">Rejoignez les donneurs qui font la différence.</p>
         {error && <div className="bg-vital-light text-vital-dark p-3 rounded-xl text-sm">{error}</div>}

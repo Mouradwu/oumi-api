@@ -13,6 +13,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { MessagesModule } from './messages/messages.module';
 import { CampaignsModule } from './campaigns/campaigns.module';
 import { AssociationsModule } from './associations/associations.module';
+import { AdminModule } from './admin/admin.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { AssociationsModule } from './associations/associations.module';
     NotificationsModule,
     MessagesModule,
     CampaignsModule,
+    AdminModule,
     AssociationsModule,
   ],
 })

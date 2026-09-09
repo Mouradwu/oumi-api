@@ -27,6 +27,14 @@ export class UsersController {
     return this.usersService.setActive(req.user.id, isActive !== false);
   }
 
+  // Changer de numero remet toujours phone_verified a false (voir
+  // users.service.ts) : jamais de badge "verifie" herite d'un ancien numero.
+  @Patch('me/phone')
+  @UseGuards(JwtAuthGuard)
+  async updatePhone(@Request() req, @Body('phone') phone: string) {
+    return this.usersService.updatePhone(req.user.id, phone);
+  }
+
   @Delete('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)
